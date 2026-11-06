@@ -30,6 +30,7 @@ Configure the following values in `.env`:
 - `SUPABASE_SERVICE_ROLE_KEY` — backend only; never expose this to the browser
 - `CORS_ORIGINS` — JSON array of allowed frontend origins
 - `SCHEDULER_SECRET` — long random secret shared only by the API and scheduled job
+- `STORY_ASSETS_BUCKET` — storage bucket name; defaults to `story-assets`
 
 Keep `.env`, `.reader_token`, and virtual environments out of Git.
 
@@ -89,6 +90,9 @@ The API validates the access token with Supabase Auth. Reader/creator RPC calls 
 - `GET /api/creator/dashboard`
 - `POST /api/creator/stories`
 - `PUT /api/creator/stories/{story_id}`
+- `POST /api/creator/stories/{story_id}/publish`
+- `POST /api/creator/stories/{story_id}/assets/upload-url`
+- `POST /api/creator/stories/{story_id}/assets/complete`
 - `GET /api/creator/stories/{story_id}/workspace`
 - `POST /api/creator/stories/{story_id}/episodes`
 - `PUT /api/creator/stories/{story_id}/episodes/{episode_id}`
@@ -120,6 +124,6 @@ Set `STORYFLICKS_API_URL` and `SCHEDULER_SECRET` in the worker environment.
 
 The repository contains the FastAPI backend and its route modules. The frontend, automated test suite, deployment configuration, and checked-in Supabase migration history are not yet present.
 
-The database functions and schema have been applied to the Supabase project during development, but their SQL migration files still need to be captured in this repository so a fresh environment can be reproduced reliably.
+The database functions and schema have been applied to the Supabase project during development. The repository now contains the latest creator-publication and asset-storage migration, but the earlier baseline migrations and functions still need to be exported from the live project before a fresh environment can be reproduced reliably. Apply `supabase/migrations/20261106000100_creator_publication_and_assets.sql` in the Supabase SQL Editor to enable story publishing and creator image uploads.
 
 End-to-end testing is intentionally deferred until the frontend and backend are both complete. Until then, use compile/static checks and schema/API contract review.
