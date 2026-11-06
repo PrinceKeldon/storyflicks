@@ -340,3 +340,23 @@ async def publish_creator_story(
         {"p_story_id": str(story_id)},
         user.access_token,
     )
+
+
+class CreatorStoryCompletionSubmission(BaseModel):
+    completion_status: Literal["ongoing", "completed"]
+
+
+@router.patch("/creator/stories/{story_id}/completion-status")
+async def set_creator_story_completion_status(
+    story_id: UUID,
+    submission: CreatorStoryCompletionSubmission,
+    user: AuthenticatedUser = Depends(get_current_user),
+):
+    return await supabase.user_rpc(
+        "set_creator_story_completion_status",
+        {
+            "p_story_id": str(story_id),
+            "p_completion_status": submission.completion_status,
+        },
+        user.access_token,
+    )
