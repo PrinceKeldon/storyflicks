@@ -7,6 +7,7 @@ from pydantic import BaseModel, Field
 
 from app.api.deps import get_current_user, supabase
 from app.core.security import AuthenticatedUser
+from app.services.storage import public_storage_url
 
 router = APIRouter()
 
@@ -107,6 +108,22 @@ async def read_episode(
 
     reading_progress = progress_records[0] if progress_records else None
 
+    asset_rows = await supabase.admin_get(
+        "episode_assets",
+        {
+            "select": "id,asset_type,storage_path,alt_text,metadata,position",
+            "episode_id": f"eq.{episode_id}",
+            "order": "position.asc",
+        },
+    )
+    assets = [
+        {
+            **asset,
+            "public_url": public_storage_url(asset.get("storage_path")),
+        }
+        for asset in asset_rows
+    ]
+
     return {
         "story": {
             "id": story["id"],
@@ -119,6 +136,7 @@ async def read_episode(
             "title": episode["title"],
             "synopsis": episode.get("synopsis"),
             "content": episode["content"],
+            "assets": assets,
         },
         "reading_progress": reading_progress,
     }
