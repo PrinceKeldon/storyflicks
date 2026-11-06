@@ -141,6 +141,12 @@ async def get_library(
         if episode:
             progress_by_story[episode["story_id"]].append(item)
 
+    engaged_story_ids = {
+        episode_map[item["episode_id"]]["story_id"]
+        for item in reactions + reviews
+        if item["episode_id"] in episode_map
+    }
+
     completed_episode_ids = {
         item["episode_id"]
         for item in progress
@@ -180,20 +186,17 @@ async def get_library(
             latest_episode["id"] in completed_episode_ids
         )
 
-        has_started = bool(story_progress)
+        # A reader who has reacted or reviewed has started the story,
+        # even if a progress checkpoint has not yet been saved.
+        has_started = bool(story_progress) or story_id in engaged_story_ids
 
         last_read = None
         if story_progress:
-            read_episodes = [
-                episode_map[item["episode_id"]]
-                for item in story_progress
-                if item["episode_id"] in episode_map
-            ]
-            if read_episodes:
-                last_read = max(
-                    read_episodes,
-                    key=lambda item: item["sequence_number"],
-                )
+            most_recent_progress = max(
+                story_progress,
+                key=lambda item: item.get("updated_at") or "",
+            )
+            last_read = episode_map.get(most_recent_progress["episode_id"])
 
         card = {
             "story": story,
