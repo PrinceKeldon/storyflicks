@@ -8,6 +8,7 @@ from pydantic import BaseModel, Field
 from app.api.deps import get_current_user, supabase
 from app.core.config import settings
 from app.core.security import AuthenticatedUser
+from app.services.storage import public_storage_url
 
 router = APIRouter()
 
@@ -208,7 +209,16 @@ async def list_creator_story_assets(
         )
 
     return {
-        "story": stories[0],
+        "story": {
+            **stories[0],
+            "cover_url": public_storage_url(stories[0].get("cover_path")),
+        },
         "episodes": episodes,
-        "assets": assets,
+        "assets": [
+            {
+                **asset,
+                "public_url": public_storage_url(asset.get("storage_path")),
+            }
+            for asset in assets
+        ],
     }
