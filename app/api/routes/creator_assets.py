@@ -165,3 +165,50 @@ async def complete_creator_asset_upload(
         },
         user.access_token,
     )
+
+
+
+@router.get("/creator/stories/{story_id}/assets")
+async def list_creator_story_assets(
+    story_id: UUID,
+    user: AuthenticatedUser = Depends(get_current_user),
+):
+    await require_story_editor(story_id, user)
+
+    stories = await supabase.admin_get(
+        "stories",
+        {
+            "id": f"eq.{story_id}",
+            "select": "id,title,cover_path",
+            "limit": "1",
+        },
+    )
+    if not stories:
+        raise HTTPException(404, "Story not found.")
+
+    episodes = await supabase.admin_get(
+        "episodes",
+        {
+            "story_id": f"eq.{story_id}",
+            "select": "id,sequence_number,title",
+            "order": "sequence_number.asc",
+        },
+    )
+
+    assets = []
+    if episodes:
+        episode_ids = ",".join(item["id"] for item in episodes)
+        assets = await supabase.admin_get(
+            "episode_assets",
+            {
+                "episode_id": f"in.({episode_ids})",
+                "select": "id,episode_id,asset_type,storage_path,alt_text,metadata,position",
+                "order": "position.asc",
+            },
+        )
+
+    return {
+        "story": stories[0],
+        "episodes": episodes,
+        "assets": assets,
+    }
