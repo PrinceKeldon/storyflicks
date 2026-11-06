@@ -91,8 +91,11 @@ The API validates the access token with Supabase Auth. Reader/creator RPC calls 
 - `POST /api/creator/stories`
 - `PUT /api/creator/stories/{story_id}`
 - `POST /api/creator/stories/{story_id}/publish`
+- `PATCH /api/creator/stories/{story_id}/completion-status`
 - `POST /api/creator/stories/{story_id}/assets/upload-url`
 - `POST /api/creator/stories/{story_id}/assets/complete`
+- `GET /api/creator/stories/{story_id}/assets`
+- `GET /api/creator/episodes/{episode_id}/revisions`
 - `GET /api/creator/stories/{story_id}/workspace`
 - `POST /api/creator/stories/{story_id}/episodes`
 - `PUT /api/creator/stories/{story_id}/episodes/{episode_id}`
