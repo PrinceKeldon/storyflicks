@@ -328,3 +328,19 @@ async def publish_creator_episode(
         },
         user.access_token,
     )
+
+
+# =========================================================
+# CREATOR STORY PUBLICATION
+# =========================================================
+
+@router.post("/creator/stories/{story_id}/publish")
+async def publish_creator_story(
+    story_id: UUID,
+    user: AuthenticatedUser = Depends(get_current_user),
+):
+    return await supabase.user_rpc(
+        "publish_creator_story",
+        {"p_story_id": str(story_id)},
+        user.access_token,
+    )
