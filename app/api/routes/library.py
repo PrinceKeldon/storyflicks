@@ -1,6 +1,8 @@
 from collections import defaultdict
+from typing import Literal
 
 from fastapi import APIRouter, Depends
+from pydantic import BaseModel
 
 from app.api.deps import get_current_user, supabase
 from app.core.security import AuthenticatedUser
@@ -317,59 +319,6 @@ async def remove_bookmark(
         {"p_story_id": story_id},
         user.access_token,
     )
-
-
-from typing import Literal
-from pydantic import BaseModel
-
-
-class ReaderPreferencesSubmission(BaseModel):
-    theme: Literal["paper", "sepia", "night"] = "paper"
-    text_size: Literal["small", "comfortable", "large"] = "comfortable"
-    reading_width: Literal["narrow", "standard", "wide"] = "standard"
-
-
-@router.get("/library/preferences")
-async def get_reader_preferences(
-    user: AuthenticatedUser = Depends(get_current_user),
-):
-    rows = await supabase.admin_get(
-        "reader_preferences",
-        {
-            "select": "theme,text_size,reading_width,updated_at",
-            "user_id": f"eq.{user.id}",
-        },
-    )
-
-    if rows:
-        return rows[0]
-
-    return {
-        "theme": "paper",
-        "text_size": "comfortable",
-        "reading_width": "standard",
-        "updated_at": None,
-    }
-
-
-@router.put("/library/preferences")
-async def save_reader_preferences(
-    preferences: ReaderPreferencesSubmission,
-    user: AuthenticatedUser = Depends(get_current_user),
-):
-    return await supabase.user_rpc(
-        "save_reader_preferences",
-        {
-            "p_theme": preferences.theme,
-            "p_text_size": preferences.text_size,
-            "p_reading_width": preferences.reading_width,
-        },
-        user.access_token,
-    )
-
-
-from typing import Literal
-from pydantic import BaseModel
 
 
 class ReaderPreferencesSubmission(BaseModel):
