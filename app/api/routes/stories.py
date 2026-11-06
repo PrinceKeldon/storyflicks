@@ -1,6 +1,7 @@
 from fastapi import APIRouter, HTTPException
 
 from app.api.deps import supabase
+from app.services.storage import public_storage_url
 
 router = APIRouter()
 
@@ -15,7 +16,7 @@ async def list_stories():
             "order": "published_at.desc",
         },
     )
-    return {"items": rows}
+    return {"items": [{**row, "cover_url": public_storage_url(row.get("cover_path"))} for row in rows]}
 
 
 @router.get("/stories/{slug}")
@@ -42,4 +43,5 @@ async def get_story(slug: str):
             "order": "sequence_number.asc",
         },
     )
+    story["cover_url"] = public_storage_url(story.get("cover_path"))
     return {"story": story, "episodes": episodes}
