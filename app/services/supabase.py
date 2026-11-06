@@ -83,8 +83,16 @@ class SupabaseService:
                 detail="Storage did not return a signed upload URL.",
             )
 
-        if signed_path.startswith("/"):
+        if signed_path.startswith("http://") or signed_path.startswith("https://"):
+            pass
+        elif signed_path.startswith("/storage/v1/"):
+            signed_path = f"{settings.supabase_url.rstrip('/')}{signed_path}"
+        elif signed_path.startswith("/"):
             signed_path = f"{settings.supabase_url.rstrip('/')}/storage/v1{signed_path}"
+        else:
+            signed_path = (
+                f"{settings.supabase_url.rstrip('/')}/storage/v1/{signed_path.lstrip('/')}"
+            )
 
         return {
             "signed_url": signed_path,
