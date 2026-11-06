@@ -1,5 +1,5 @@
 from datetime import datetime
-from typing import Literal
+from typing import Any, Literal
 from uuid import UUID
 
 from fastapi import APIRouter, Depends, HTTPException
@@ -47,14 +47,14 @@ async def moderate_report(
     )
 
 
-class AuthorReplySubmission(BaseModel):
+class AuthorReplyWithReviewSubmission(BaseModel):
     review_id: UUID
     body: str
 
 
 @router.post("/creator/reviews/reply")
 async def publish_author_reply(
-    submission: AuthorReplySubmission,
+    submission: AuthorReplyWithReviewSubmission,
     user: AuthenticatedUser = Depends(get_current_user),
 ):
     return await supabase.user_rpc(
@@ -136,14 +136,14 @@ async def set_author_note_pin(
     )
 
 
-class AuthorReplySubmission(BaseModel):
+class AuthorReplyBodySubmission(BaseModel):
     body: str
 
 
 @router.post("/creator/reviews/{review_id}/reply")
 async def publish_author_reply(
     review_id: UUID,
-    submission: AuthorReplySubmission,
+    submission: AuthorReplyBodySubmission,
     user: AuthenticatedUser = Depends(get_current_user),
 ):
     return await supabase.user_rpc(
@@ -159,10 +159,6 @@ async def publish_author_reply(
 # =========================================================
 # CREATOR STORY AND EPISODE MANAGEMENT
 # =========================================================
-
-from typing import Any
-from pydantic import BaseModel
-
 
 class CreatorStorySubmission(BaseModel):
     title: str
