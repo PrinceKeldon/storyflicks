@@ -55,6 +55,44 @@ class SupabaseService:
         self._raise_for_supabase(response)
         return response.json()
 
+    async def create_signed_upload_url(self, bucket: str, storage_path: str) -> dict[str, Any]:
+        from urllib.parse import quote
+
+        encoded_path = quote(storage_path, safe="/")
+        endpoint = (
+            f"{settings.supabase_url.rstrip('/')}/storage/v1/object/upload/sign/"
+            f"{quote(bucket, safe='')}/{encoded_path}"
+        )
+        async with httpx.AsyncClient(timeout=30.0) as client:
+            response = await client.post(
+                endpoint,
+                headers=self._admin_headers(),
+                json={"upsert": False},
+            )
+
+        self._raise_for_supabase(response)
+        payload = response.json()
+        signed_path = (
+            payload.get("signedUrl")
+            or payload.get("signedURL")
+            or payload.get("url")
+        )
+        if not signed_path:
+            raise HTTPException(
+                status_code=502,
+                detail="Storage did not return a signed upload URL.",
+            )
+
+        if signed_path.startswith("/"):
+            signed_path = f"{settings.supabase_url.rstrip('/')}/storage/v1{signed_path}"
+
+        return {
+            "signed_url": signed_path,
+            "token": payload.get("token"),
+            "path": payload.get("path") or storage_path,
+            "bucket": bucket,
+        }
+
     async def user_rpc(
         self, function_name: str, payload: dict[str, Any], access_token: str
     ) -> dict[str, Any]:
