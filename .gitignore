@@ -5,3 +5,7 @@ __pycache__/
 .pytest_cache/
 .DS_Store
 .reader_token
+
+# Local manuscript and database exports — never commit private story content
+creator_backup.json
+backups/
