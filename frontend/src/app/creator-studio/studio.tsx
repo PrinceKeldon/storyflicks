@@ -59,12 +59,17 @@ export default function CreatorStudio(){
  const [blocks,setBlocks]=useState<Block[]>([{type:"paragraph",text:""}]),[scheduleAt,setScheduleAt]=useState("");
 
  const request=useCallback(async(path:string,init:RequestInit={})=>{
-  if(!api||!token)throw new Error("API or sign-in session unavailable.");
-  const res=await fetch(api+path,{...init,headers:{Authorization:"Bearer "+token,...(init.body?{"Content-Type":"application/json"}:{}),...init.headers},cache:"no-store"});
+  const client=getSupabaseBrowserClient();
+  if(!api||!client)throw new Error("API or sign-in session unavailable.");
+  const {data:{session}}=await client.auth.getSession();
+  const accessToken=session?.access_token;
+  if(!accessToken)throw new Error("Your sign-in session has expired. Please sign in again.");
+  setToken(current=>current===accessToken?current:accessToken);
+  const res=await fetch(api+path,{...init,headers:{Authorization:"Bearer "+accessToken,...(init.body?{"Content-Type":"application/json"}:{}),...init.headers},cache:"no-store"});
   const body=await res.json().catch(()=>({}));
   if(!res.ok)throw new Error(typeof body.detail==="string"?body.detail:"Request failed ("+res.status+").");
   return body;
- },[api,token]);
+ },[api]);
 
  const loadDashboard=useCallback(async()=>{
   const client=getSupabaseBrowserClient();if(!client||!api){setError("Creator Studio is not configured.");setStatus("error");return;}
