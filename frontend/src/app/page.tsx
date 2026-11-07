@@ -58,8 +58,8 @@ export default function DiscoverPage() {
         </div>
         <div className="empty-shelf">
           <div className="empty-mark">↗</div>
-          <div><h3>Your next chapter is waiting.</h3><p>Sign in to keep your reading progress, save stories and pick up right where you left off.</p></div>
-          <a href="/sign-in?mode=signup" className="outline-button">Create your free account</a>
+          <div><h3>Your next chapter is waiting.</h3><p>Your reading progress, saved stories and contributions live together in My Library.</p></div>
+          <a href="/library" className="outline-button">Open My Library <span>↗</span></a>
         </div>
       </section>
 
