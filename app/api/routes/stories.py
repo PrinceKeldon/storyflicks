@@ -21,16 +21,16 @@ async def list_stories(
     }
 
     if q:
-        safe_query = " ".join(re.findall(r"[\\w-]+", q, flags=re.UNICODE))
+        safe_query = " ".join(re.findall(r"[\w-]+", q, flags=re.UNICODE))
         if safe_query:
             params["or"] = (
-                f"(title.ilike.*{safe_query}*,",
-                f"tagline.ilike.*{safe_query}*,",
-                f"synopsis.ilike.*{safe_query}*)"
+                f"(title.ilike.*{safe_query}*,"
+                f"tagline.ilike.*{safe_query}*,"
+                f"synopsis.ilike.*{safe_query}*)" 
             )
 
     if genre:
-        safe_genre = " ".join(re.findall(r"[\\w &-]+", genre, flags=re.UNICODE)).strip()
+        safe_genre = " ".join(re.findall(r"[\w &-]+", genre, flags=re.UNICODE)).strip()
         if safe_genre:
             genre_value = f'"{safe_genre}"' if " " in safe_genre else safe_genre
             params["genres"] = f"cs.{{{genre_value}}}"
