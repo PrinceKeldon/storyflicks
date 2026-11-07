@@ -5,8 +5,8 @@ import { useState } from "react";
 import type { FormEvent } from "react";
 import { getSupabaseBrowserClient } from "@/lib/supabase";
 
-export default function SignInForm({ redirectTo }: { redirectTo: string }) {
-  const [mode, setMode] = useState<"signin" | "signup">("signin");
+export default function SignInForm({ redirectTo, initialMode = "signin" }: { redirectTo: string; initialMode?: "signin" | "signup" }) {
+  const [mode, setMode] = useState<"signin" | "signup">(initialMode);
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [busy, setBusy] = useState(false);
