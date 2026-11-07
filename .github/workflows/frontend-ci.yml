@@ -35,11 +35,17 @@ jobs:
         with:
           node-version: 24
 
+      # PR builds validate a generated lockfile; main pushes persist any lockfile changes.
       - name: Generate lockfile when missing
         run: npm install --package-lock-only --ignore-scripts
 
       - name: Install locked dependencies
         run: npm ci
+
+      - name: Full dependency audit report
+        run: |
+          npm audit --json > /tmp/npm-audit.json || true
+          node -e 'const a=JSON.parse(require("node:fs").readFileSync("/tmp/npm-audit.json","utf8")); for (const [name, v] of Object.entries(a.vulnerabilities || {})) console.log(name+" | "+v.severity+" | direct="+v.isDirect+" | fix="+JSON.stringify(v.fixAvailable)+" | "+v.via.map(x => typeof x === "string" ? x : x.title).join("; "))'
 
       - name: TypeScript validation
         run: npx tsc --noEmit
