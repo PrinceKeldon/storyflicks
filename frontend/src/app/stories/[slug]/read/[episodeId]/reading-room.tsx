@@ -101,7 +101,7 @@ export default function ReadingRoom({ episodeId }: { episodeId: string }) {
   const nextUrl = payload ? `/stories/${payload.story.slug}#episodes` : "/";
 
   if (status === "loading") return <main className="reader-state"><span className="reader-state-mark">SF.</span><p>Preparing your reading room…</p></main>;
-  if (status === "signed-out") return <main className="reader-state"><span className="reader-state-mark">SF.</span><p className="eyebrow">YOUR STORY IS WAITING</p><h1>Sign in to enter the Reading Room.</h1><p>Your reading progress and episode access are tied to your account.</p><Link className="primary-button" href={`/stories/the-priest#episodes`}>Back to the episode guide <span>↗</span></Link></main>;
+  if (status === "signed-out") return <main className="reader-state"><span className="reader-state-mark">SF.</span><p className="eyebrow">YOUR STORY IS WAITING</p><h1>Sign in to enter the Reading Room.</h1><p>Your reading progress and episode access are tied to your account.</p><Link className="primary-button" href={`/sign-in?next=/stories/the-priest/read/${episodeId}`}>Sign in to continue <span>↗</span></Link></main>;
   if (status === "error" || !payload) return <main className="reader-state"><span className="reader-state-mark">SF.</span><p className="eyebrow">A SMALL INTERRUPTION</p><h1>We couldn’t open this episode.</h1><p>{error}</p><Link className="text-button" href="/stories/the-priest">← Back to THE PRIEST</Link></main>;
 
   return (
