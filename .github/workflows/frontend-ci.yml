@@ -43,10 +43,16 @@ jobs:
 
       # PR builds validate a generated lockfile; main pushes persist any lockfile changes.
       - name: Generate lockfile when missing
-        run: npm install --package-lock-only --ignore-scripts
+        run: npm install --package-lock-only --ignore-scripts --no-audit --no-fund
 
       - name: Install locked dependencies
-        run: npm ci
+        run: npm ci --no-audit --no-fund
+
+      - name: Apply compatible dependency security fixes
+        run: npm audit fix --no-fund
+
+      - name: Audit full dependency tree
+        run: npm audit --audit-level=moderate
 
       - name: TypeScript validation
         run: npx tsc --noEmit
