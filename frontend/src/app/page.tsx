@@ -1,0 +1,74 @@
+const shelves = [
+  { eyebrow: "THE STORY EVERYONE IS TALKING ABOUT", title: "THE PRIEST", description: "Two lives. One secret. A confession that changes everything.", meta: "Episodic drama · Ongoing", action: "Explore the story" },
+];
+
+const navItems = ["Discover", "My Library", "Creator Studio"];
+
+export default function DiscoverPage() {
+  return (
+    <main className="app-shell">
+      <header className="topbar">
+        <a className="wordmark" href="/" aria-label="STORYFLICKS home">STORY<span>FLICKS</span><i>.</i></a>
+        <nav className="main-nav" aria-label="Main navigation">
+          {navItems.map((item, index) => (
+            <a className={index === 0 ? "nav-link active" : "nav-link"} href={index === 0 ? "/" : "#"} key={item}>{item}</a>
+          ))}
+        </nav>
+        <div className="account-actions">
+          <button className="icon-button" aria-label="Search"><span className="search-icon" /></button>
+          <a className="sign-in" href="#sign-in">Sign in</a>
+          <a className="join-button" href="#join">Join free <span>↗</span></a>
+        </div>
+      </header>
+
+      <section className="welcome-row">
+        <div>
+          <p className="eyebrow">YOUR NEXT OBSESSION STARTS HERE</p>
+          <h1>Stories worth <em>staying for.</em></h1>
+        </div>
+        <p className="welcome-note">A good story pulls you in.<br />A great one keeps you coming back.</p>
+      </section>
+
+      <section className="featured" aria-labelledby="featured-title">
+        <div className="featured-copy">
+          <div className="feature-kicker"><span className="live-dot" /> FEATURED STORY</div>
+          <p className="feature-overline">AN ORIGINAL STORYFLICKS SERIES</p>
+          <h2 id="featured-title">THE<br /><span>PRIEST</span></h2>
+          <p className="feature-tagline">{shelves[0].description}</p>
+          <p className="feature-meta">DRAMA <b>·</b> ONGOING <b>·</b> EPISODIC</p>
+          <div className="feature-actions">
+            <a className="primary-button" href="/stories/the-priest">Explore the story <span>↗</span></a>
+            <a className="text-button" href="/stories/the-priest">View episode guide <span>→</span></a>
+          </div>
+        </div>
+        <div className="feature-art" role="img" aria-label="Typographic artwork for THE PRIEST">
+          <div className="art-grain" />
+          <div className="art-cross" />
+          <div className="art-caption">A STORY ABOUT<br />FAITH, DESIRE &amp; SECRETS</div>
+          <div className="art-title">THE<br /><strong>PRIEST</strong></div>
+          <div className="art-index">SF ORIGINAL&nbsp;&nbsp; / &nbsp;&nbsp;001</div>
+        </div>
+        <div className="feature-index"><span>01</span><i /> 01</div>
+      </section>
+
+      <section className="shelf-section">
+        <div className="section-heading">
+          <div><p className="eyebrow">PICK UP WHERE YOU LEFT OFF</p><h2>Keep the story going<span>.</span></h2></div>
+          <a href="/library" className="subtle-link">Your library <span>→</span></a>
+        </div>
+        <div className="empty-shelf">
+          <div className="empty-mark">↗</div>
+          <div><h3>Your next chapter is waiting.</h3><p>Sign in to keep your reading progress, save stories and pick up right where you left off.</p></div>
+          <a href="#join" className="outline-button">Create your free account</a>
+        </div>
+      </section>
+
+      <section className="browse-row">
+        <div><p className="eyebrow">FIND YOUR KIND OF STORY</p><h2>What are you in the mood for?</h2></div>
+        <div className="genre-list"><a href="#drama">Drama <span>↗</span></a><a href="#thriller">Thriller <span>↗</span></a><a href="#romance">Romance <span>↗</span></a><a href="#mystery">Mystery <span>↗</span></a></div>
+      </section>
+
+      <footer className="footer"><a className="wordmark" href="/">STORY<span>FLICKS</span><i>.</i></a><p>Stories worth staying for.</p><span>© 2026 STORYFLICKS</span></footer>
+    </main>
+  );
+}
