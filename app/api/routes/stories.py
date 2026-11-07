@@ -14,7 +14,7 @@ async def list_stories(
     genre: str | None = Query(default=None, max_length=40),
 ):
     params = {
-        "select": "id,slug,title,tagline,synopsis,genres,cover_path,publication_status,first_episode_free,published_at",
+        "select": "id,slug,title,tagline,synopsis,genres,cover_path,publication_status,completion_status,first_episode_free,published_at",
         "publication_status": "eq.published",
         "order": "published_at.desc",
         "limit": "100",
