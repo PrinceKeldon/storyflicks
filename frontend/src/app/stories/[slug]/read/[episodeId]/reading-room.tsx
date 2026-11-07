@@ -55,7 +55,7 @@ export default function ReadingRoom({ episodeId }: { episodeId: string }) {
       const preferencesResponse = await fetch(`${apiUrl}/library/preferences`, {
         headers: { Authorization: `Bearer ${session.access_token}` },
         cache: "no-store",
-      });
+      }).catch(() => null);
       if (preferencesResponse.ok) {
         const preferences = await preferencesResponse.json() as { theme?: "paper" | "sepia" | "night"; text_size?: "small" | "comfortable" | "large"; reading_width?: "narrow" | "standard" | "wide" };
         if (preferences.theme) setTheme(preferences.theme);
