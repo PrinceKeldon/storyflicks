@@ -126,14 +126,14 @@ export default function ReadingRoom({ slug, episodeId }: { slug: string; episode
 
   if (status === "loading") return <main className="reader-state"><span className="reader-state-mark">SF.</span><p>Preparing your reading room…</p></main>;
   if (status === "signed-out") return <main className="reader-state"><span className="reader-state-mark">SF.</span><p className="eyebrow">YOUR STORY IS WAITING</p><h1>Sign in to enter the Reading Room.</h1><p>Your reading progress and episode access are tied to your account.</p><Link className="primary-button" href={`/sign-in?next=/stories/${slug}/read/${episodeId}`}>Sign in to continue <span>↗</span></Link></main>;
-  if (status === "error" || !payload) return <main className="reader-state"><span className="reader-state-mark">SF.</span><p className="eyebrow">A SMALL INTERRUPTION</p><h1>We couldn’t open this episode.</h1><p>{error}</p><Link className="text-button" href="/stories/${slug}">← Back to {payload?.story.title || "the story"}</Link></main>;
+  if (status === "error" || !payload) return <main className="reader-state"><span className="reader-state-mark">SF.</span><p className="eyebrow">A SMALL INTERRUPTION</p><h1>We couldn’t open this episode.</h1><p>{error}</p><Link className="text-button" href={`/stories/${slug}`}>← Back to {payload?.story.title || "the story"}</Link></main>;
 
   return (
     <main className={`reading-room theme-${theme}`}>
       <div className="reader-progress-track"><span style={{ width: `${progress}%` }} /></div>
       <header className="reader-toolbar">
         <Link className="reader-brand" href="/">STORY<span>FLICKS</span><i>.</i></Link>
-        <div className="reader-location"><Link href="/stories/${slug}">THE PRIEST</Link><span>/</span><span>EPISODE {String(payload.episode.sequence_number).padStart(2, "0")}</span></div>
+        <div className="reader-location"><Link href="/stories/${slug}">{payload.story.title}</Link><span>/</span><span>EPISODE {String(payload.episode.sequence_number).padStart(2, "0")}</span></div>
         <div className="reader-tools">
           <span className="reader-progress-label">{progress}%</span>
           <button className="reader-tool-button" onClick={() => setShowSettings((value) => !value)} aria-expanded={showSettings}>Aa <span>Reading settings</span></button>
@@ -146,7 +146,7 @@ export default function ReadingRoom({ slug, episodeId }: { slug: string; episode
         <div><span>READING WIDTH</span><div className="setting-options"><button className={width === "comfortable" ? "selected" : ""} onClick={() => setWidth("comfortable")}>Comfortable</button><button className={width === "wide" ? "selected" : ""} onClick={() => setWidth("wide")}>Wide</button></div></div>
       </section>}
       <article className={`reading-page reading-width-${width}`}>
-        <div className="reading-kicker">THE PRIEST <span>·</span> EPISODE {String(payload.episode.sequence_number).padStart(2, "0")}</div>
+        <div className="reading-kicker">{payload.story.title} <span>·</span> EPISODE {String(payload.episode.sequence_number).padStart(2, "0")}</div>
         <h1>{payload.episode.title}</h1>
         {payload.episode.synopsis && <p className="reading-deck">{payload.episode.synopsis}</p>}
         <div className="reading-rule"><span>✦</span></div>
