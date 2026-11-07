@@ -152,6 +152,7 @@ export default function ReactionPanel({ episodeId }: { episodeId: string }) {
         <p className="eyebrow">END OF EPISODE {String(data.episode.sequence_number).padStart(2, "0")}</p>
         <h1>So, what did you think?</h1>
         <p className="contribution-deck">Every reader takes something different from a story. Tell us what stayed with you.</p>
+        <p className="contribution-rule">A reaction OR a review is enough to unlock the next episode. You can also do both, or skip and return later.</p>
 
         <section className="reaction-section">
           <div className="contribution-section-heading"><div><p className="eyebrow">THE QUICK TAKE</p><h2>Pick the reactions that fit.</h2></div><span>CHOOSE UP TO 8</span></div>
