@@ -54,7 +54,7 @@ export default async function StoryDetailPage({ params }: { params: Promise<{ sl
       <section className="story-intro">
         <div className="story-poster" aria-label={`${story?.title ?? "Story"} title artwork`}>
           <span className="poster-kicker">A STORY ABOUT FAITH, DESIRE &amp; SECRETS</span>
-          <span className="poster-title">THE<br /><strong>PRIEST</strong></span>
+          <span className="poster-title">{story?.title ?? "THE PRIEST"}</span>
           <span className="poster-foot">STORYFLICKS ORIGINAL</span>
         </div>
         <div className="story-info">
