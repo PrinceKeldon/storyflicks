@@ -166,8 +166,8 @@ export default function ReadingRoom({ episodeId }: { episodeId: string }) {
         <footer className="reading-end">
           <span>END OF EPISODE {String(payload.episode.sequence_number).padStart(2, "0")}</span>
           <h2>Let that one settle.</h2>
-          <p>Your next step is waiting in the story guide.</p>
-          <Link href={nextUrl} className="primary-button">Return to episode guide <span>→</span></Link>
+          <p>Take a moment to react or write a review. Either one unlocks what comes next.</p>
+          <Link href={`/stories/${payload.story.slug}/react/${payload.episode.id}`} className="primary-button">Share your take <span>→</span></Link>
         </footer>
       </article>
       <footer className="reader-footer"><span>STORYFLICKS</span><span>Stories worth staying for.</span><span>© 2026</span></footer>
