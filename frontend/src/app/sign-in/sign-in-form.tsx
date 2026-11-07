@@ -47,7 +47,7 @@ export default function SignInForm({ redirectTo }: { redirectTo: string }) {
           <label htmlFor="email">EMAIL ADDRESS</label>
           <input id="email" type="email" autoComplete="email" required value={email} onChange={(event) => setEmail(event.target.value)} placeholder="you@example.com" />
           <label htmlFor="password">PASSWORD</label>
-          <input id="password" type="password" autoComplete={mode === "signin" ? "current-password" : "new-password"} minLength={8} required value={password} onChange={(event) => setPassword(event.target.value)} placeholder="At least 8 characters" />
+          <input id="password" type="password" autoComplete={mode === "signin" ? "current-password" : "new-password"} minLength={mode === "signup" ? 8 : undefined} required value={password} onChange={(event) => setPassword(event.target.value)} placeholder={mode === "signup" ? "At least 8 characters" : "Your password"} />
           {error && <p className="auth-error" role="alert">{error}</p>}
           {message && <p className="auth-message" role="status">{message}</p>}
           <button className="primary-button auth-submit" type="submit" disabled={busy}>{busy ? "One moment…" : mode === "signin" ? "Sign in" : "Create free account"} <span>↗</span></button>
