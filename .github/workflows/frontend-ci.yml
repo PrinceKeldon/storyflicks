@@ -18,8 +18,9 @@ on:
       - ".github/workflows/frontend-ci.yml"
   workflow_dispatch:
 
+# CI only needs to read source. No repository write token is exposed to build steps.
 permissions:
-  contents: write
+  contents: read
 
 concurrency:
   group: storyflicks-ci-${{ github.ref }}
@@ -35,24 +36,16 @@ jobs:
     steps:
       - name: Check out repository
         uses: actions/checkout@v4
-        with:
-          repository: ${{ github.event.pull_request.head.repo.full_name || github.repository }}
-          ref: ${{ github.head_ref || github.ref }}
 
       - name: Set up Node.js
         uses: actions/setup-node@v4
         with:
           node-version: 24
-
-      # PR builds validate a generated lockfile; main pushes persist any lockfile changes.
-      - name: Generate lockfile when missing
-        run: npm install --package-lock-only --ignore-scripts --no-audit --no-fund
+          cache: npm
+          cache-dependency-path: frontend/package-lock.json
 
       - name: Install locked dependencies
         run: npm ci --no-audit --no-fund
-
-      - name: Apply compatible dependency security fixes
-        run: npm audit fix --no-fund
 
       - name: Audit full dependency tree
         run: npm audit --audit-level=moderate
@@ -67,25 +60,6 @@ jobs:
         run: npm run build
         env:
           NEXT_TELEMETRY_DISABLED: "1"
-
-      - name: Commit generated lockfile
-        if: github.event_name == 'push' || github.event.pull_request.head.repo.full_name == github.repository
-        working-directory: .
-        run: |
-          if [[ -f frontend/package-lock.json ]]; then
-            git add frontend/package-lock.json
-            if ! git diff --cached --quiet -- frontend/package-lock.json; then
-              if [[ "$GITHUB_EVENT_NAME" == "pull_request" ]]; then
-                branch="$GITHUB_HEAD_REF"
-              else
-                branch="$GITHUB_REF_NAME"
-              fi
-              git config user.name "github-actions[bot]"
-              git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-              git commit -m "Update audited frontend dependency lockfile"
-              git push origin "HEAD:$branch"
-            fi
-          fi
 
   backend:
     name: Backend import and syntax checks
