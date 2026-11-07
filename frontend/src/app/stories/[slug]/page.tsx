@@ -16,6 +16,8 @@ type StoryResponse = {
     title: string;
     tagline?: string | null;
     synopsis?: string | null;
+    genres?: string[];
+    completion_status?: string | null;
     cover_url?: string | null;
   };
   episodes: Episode[];
@@ -58,7 +60,7 @@ export default async function StoryDetailPage({ params }: { params: Promise<{ sl
           <span className="poster-foot">STORYFLICKS ORIGINAL</span>
         </div>
         <div className="story-info">
-          <p className="eyebrow">DRAMA · ONGOING · EPISODIC</p>
+          <p className="eyebrow">{story?.genres?.join(" · ").toUpperCase() || "STORYFLICKS ORIGINAL"} · {(story?.completion_status || "ongoing").toUpperCase()} · EPISODIC</p>
           <h1>{story?.title ?? (slug === "the-priest" ? "THE PRIEST" : "Story")}</h1>
           <p className="story-tagline">{story?.tagline ?? "Two lives. One secret. A confession that changes everything."}</p>
           <p className="story-synopsis">{story?.synopsis ?? "For over twenty years, Father James has kept his priestly life separate from the man he secretly becomes beyond the collar. But when Sophia enters his world, questions of faith, desire and identity begin to blur — and some secrets may be impossible to keep."}</p>
