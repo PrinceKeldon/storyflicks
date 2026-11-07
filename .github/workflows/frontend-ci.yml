@@ -41,12 +41,18 @@ jobs:
         with:
           node-version: 24
 
-      # PR builds validate a generated lockfile; main pushes persist any lockfile changes.
+      # PR builds validate a generated lockfile; main pushes persist any lockfile changes and compatible security updates.
       - name: Generate lockfile when missing
         run: npm install --package-lock-only --ignore-scripts
 
       - name: Install locked dependencies
         run: npm ci
+
+      - name: Apply compatible dependency security fixes
+        run: npm audit fix
+
+      - name: Audit full dependency tree
+        run: npm audit --audit-level=moderate
 
       - name: TypeScript validation
         run: npx tsc --noEmit
