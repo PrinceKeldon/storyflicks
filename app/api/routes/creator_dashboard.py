@@ -446,7 +446,6 @@ async def get_creator_analytics(
                 key = "public_reviews" if is_public else "private_feedback"
                 timeline_by_day[event_date][key] += 1
                 timeline_by_day[event_date]["active_readers"].add(reader)
-                active_readers_by_day[event_date].add(reader)
 
     episode_rows = []
     for item in by_episode.values():
