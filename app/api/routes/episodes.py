@@ -355,12 +355,68 @@ async def get_review_room(
             "author_reply": reply_map.get(review["id"]),
         })
 
+    own_reviews = await supabase.admin_get(
+        "reviews",
+        {
+            "select": "id,headline,body,visibility,status,submitted_at,updated_at",
+            "episode_id": f"eq.{episode_id}",
+            "user_id": f"eq.{user.id}",
+            "status": "eq.submitted",
+            "order": "updated_at.desc",
+            "limit": "1",
+        },
+    )
+
+    participation_rows = await supabase.admin_get(
+        "episode_participations",
+        {
+            "select": "id,qualifying_contribution,created_at",
+            "episode_id": f"eq.{episode_id}",
+            "user_id": f"eq.{user.id}",
+            "limit": "1",
+        },
+    )
+
+    next_episodes = await supabase.admin_get(
+        "episodes",
+        {
+            "select": "id,title,sequence_number,publication_status",
+            "story_id": f"eq.{episode['story_id']}",
+            "sequence_number": f"gt.{episode['sequence_number']}",
+            "publication_status": "neq.withdrawn",
+            "order": "sequence_number.asc",
+            "limit": "1",
+        },
+    )
+
+    next_episode = None
+    if next_episodes:
+        next_item = next_episodes[0]
+        next_entitlements = await supabase.admin_get(
+            "episode_entitlements",
+            {
+                "select": "id,grant_reason,granted_at",
+                "user_id": f"eq.{user.id}",
+                "episode_id": f"eq.{next_item['id']}",
+                "limit": "1",
+            },
+        )
+        next_episode = {
+            **next_item,
+            "unlocked": bool(next_entitlements),
+            "grant_reason": next_entitlements[0]["grant_reason"] if next_entitlements else None,
+        }
+
     return {
         "episode": {
             "id": episode["id"],
             "title": episode["title"],
             "sequence_number": episode["sequence_number"],
         },
+        "has_qualified": bool(participation_rows),
+        "qualifying_contribution": participation_rows[0]["qualifying_contribution"] if participation_rows else None,
+        "my_review": own_reviews[0] if own_reviews else None,
+        "next_episode": next_episode,
         "reaction_summary": reaction_summary,
         "reviews": review_results,
         "review_count": len(review_results),
