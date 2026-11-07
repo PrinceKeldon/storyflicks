@@ -21,6 +21,8 @@ async def get_creator_dashboard(
         {
             "id": f"eq.{user.id}",
             "status": "eq.active",
+            "select": "id",
+            "limit": "1",
         },
     )
 
@@ -31,10 +33,18 @@ async def get_creator_dashboard(
         )
 
     # Find stories assigned to this creator.
-    assignments = await supabase.admin_get(
+    assignments = await supabase.admin_get_all(
         "story_creators",
-        {"creator_id": f"eq.{user.id}"},
+        {
+            "creator_id": f"eq.{user.id}",
+            "select": "story_id,role",
+            "order": "story_id.asc",
+        },
     )
+    assignments = [
+        assignment for assignment in assignments
+        if assignment.get("role") in ("owner", "author", "editor")
+    ]
 
     if not assignments:
         return {
@@ -60,9 +70,13 @@ async def get_creator_dashboard(
 
     story_filter = f"in.({','.join(story_ids)})"
 
-    stories = await supabase.admin_get(
+    stories = await supabase.admin_get_all(
         "stories",
-        {"id": story_filter},
+        {
+            "id": story_filter,
+            "select": "id,slug,title,publication_status,completion_status",
+            "order": "id.asc",
+        },
     )
 
     if not stories:
@@ -71,9 +85,13 @@ async def get_creator_dashboard(
             "stories": [],
         }
 
-    episodes = await supabase.admin_get(
+    episodes = await supabase.admin_get_all(
         "episodes",
-        {"story_id": story_filter},
+        {
+            "story_id": story_filter,
+            "select": "id,story_id,sequence_number,publication_status",
+            "order": "story_id.asc,sequence_number.asc,id.asc",
+        },
     )
 
     episode_ids = [episode["id"] for episode in episodes]
@@ -81,21 +99,31 @@ async def get_creator_dashboard(
     if episode_ids:
         episode_filter = f"in.({','.join(episode_ids)})"
 
-        progress = await supabase.admin_get(
+        progress = await supabase.admin_get_all(
             "reading_progress",
-            {"episode_id": episode_filter},
+            {
+                "episode_id": episode_filter,
+                "select": "episode_id,completed_at",
+                "order": "episode_id.asc,user_id.asc",
+            },
         )
 
-        reactions = await supabase.admin_get(
+        reactions = await supabase.admin_get_all(
             "reader_reactions",
-            {"episode_id": episode_filter},
+            {
+                "episode_id": episode_filter,
+                "select": "episode_id",
+                "order": "episode_id.asc,user_id.asc,reaction_id.asc",
+            },
         )
 
-        reviews = await supabase.admin_get(
+        reviews = await supabase.admin_get_all(
             "reviews",
             {
                 "episode_id": episode_filter,
                 "status": "eq.submitted",
+                "select": "episode_id,visibility",
+                "order": "episode_id.asc,user_id.asc,created_at.asc,id.asc",
             },
         )
     else:
@@ -103,9 +131,13 @@ async def get_creator_dashboard(
         reactions = []
         reviews = []
 
-    notes = await supabase.admin_get(
+    notes = await supabase.admin_get_all(
         "author_notes",
-        {"story_id": story_filter},
+        {
+            "story_id": story_filter,
+            "select": "story_id,status",
+            "order": "story_id.asc,created_at.asc,id.asc",
+        },
     )
 
     # Group related records by story.
