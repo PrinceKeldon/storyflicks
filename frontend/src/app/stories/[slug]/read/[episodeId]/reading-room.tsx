@@ -76,6 +76,15 @@ export default function ReadingRoom({ slug, episodeId }: { slug: string; episode
     } catch (cause) { setError(cause instanceof Error ? cause.message : "Something went wrong."); setStatus("error"); }
   }, [apiUrl, episodeId]);
 
+  useEffect(() => {
+    const supabase = getSupabaseBrowserClient();
+    if (!supabase) return;
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
+      tokenRef.current = session?.access_token ?? null;
+    });
+    return () => subscription.unsubscribe();
+  }, []);
+
   useEffect(() => { void loadEpisode(); return () => { if (preferencesTimer.current) clearTimeout(preferencesTimer.current); }; }, [loadEpisode]);
 
   const flushProgress = useCallback(() => {
