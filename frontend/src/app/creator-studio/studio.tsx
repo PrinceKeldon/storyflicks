@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useState, type FormEvent } from "react";
 import { getSupabaseBrowserClient } from "@/lib/supabase";
 
 type StoryCard = { id:string; slug:string; title:string; publication_status:string; completion_status:string|null; role:string; episode_count:number; published_episode_count:number; draft_episode_count:number; scheduled_episode_count:number; total_reads:number; completed_reads:number; reaction_count:number; public_review_count:number; private_feedback_count:number };
@@ -70,15 +70,15 @@ export default function CreatorStudio(){
  const selected=useMemo(()=>workspace?.episodes.find(e=>e.id===episodeId)||null,[workspace,episodeId]);
  const latestDraft=revisions.find(r=>r.revision_status==="draft");
 
- async function createStory(ev:React.FormEvent<HTMLFormElement>){ev.preventDefault();setBusy("create");setError("");try{const data=await request("/creator/stories",{method:"POST",body:JSON.stringify(newStory)}) as {story_id:string};setNewStoryOpen(false);setStoryId(data.story_id);setTab("episodes");setNotice("Story workspace created. Add your first episode when ready.");setNewStory({title:"",slug:"",tagline:"",synopsis:"",first_episode_free:true});await loadDashboard();}catch(e){setError(message(e,"Could not create story."));}finally{setBusy("");}}
- async function saveStory(ev:React.FormEvent<HTMLFormElement>){ev.preventDefault();if(!workspace)return;setBusy("save-story");setError("");try{await request("/creator/stories/"+storyId,{method:"PUT",body:JSON.stringify(story)});setNotice("Story details saved.");await loadWorkspace(storyId);await loadDashboard();}catch(e){setError(message(e,"Could not save story details."));}finally{setBusy("");}}
- async function saveEpisode(ev:React.FormEvent<HTMLFormElement>){ev.preventDefault();if(!workspace)return;if(!blocks.some(b=>b.text.trim())){setError("Add at least one text block before saving.");return;}setBusy("save-episode");setError("");
+ async function createStory(ev:FormEvent<HTMLFormElement>){ev.preventDefault();setBusy("create");setError("");try{const data=await request("/creator/stories",{method:"POST",body:JSON.stringify(newStory)}) as {story_id:string};setNewStoryOpen(false);setStoryId(data.story_id);setTab("episodes");setNotice("Story workspace created. Add your first episode when ready.");setNewStory({title:"",slug:"",tagline:"",synopsis:"",first_episode_free:true});await loadDashboard();setStoryId(data.story_id);}catch(e){setError(message(e,"Could not create story."));}finally{setBusy("");}}
+ async function saveStory(ev:FormEvent<HTMLFormElement>){ev.preventDefault();if(!workspace)return;setBusy("save-story");setError("");try{await request("/creator/stories/"+storyId,{method:"PUT",body:JSON.stringify(story)});setNotice("Story details saved.");await loadWorkspace(storyId);await loadDashboard();}catch(e){setError(message(e,"Could not save story details."));}finally{setBusy("");}}
+ async function saveEpisode(ev:FormEvent<HTMLFormElement>){ev.preventDefault();if(!workspace)return;if(!blocks.some(b=>b.text.trim())){setError("Add at least one text block before saving.");return;}setBusy("save-episode");setError("");
   const payload={season_id:null,sequence_number:Number(episode.sequence_number),title:episode.title,synopsis:episode.synopsis||null,content:{blocks:blocks.filter(b=>b.text.trim())}};
   try{const path=episodeId?"/creator/stories/"+storyId+"/episodes/"+episodeId:"/creator/stories/"+storyId+"/episodes";const data=await request(path,{method:episodeId?"PUT":"POST",body:JSON.stringify(payload)}) as {episode_id:string;revision_number:number};
    setNotice("Draft revision "+data.revision_number+" saved. Readers continue seeing the published version until you publish this revision.");await loadWorkspace(storyId);setEpisodeId(data.episode_id);await loadRevisions(data.episode_id);
   }catch(e){setError(message(e,"Could not save episode."));}finally{setBusy("");}
  }
- async function publication(action:"publish"|"schedule"|"cancel_schedule"){if(!episodeId)return;const rid=revisionId||latestDraft?.id;if(action!=="cancel_schedule"&&!rid){setError("Save a draft revision before publishing.");return;}if(action==="schedule"&&!scheduleAt){setError("Choose a publication date and time.");return;}setBusy(action);setError("");
+ async function publication(action:"publish"|"schedule"|"cancel_schedule"){if(!episodeId)return;const rid=(revisions.find(r=>r.id===revisionId&&r.revision_status==="draft")||latestDraft)?.id;if(action!=="cancel_schedule"&&!rid){setError("Save a draft revision before publishing.");return;}if(action==="schedule"&&!scheduleAt){setError("Choose a publication date and time.");return;}setBusy(action);setError("");
   try{await request("/creator/episodes/"+episodeId+"/publication",{method:"POST",body:JSON.stringify({action,revision_id:action==="cancel_schedule"?null:rid,scheduled_at:action==="schedule"?new Date(scheduleAt).toISOString():null})});setNotice(action==="publish"?"Episode revision published.":action==="schedule"?"Publication scheduled.":"Scheduled publication cancelled.");await loadWorkspace(storyId);await loadRevisions(episodeId);await loadDashboard();}catch(e){setError(message(e,"Publication action failed."));}finally{setBusy("");}
  }
  async function publishStory(){if(!workspace)return;setBusy("publish-story");try{await request("/creator/stories/"+storyId+"/publish",{method:"POST"});setNotice("Story published.");await loadWorkspace(storyId);await loadDashboard();}catch(e){setError(message(e,"Could not publish story."));}finally{setBusy("");}}
