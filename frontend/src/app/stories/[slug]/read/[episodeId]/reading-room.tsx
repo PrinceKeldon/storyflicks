@@ -133,11 +133,11 @@ export default function ReadingRoom({ slug, episodeId }: { slug: string; episode
       <div className="reader-progress-track"><span style={{ width: `${progress}%` }} /></div>
       <header className="reader-toolbar">
         <Link className="reader-brand" href="/">STORY<span>FLICKS</span><i>.</i></Link>
-        <div className="reader-location"><Link href="/stories/${slug}">{payload.story.title}</Link><span>/</span><span>EPISODE {String(payload.episode.sequence_number).padStart(2, "0")}</span></div>
+        <div className="reader-location"><Link href={`/stories/${slug}`}>{payload.story.title}</Link><span>/</span><span>EPISODE {String(payload.episode.sequence_number).padStart(2, "0")}</span></div>
         <div className="reader-tools">
           <span className="reader-progress-label">{progress}%</span>
           <button className="reader-tool-button" onClick={() => setShowSettings((value) => !value)} aria-expanded={showSettings}>Aa <span>Reading settings</span></button>
-          <Link className="reader-exit" href="/stories/${slug}">Exit</Link>
+          <Link className="reader-exit" href={`/stories/${slug}`}>Exit</Link>
         </div>
       </header>
       {showSettings && <section className="reader-settings" aria-label="Reading settings">
