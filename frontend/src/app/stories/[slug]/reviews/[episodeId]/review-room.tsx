@@ -146,13 +146,13 @@ export default function ReviewRoom({ slug, episodeId }: { slug: string; episodeI
 
   if (status === "loading") return <main className="reader-state"><span className="reader-state-mark">SF.</span><p>Opening the conversation…</p></main>;
   if (status === "signed-out") return <main className="reader-state"><span className="reader-state-mark">SF.</span><h1>Join the conversation.</h1><p>Sign in to read and take part in the Review Room.</p><Link className="primary-button" href={`/sign-in?next=/stories/${slug}/reviews/${episodeId}`}>Sign in to continue <span>↗</span></Link></main>;
-  if (status === "error" || !data) return <main className="reader-state"><span className="reader-state-mark">SF.</span><h1>The conversation isn’t available.</h1><p>{error}</p><Link href="/stories/${slug}">Back to THE PRIEST</Link></main>;
+  if (status === "error" || !data) return <main className="reader-state"><span className="reader-state-mark">SF.</span><h1>The conversation isn’t available.</h1><p>{error}</p><Link href={`/stories/${slug}`}>Back to {data?.story.title || "the story"}</Link></main>;
 
   return (
     <main className="review-room-shell">
       <header className="review-room-header">
         <Link className="reader-brand" href="/">STORY<span>FLICKS</span><i>.</i></Link>
-        <div className="reader-location"><Link href="/stories/${slug}">THE PRIEST</Link><span>/</span><span>REVIEW ROOM</span></div>
+        <div className="reader-location"><Link href="/stories/${slug}">{data.story.title}</Link><span>/</span><span>REVIEW ROOM</span></div>
         <Link className="reader-exit" href="/stories/${slug}">Exit</Link>
       </header>
       <section className="review-room-content">
