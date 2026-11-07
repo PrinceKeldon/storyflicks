@@ -18,6 +18,7 @@ type StoryResponse = {
     synopsis?: string | null;
     genres?: string[];
     completion_status?: string | null;
+    first_episode_free?: boolean;
     cover_url?: string | null;
   };
   episodes: Episode[];
@@ -55,16 +56,16 @@ export default async function StoryDetailPage({ params }: { params: Promise<{ sl
       <header className="detail-top"><Link href="/" className="back-link">← Back to Discover</Link><span className="detail-label">STORYFLICKS ORIGINAL / 001</span></header>
       <section className="story-intro">
         <div className="story-poster" aria-label={`${story?.title ?? "Story"} title artwork`}>
-          <span className="poster-kicker">A STORY ABOUT FAITH, DESIRE &amp; SECRETS</span>
+          <span className="poster-kicker">{story?.genres?.join(" · ").toUpperCase() || (slug === "the-priest" ? "A STORY ABOUT FAITH, DESIRE & SECRETS" : "A STORYFLICKS ORIGINAL")}</span>
           <span className="poster-title">{story?.title ?? "THE PRIEST"}</span>
           <span className="poster-foot">STORYFLICKS ORIGINAL</span>
         </div>
         <div className="story-info">
           <p className="eyebrow">{story?.genres?.join(" · ").toUpperCase() || "STORYFLICKS ORIGINAL"} · {(story?.completion_status || "ongoing").toUpperCase()} · EPISODIC</p>
           <h1>{story?.title ?? (slug === "the-priest" ? "THE PRIEST" : "Story")}</h1>
-          <p className="story-tagline">{story?.tagline ?? "Two lives. One secret. A confession that changes everything."}</p>
-          <p className="story-synopsis">{story?.synopsis ?? "For over twenty years, Father James has kept his priestly life separate from the man he secretly becomes beyond the collar. But when Sophia enters his world, questions of faith, desire and identity begin to blur — and some secrets may be impossible to keep."}</p>
-          <div className="story-facts"><span>{episodes.length} PUBLISHED EPISODES</span><span>ONGOING</span><span>FIRST EPISODE FREE</span></div>
+          <p className="story-tagline">{story?.tagline ?? (slug === "the-priest" ? "Two lives. One secret. A confession that changes everything." : "A new STORYFLICKS original.")}</p>
+          <p className="story-synopsis">{story?.synopsis ?? (slug === "the-priest" ? "For over twenty years, Father James has kept his priestly life separate from the man he secretly becomes beyond the collar. But when Sophia enters his world, questions of faith, desire and identity begin to blur — and some secrets may be impossible to keep." : "Story details are coming soon.")}</p>
+          <div className="story-facts"><span>{episodes.length} PUBLISHED EPISODES</span><span>{(story?.completion_status || "ongoing").toUpperCase()}</span><span>{story?.first_episode_free === false ? "ACCESS REQUIRED" : "FIRST EPISODE FREE"}</span></div>
           <div className="story-primary-actions"><a href="#episodes" className="primary-button">Explore episodes <span>↓</span></a>{story?.id && <BookmarkButton storyId={story.id} slug={slug} />}</div>
           {episodes[0]?.id && <Link href={`/stories/${slug}/reviews/${episodes[0].id}`} className="story-discussion-link">Enter the Review Room <span>↗</span></Link>}
         </div>
@@ -90,7 +91,7 @@ export default async function StoryDetailPage({ params }: { params: Promise<{ sl
             )
           ))}
         </div>
-        <p className="episode-note">More episodes are in the works. Follow the story as it unfolds.</p>
+        <p className="episode-note">{story?.completion_status === "completed" ? "This story is complete. Enjoy the full journey." : "More episodes are in the works. Follow the story as it unfolds."}</p>
       </section>
       <footer className="footer"><Link className="wordmark" href="/">STORY<span>FLICKS</span><i>.</i></Link><p>Stories worth staying for.</p><span>© 2026 STORYFLICKS</span></footer>
     </main>
