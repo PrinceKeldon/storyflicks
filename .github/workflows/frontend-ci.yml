@@ -66,16 +66,21 @@ jobs:
           NEXT_TELEMETRY_DISABLED: "1"
 
       - name: Commit generated lockfile
-        if: github.event_name != 'pull_request'
+        if: github.event_name == 'push' || github.event.pull_request.head.repo.full_name == github.repository
         working-directory: .
         run: |
           if [[ -f frontend/package-lock.json ]]; then
             git add frontend/package-lock.json
             if ! git diff --cached --quiet -- frontend/package-lock.json; then
+              if [[ "$GITHUB_EVENT_NAME" == "pull_request" ]]; then
+                branch="$GITHUB_HEAD_REF"
+              else
+                branch="$GITHUB_REF_NAME"
+              fi
               git config user.name "github-actions[bot]"
               git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-              git commit -m "Add reproducible frontend dependency lockfile"
-              git push
+              git commit -m "Update audited frontend dependency lockfile"
+              git push origin "HEAD:$branch"
             fi
           fi
 
