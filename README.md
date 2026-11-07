@@ -125,8 +125,14 @@ Set `STORYFLICKS_API_URL` and `SCHEDULER_SECRET` in the worker environment.
 
 ## Current implementation status
 
-The repository contains the FastAPI backend and its route modules. The frontend, automated test suite, deployment configuration, and checked-in Supabase migration history are not yet present.
+The repository contains the FastAPI backend and a reproducible Supabase schema baseline:
 
-The database functions and schema have been applied to the Supabase project during development. The repository now contains the latest creator-publication and asset-storage migration, but the earlier baseline migrations and functions still need to be exported from the live project before a fresh environment can be reproduced reliably. Apply `supabase/migrations/20261106000100_creator_publication_and_assets.sql` in the Supabase SQL Editor to enable story publishing and creator image uploads.
+- `supabase/migrations/20261107000100_initial_schema.sql` contains the exported public schema, database functions, grants/revokes, the auth-user profile trigger, the `story-assets` bucket definition, and the initial reaction catalogue.
+- The baseline migration is recorded as applied in the linked development project's migration history. A dry-run `supabase db push --dry-run --linked` confirmed that the remote database was up to date at the time of verification.
+- `supabase/schema.sql` is the accompanying schema snapshot. The archived creator-publication migration is retained for historical reference and is not an active migration.
 
-End-to-end testing is intentionally deferred until the frontend and backend are both complete. Until then, use compile/static checks and schema/API contract review.
+**Important:** schema migrations reproduce database structure and database logic; they do not reproduce live user accounts, story records, manuscript content, or uploaded storage objects. The development data for THE PRIEST is backed up separately in a local `creator_backup.json` file. That file and the `backups/` directory are intentionally excluded from Git because they may contain unpublished manuscript material. Never commit manuscript backups, Supabase secrets, access tokens, or private user data.
+
+The THE PRIEST data export currently preserves its story record, creator profile and assignment, all 12 episode records, the two published manuscript bodies and their published revisions, and publication history. It does not contain the original cover image bytes or unrelated reader activity. Restoring creator ownership requires the corresponding Supabase Auth user to exist, or an explicit creator-ID mapping during restore.
+
+The frontend, automated test suite, and production deployment configuration are still outstanding. End-to-end testing is intentionally deferred until the frontend and backend are both complete. Until then, use compile/static checks and schema/API contract review.
