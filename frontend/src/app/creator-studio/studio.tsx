@@ -28,7 +28,21 @@ type Block = { type:"paragraph"|"heading"|"quote"; text:string };
 type Tab = "overview"|"stories"|"episodes"|"community"|"audience"|"insights"|"settings";
 const tabs: {id:Tab;label:string}[] = [{id:"overview",label:"Overview"},{id:"stories",label:"My Stories"},{id:"episodes",label:"Episode Manager"},{id:"community",label:"Community"},{id:"audience",label:"Audience"},{id:"insights",label:"Insights"},{id:"settings",label:"Settings"}];
 function slugify(s:string){return s.toLowerCase().trim().normalize("NFKD").replace(/[\u0300-\u036f]/g,"").replace(/[^a-z0-9]+/g,"-").replace(/^-|-$/g,"");}
-function blocksFrom(value:unknown):Block[]{let v=value;if(typeof v==="string"){try{v=JSON.parse(v);}catch{return v.split(/\n\s*\n/).filter(Boolean).map(text=>({type:"paragraph",text}));}}const raw=v&&typeof v==="object"&&Array.isArray((v as {blocks?:unknown}).blocks)?(v as {blocks:unknown[]}).blocks:Array.isArray(v)?v:[];return raw.map(x=>{const b=x as Record<string,unknown>;return {type:b.type==="heading"||b.type==="quote"?b.type:"paragraph",text:typeof b.text==="string"?b.text:typeof b.content==="string"?b.content:""};}).filter(b=>b.text.trim());}
+function blocksFrom(value:unknown):Block[]{
+ let parsed:unknown=value;
+ if(typeof value==="string"){
+  try{parsed=JSON.parse(value);}
+  catch{return value.split(/\n\s*\n/).filter(Boolean).map((text):Block=>({type:"paragraph",text}));}
+ }
+ const raw:unknown[]=Array.isArray(parsed)?parsed:parsed&&typeof parsed==="object"&&Array.isArray((parsed as {blocks?:unknown}).blocks)?(parsed as {blocks:unknown[]}).blocks:[];
+ return raw.map((item):Block|null=>{
+  if(!item||typeof item!=="object")return null;
+  const block=item as Record<string,unknown>;
+  const type:Block["type"]=block.type==="heading"||block.type==="quote"?block.type:"paragraph";
+  const text=typeof block.text==="string"?block.text:typeof block.content==="string"?block.content:"";
+  return {type,text};
+ }).filter((block):block is Block=>block!==null&&block.text.trim().length>0);
+}
 function dateLabel(s?:string|null){if(!s)return "—";const d=new Date(s);return Number.isNaN(d.getTime())?"—":new Intl.DateTimeFormat("en-GB",{dateStyle:"medium",timeStyle:"short"}).format(d);}
 function message(e:unknown,fallback:string){return e instanceof Error?e.message:fallback;}
 
