@@ -1,4 +1,3 @@
-import Link from "next/link";
 import ReviewRoom from "./review-room";
 
 export default async function EpisodeReviewRoomPage({ params }: { params: Promise<{ slug: string; episodeId: string }> }) {
