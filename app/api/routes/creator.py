@@ -301,7 +301,7 @@ async def update_creator_story(
     user: AuthenticatedUser = Depends(get_current_user),
 ):
     return await supabase.user_rpc(
-        "save_creator_story",
+        "save_creator_story_v2",
         {
             "p_story_id": str(story_id),
             "p_title": submission.title,
@@ -309,6 +309,7 @@ async def update_creator_story(
             "p_tagline": submission.tagline,
             "p_synopsis": submission.synopsis,
             "p_first_episode_free": submission.first_episode_free,
+            "p_genres": submission.genres,
         },
         user.access_token,
     )
