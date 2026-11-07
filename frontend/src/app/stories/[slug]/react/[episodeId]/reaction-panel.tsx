@@ -16,6 +16,7 @@ type Reaction = {
 type OwnReview = { id: string; headline: string | null; body: string; visibility: "public" | "private"; status: string; submitted_at?: string | null };
 type NextEpisode = { id: string; title: string; sequence_number: number; publication_status: string; unlocked: boolean; grant_reason?: string | null };
 type ReviewRoomPayload = {
+  story: { id: string; slug: string; title: string };
   episode: { id: string; title: string; sequence_number: number };
   reaction_summary: Reaction[];
   review_count: number;
@@ -37,7 +38,7 @@ const categoryLabels: Record<string, string> = {
   critical: "Not for me",
 };
 
-export default function ReactionPanel({ episodeId }: { episodeId: string }) {
+export default function ReactionPanel({ slug, episodeId }: { slug: string; episodeId: string }) {
   const [data, setData] = useState<ReviewRoomPayload | null>(null);
   const [selected, setSelected] = useState<string[]>([]);
   const [headline, setHeadline] = useState("");
@@ -138,15 +139,15 @@ export default function ReactionPanel({ episodeId }: { episodeId: string }) {
   }
 
   if (status === "loading") return <main className="reader-state"><span className="reader-state-mark">SF.</span><p>Gathering your thoughts…</p></main>;
-  if (status === "signed-out") return <main className="reader-state"><span className="reader-state-mark">SF.</span><h1>Sign in to share your take.</h1><Link className="primary-button" href={`/sign-in?next=/stories/the-priest/react/${episodeId}`}>Sign in to continue <span>↗</span></Link></main>;
-  if (status === "error" || !data) return <main className="reader-state"><span className="reader-state-mark">SF.</span><h1>We couldn’t load this page.</h1><p>{error}</p><Link href="/stories/the-priest">Back to THE PRIEST</Link></main>;
+  if (status === "signed-out") return <main className="reader-state"><span className="reader-state-mark">SF.</span><h1>Sign in to share your take.</h1><Link className="primary-button" href={`/sign-in?next=/stories/${slug}/react/${episodeId}`}>Sign in to continue <span>↗</span></Link></main>;
+  if (status === "error" || !data) return <main className="reader-state"><span className="reader-state-mark">SF.</span><h1>We couldn’t load this page.</h1><p>{error}</p><Link href="/stories/${slug}">Back to {data?.story.title || "the story"}</Link></main>;
 
   return (
     <main className="contribution-shell">
       <header className="contribution-header">
         <Link className="reader-brand" href="/">STORY<span>FLICKS</span><i>.</i></Link>
-        <div className="reader-location"><Link href="/stories/the-priest">THE PRIEST</Link><span>/</span><span>YOUR TAKE</span></div>
-        <Link className="reader-exit" href="/stories/the-priest">Exit</Link>
+        <div className="reader-location"><Link href="/stories/${slug}">THE PRIEST</Link><span>/</span><span>YOUR TAKE</span></div>
+        <Link className="reader-exit" href="/stories/${slug}">Exit</Link>
       </header>
       <section className="contribution-content">
         <p className="eyebrow">END OF EPISODE {String(data.episode.sequence_number).padStart(2, "0")}</p>
@@ -199,12 +200,12 @@ export default function ReactionPanel({ episodeId }: { episodeId: string }) {
           <h2>{unlock ? "Your next episode is unlocked." : data.next_episode ? "Your contribution is recorded." : "You’re all caught up."}</h2>
           {unlock ? <>
             <p><strong>{unlock.title}</strong> is now in your library{unlock.publication_status !== "published" ? " and will be ready when it is published" : ""}.</p>
-            {unlock.publication_status === "published" && <Link className="primary-button" href={`/stories/the-priest/read/${unlock.id}`}>Read next episode <span>↗</span></Link>}
+            {unlock.publication_status === "published" && <Link className="primary-button" href={`/stories/${slug}/read/${unlock.id}`}>Read next episode <span>↗</span></Link>}
             {unlock.publication_status !== "published" && <p className="unlock-waiting">We’ll keep your access ready. Come back when the episode is released.</p>}
           </> : data.next_episode ? <p>Your contribution is saved. If the next episode has not opened yet, your access will be ready when it is published.</p> : <p>Your response is recorded. There isn’t another episode available just yet.</p>}
         </section>}
 
-        <div className="contribution-bottom-links"><Link href="/stories/the-priest">Skip for now · Back to THE PRIEST</Link><Link href={`/stories/the-priest/reviews/${episodeId}`}>Reader discussion ↗</Link><Link href="/stories/the-priest#episodes">Episode guide ↗</Link></div>
+        <div className="contribution-bottom-links"><Link href="/stories/${slug}">Skip for now · Back to {data.story.title}</Link><Link href={`/stories/${slug}/reviews/${episodeId}`}>Reader discussion ↗</Link><Link href="/stories/${slug}#episodes">Episode guide ↗</Link></div>
       </section>
       <footer className="reader-footer"><span>STORYFLICKS</span><span>Stories worth staying for.</span><span>© 2026</span></footer>
     </main>
