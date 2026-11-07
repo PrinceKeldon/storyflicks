@@ -267,7 +267,7 @@ async def get_creator_analytics(
 
     assignments = await supabase.admin_get_all(
         "story_creators",
-        {"creator_id": f"eq.{user.id}", "select": "story_id,role"},
+        {"creator_id": f"eq.{user.id}", "select": "story_id,role", "order": "story_id.asc"},
     )
     allowed_roles = {"owner", "author", "editor"}
     allowed_story_ids = {
@@ -295,7 +295,7 @@ async def get_creator_analytics(
 
     story_filter = f"in.({','.join(sorted(allowed_story_ids))})"
     stories = await supabase.admin_get_all(
-        "stories", {"id": story_filter, "select": "id,title,slug"}
+        "stories", {"id": story_filter, "select": "id,title,slug", "order": "id.asc"}
     )
     episodes = await supabase.admin_get_all(
         "episodes",
@@ -303,7 +303,7 @@ async def get_creator_analytics(
             "story_id": story_filter,
             "publication_status": "eq.published",
             "select": "id,story_id,title,sequence_number,published_at",
-            "order": "sequence_number.asc",
+            "order": "sequence_number.asc,id.asc",
         },
     )
     if not episodes:
@@ -328,6 +328,7 @@ async def get_creator_analytics(
             {
                 "episode_id": episode_filter,
                 "select": "episode_id,user_id,progress_percent,completed_at,updated_at,started_at",
+                "order": "episode_id.asc,user_id.asc",
             },
         ),
         supabase.admin_get_all(
@@ -335,6 +336,7 @@ async def get_creator_analytics(
             {
                 "episode_id": episode_filter,
                 "select": "episode_id,user_id,created_at",
+                "order": "created_at.asc,id.asc",
             },
         ),
         supabase.admin_get_all(
@@ -343,6 +345,7 @@ async def get_creator_analytics(
                 "episode_id": episode_filter,
                 "status": "eq.submitted",
                 "select": "episode_id,user_id,visibility,submitted_at",
+                "order": "submitted_at.asc,id.asc",
             },
         ),
     )
