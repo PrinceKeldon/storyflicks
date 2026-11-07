@@ -69,7 +69,7 @@ export default function CreatorStudio(){
 
  const [busy,setBusy]=useState(""),[newStoryOpen,setNewStoryOpen]=useState(false);
  const [newStory,setNewStory]=useState({title:"",slug:"",tagline:"",synopsis:"",genres:"",first_episode_free:true});
- const [story,setStory]=useState({title:"",slug:"",tagline:"",synopsis:"",first_episode_free:true});
+ const [story,setStory]=useState({title:"",slug:"",tagline:"",synopsis:"",genres:"",first_episode_free:true});
  const [episode,setEpisode]=useState({sequence_number:1,title:"",synopsis:""});
  const [blocks,setBlocks]=useState<Block[]>([{type:"paragraph",text:""}]),[scheduleAt,setScheduleAt]=useState("");
 
