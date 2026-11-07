@@ -91,7 +91,7 @@ export default async function SearchPage({
             <p className="eyebrow">{query || genre ? "YOUR RESULTS" : "AVAILABLE STORIES"}</p>
             <h2>{query ? "Results for “" + query + "”" : genre ? genre + " stories" : "Explore the catalogue"}</h2>
           </div>
-          <span className="search-result-count">{items.length} {items.length === 1 ? "story" : "stories"}</span>
+          <span className="search-result-count" aria-live="polite">{items.length} {items.length === 1 ? "story" : "stories"}</span>
         </div>
 
         {unavailable ? (
