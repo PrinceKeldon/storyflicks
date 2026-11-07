@@ -195,15 +195,15 @@ export default function ReactionPanel({ episodeId }: { episodeId: string }) {
 
         {data.has_qualified && <section className="unlock-panel">
           <p className="eyebrow">YOU’VE DONE YOUR PART</p>
-          <h2>Your next episode is unlocked.</h2>
+          <h2>{unlock ? "Your next episode is unlocked." : data.next_episode ? "Your contribution is recorded." : "You’re all caught up."}</h2>
           {unlock ? <>
             <p><strong>{unlock.title}</strong> is now in your library{unlock.publication_status !== "published" ? " and will be ready when it is published" : ""}.</p>
             {unlock.publication_status === "published" && <Link className="primary-button" href={`/stories/the-priest/read/${unlock.id}`}>Read next episode <span>↗</span></Link>}
             {unlock.publication_status !== "published" && <p className="unlock-waiting">We’ll keep your access ready. Come back when the episode is released.</p>}
-          </> : <p>Your contribution is recorded. Your episode guide will show the next available chapter.</p>}
+          </> : data.next_episode ? <p>Your contribution is saved. If the next episode has not opened yet, your access will be ready when it is published.</p> : <p>Your response is recorded. There isn’t another episode available just yet.</p>}
         </section>}
 
-        <div className="contribution-bottom-links"><Link href="/stories/the-priest">← Back to THE PRIEST</Link><Link href="/stories/the-priest#episodes">Episode guide ↗</Link></div>
+        <div className="contribution-bottom-links"><Link href="/stories/the-priest">Skip for now · Back to THE PRIEST</Link><Link href="/stories/the-priest#episodes">Episode guide ↗</Link></div>
       </section>
       <footer className="reader-footer"><span>STORYFLICKS</span><span>Stories worth staying for.</span><span>© 2026</span></footer>
     </main>
