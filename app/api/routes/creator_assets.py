@@ -1,5 +1,6 @@
 from typing import Literal
 from uuid import UUID, uuid4
+from fastapi import HTTPException
 from urllib.parse import quote
 
 from fastapi import APIRouter, Depends, HTTPException
@@ -155,6 +156,52 @@ async def complete_creator_asset_upload(
     )
     if not submission.storage_path.startswith(episode_prefix):
         raise HTTPException(422, "Invalid episode image storage path.")
+
+    expected_parent = (
+        f"{path_prefix}cover/"
+        if submission.asset_type == "cover"
+        else episode_prefix
+    )
+    if not submission.storage_path.startswith(expected_parent):
+        raise HTTPException(422, "Invalid image storage path.")
+    filename = submission.storage_path[len(expected_parent):]
+    stem, separator, extension = filename.rpartition(".")
+    if not separator or "/" in filename:
+        raise HTTPException(422, "Invalid image filename.")
+    try:
+        UUID(stem)
+    except ValueError as exc:
+        raise HTTPException(422, "Invalid image filename.") from exc
+
+    try:
+        object_info = await supabase.get_storage_object_info(
+            settings.story_assets_bucket,
+            submission.storage_path,
+        )
+    except HTTPException as exc:
+        if exc.status_code == 404:
+            raise HTTPException(
+                422,
+                "The uploaded image was not found in storage. Please upload it again.",
+            ) from exc
+        raise
+
+    metadata = object_info.get("metadata") or {}
+    content_type = metadata.get("mimetype") or object_info.get("mimetype")
+    object_size = metadata.get("size") or object_info.get("size")
+    try:
+        object_size = int(object_size)
+    except (TypeError, ValueError) as exc:
+        raise HTTPException(
+            422,
+            "Storage could not verify the uploaded image size.",
+        ) from exc
+
+    expected_extension = IMAGE_TYPES.get(content_type)
+    if expected_extension is None or extension.lower() != expected_extension:
+        raise HTTPException(422, "The uploaded image format does not match its file type.")
+    if object_size <= 0 or object_size > 10 * 1024 * 1024:
+        raise HTTPException(422, "Images must be between 1 byte and 10 MB.")
 
     return await supabase.user_rpc(
         "register_creator_episode_image",
