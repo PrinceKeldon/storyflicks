@@ -6,7 +6,7 @@ import { getSupabaseBrowserClient } from "@/lib/supabase";
 
 type State = "loading" | "signed-out" | "saved" | "unsaved" | "busy" | "error";
 
-export default function BookmarkButton({ storyId }: { storyId: string }) {
+export default function BookmarkButton({ storyId, slug }: { storyId: string; slug: string }) {
   const [state,setState]=useState<State>("loading");
   const [message,setMessage]=useState("");
   const apiUrl=process.env.NEXT_PUBLIC_API_URL?.replace(/\/$/,"");
@@ -45,8 +45,8 @@ export default function BookmarkButton({ storyId }: { storyId: string }) {
     }catch(cause){setMessage(cause instanceof Error?cause.message:"Something went wrong.");setState(wasSaved?"saved":"unsaved");}
   }
 
-  if(state==="signed-out")return <Link className="story-save-button" href="/sign-in?next=/stories/the-priest">☆ Save story</Link>;
+  if(state==="signed-out")return <Link className="story-save-button" href="/sign-in?next=/stories/${slug}">☆ Save story</Link>;
   if(state==="loading")return <span className="story-save-button muted">Checking library…</span>;
-  if(state==="error")return <Link className="story-save-button" href="/sign-in?next=/stories/the-priest">Sign in to save</Link>;
+  if(state==="error")return <Link className="story-save-button" href="/sign-in?next=/stories/${slug}">Sign in to save</Link>;
   return <span className="story-save-wrap"><button className={state==="saved"||state==="busy"&&message==="saved"?"story-save-button saved":"story-save-button"} onClick={()=>void toggle()} disabled={state==="busy"}>{state==="busy"?"Saving…":state==="saved"?"✓ Saved to library":"☆ Save story"}</button>{message&&<small role="alert">{message}</small>}</span>;
 }
