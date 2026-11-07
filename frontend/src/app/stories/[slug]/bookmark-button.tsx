@@ -47,6 +47,6 @@ export default function BookmarkButton({ storyId, slug }: { storyId: string; slu
 
   if(state==="signed-out")return <Link className="story-save-button" href={`/sign-in?next=/stories/${slug}`}>☆ Save story</Link>;
   if(state==="loading")return <span className="story-save-button muted">Checking library…</span>;
-  if(state==="error")return <Link className="story-save-button" href="/sign-in?next=/stories/${slug}">Sign in to save</Link>;
-  return <span className="story-save-wrap"><button className={state==="saved"||state==="busy"&&message==="saved"?"story-save-button saved":"story-save-button"} onClick={()=>void toggle()} disabled={state==="busy"}>{state==="busy"?"Saving…":state==="saved"?"✓ Saved to library":"☆ Save story"}</button>{message&&<small role="alert">{message}</small>}</span>;
+  if(state==="error")return <span className="story-save-button muted" role="status">Save unavailable</span>;
+  return <span className="story-save-wrap"><button className={state==="saved"?"story-save-button saved":"story-save-button"} onClick={()=>void toggle()} disabled={state==="busy"}>{state==="busy"?"Saving…":state==="saved"?"✓ Saved to library":"☆ Save story"}</button>{message&&<small role="alert">{message}</small>}</span>;
 }
