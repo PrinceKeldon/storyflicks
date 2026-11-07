@@ -1,4 +1,4 @@
-name: Frontend quality checks
+name: STORYFLICKS quality checks
 
 on:
   push:
@@ -12,6 +12,9 @@ on:
   pull_request:
     paths:
       - "frontend/**"
+      - "app/**"
+      - "requirements.txt"
+      - "supabase/migrations/**"
       - ".github/workflows/frontend-ci.yml"
   workflow_dispatch:
 
@@ -19,7 +22,7 @@ permissions:
   contents: write
 
 concurrency:
-  group: frontend-ci-${{ github.ref }}
+  group: storyflicks-ci-${{ github.ref }}
   cancel-in-progress: true
 
 jobs:
