@@ -383,15 +383,19 @@ async def get_review_room(
         } | {
             note["creator_id"] for note in author_notes
         }
+    else:
+        profile_ids = {
+            note["creator_id"] for note in author_notes
+        }
 
-        if profile_ids:
-            profiles = await supabase.admin_get(
-                "profiles",
-                {
-                    "select": "id,username,display_name,avatar_path",
-                    "id": f"in.({','.join(profile_ids)})",
-                },
-            )
+    if profile_ids:
+        profiles = await supabase.admin_get(
+            "profiles",
+            {
+                "select": "id,username,display_name,avatar_path",
+                "id": f"in.({','.join(profile_ids)})",
+            },
+        )
 
     profile_map = {
         profile["id"]: profile
