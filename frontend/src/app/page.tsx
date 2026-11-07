@@ -11,7 +11,7 @@ export default function DiscoverPage() {
         <a className="wordmark" href="/" aria-label="STORYFLICKS home">STORY<span>FLICKS</span><i>.</i></a>
         <nav className="main-nav" aria-label="Main navigation">
           {navItems.map((item, index) => (
-            <a className={index === 0 ? "nav-link active" : "nav-link"} href={index === 0 ? "/" : index === 1 ? "/library" : "/creator"} key={item}>{item}</a>
+            <a className={index === 0 ? "nav-link active" : "nav-link"} href={index === 0 ? "/" : index === 1 ? "/library" : "#"} key={item}>{item}</a>
           ))}
         </nav>
         <div className="account-actions">
