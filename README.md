@@ -1,6 +1,6 @@
 # STORYFLICKS
 
-STORYFLICKS is an episodic storytelling platform. The repository contains a Python FastAPI backend and a Next.js App Router frontend in `frontend/`. The first frontend milestone is the responsive Discover experience and shared visual shell.
+STORYFLICKS is an entertainment platform built around episodic stories. The repository contains a Python FastAPI backend and a Next.js App Router frontend in `frontend/`.
 
 ## Stack
 
@@ -34,7 +34,18 @@ Configure the following values in `.env`:
 
 Keep `.env`, `.reader_token`, and virtual environments out of Git.
 
-## Run the frontend\n\n```bash\ncd ~/storyflicks/frontend\nnpm install\ncp .env.example .env.local\nnpm run dev\n```\n\nOpen http://localhost:3000. Set `NEXT_PUBLIC_API_URL` to the FastAPI base URL (for local development, `http://127.0.0.1:8000/api`). Only public Supabase URL/anon-key values may be exposed to the browser; never add the service-role key to frontend environment variables.\n\n## Run the API
+## Run the frontend
+
+```bash
+cd ~/storyflicks/frontend
+npm install
+cp .env.example .env.local
+npm run dev
+```
+
+Open http://localhost:3000. Set `NEXT_PUBLIC_API_URL` to the FastAPI base URL (for local development, `http://127.0.0.1:8000/api`). Only public Supabase URL/anon-key values may be exposed to the browser; never add the service-role key to frontend environment variables.
+
+## Run the API
 
 ```bash
 python -m uvicorn app.main:app --reload --host 127.0.0.1 --port 8000
