@@ -426,3 +426,37 @@ button{font:inherit}
 .studio-asset-strip figure{width:110px;margin:0;background:#1d2420;border:1px solid #39443b}
 .studio-asset-strip img{width:100%;height:105px;object-fit:cover;display:block}
 .studio-asset-strip figcaption{padding:6px;font-size:7px;color:#aeb8ac;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+
+.studio-community-tabs{display:flex;gap:8px;align-items:center;border-bottom:1px solid #343c37;margin:22px 0 20px;overflow:auto}
+.studio-community-tabs button{display:flex;align-items:center;gap:9px;padding:13px 15px;margin-bottom:-1px;background:transparent;border:0;border-bottom:2px solid transparent;color:#939d92;font:10px 'DM Sans',sans-serif;white-space:nowrap;cursor:pointer}
+.studio-community-tabs button.active{border-bottom-color:var(--mint);color:var(--paper)}
+.studio-community-tabs small{font:8px 'DM Mono',monospace;color:var(--mint)}
+.studio-note-composer{max-width:900px}
+.studio-note-composer>label{margin-bottom:14px}
+.studio-note-composer>label select,.studio-report-toolbar select{padding:10px 12px;border:1px solid #3b443e;background:#111514;color:#e8e3d9;font:10px 'DM Sans',sans-serif}
+.studio-note-actions{display:flex;align-items:center;justify-content:flex-end;gap:10px;flex-wrap:wrap;margin:14px 0}
+.studio-note-actions>span{margin-right:auto;font:8px 'DM Mono',monospace;color:#899388}
+.studio-community-list{display:grid;gap:12px}
+.studio-community-card{padding:20px;background:#191d1e;border:1px solid #343c37;min-width:0}
+.studio-community-card-head{display:flex;justify-content:space-between;align-items:start;gap:12px;margin-bottom:15px}
+.studio-community-card-head>span{font:8px 'DM Mono',monospace;letter-spacing:.7px;text-transform:uppercase;color:var(--mint)}
+.studio-community-card-head>small{font:8px 'DM Mono',monospace;color:#8d978c;text-align:right}
+.studio-community-card h3{font:500 21px 'Playfair Display',Georgia,serif;margin:0 0 10px}
+.studio-note-body{font:11px/1.8 'DM Sans',sans-serif;color:#c2c9bf;white-space:pre-wrap;overflow-wrap:anywhere;margin:10px 0 18px}
+.studio-community-card-foot{display:flex;justify-content:space-between;align-items:center;gap:12px;border-top:1px solid #303735;padding-top:12px}
+.studio-community-card-foot>small{font:8px 'DM Mono',monospace;color:#879187}
+.studio-community-card-foot>div{display:flex;gap:13px;flex-wrap:wrap}
+.studio-text-action.danger{color:#d18b7b}
+.studio-review-author{font:8px 'DM Mono',monospace;color:#929b91;margin:0 0 12px}
+.studio-published-reply{padding:13px 15px;margin:15px 0;background:#202923;border-left:2px solid var(--mint)}
+.studio-published-reply span{font:7px 'DM Mono',monospace;letter-spacing:.7px;color:var(--mint)}
+.studio-published-reply p{font:10px/1.7 'DM Sans',sans-serif;color:#c7d0c5;white-space:pre-wrap;margin:8px 0 0}
+.studio-reply-composer{display:flex;flex-direction:column;gap:8px;margin:18px 0 12px;font:8px 'DM Mono',monospace;letter-spacing:.7px;color:#9ca69b}
+.studio-reply-composer textarea{width:100%;padding:11px 12px;border:1px solid #3b443e;background:#111514;color:#e8e3d9;font:11px/1.7 'DM Sans',sans-serif;resize:vertical}
+.studio-report-toolbar{display:flex;justify-content:flex-end;margin-bottom:15px}
+.studio-report-toolbar label{display:flex;align-items:center;gap:10px;font:8px 'DM Mono',monospace;color:#9ca69b}
+.studio-report-meta{display:flex;flex-direction:column;gap:6px;padding:12px 0;border-top:1px solid #303735;border-bottom:1px solid #303735}
+.studio-report-meta span{font:9px 'DM Mono',monospace;color:#c1c9be}
+.studio-report-meta small{font:8px/1.6 'DM Sans',sans-serif;color:#8e978d}
+.studio-report-actions{display:flex;gap:9px;align-items:center;flex-wrap:wrap;margin-top:14px}
+@media(max-width:700px){.studio-community-card{padding:15px}.studio-community-card-head{flex-direction:column}.studio-community-card-head>small{text-align:left}.studio-note-actions{justify-content:flex-start}.studio-community-card-foot{align-items:flex-start;flex-direction:column}.studio-report-toolbar{justify-content:flex-start}.studio-report-toolbar label{align-items:flex-start;flex-direction:column}}
