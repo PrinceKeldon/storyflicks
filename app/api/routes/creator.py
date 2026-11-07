@@ -3,7 +3,7 @@ from typing import Any, Literal
 from uuid import UUID
 
 from fastapi import APIRouter, Depends, HTTPException
-from pydantic import BaseModel
+from pydantic import BaseModel, Field
 
 from app.api.deps import get_current_user, supabase
 from app.core.security import AuthenticatedUser
@@ -263,6 +263,7 @@ class CreatorStorySubmission(BaseModel):
     tagline: str | None = None
     synopsis: str | None = None
     first_episode_free: bool = True
+    genres: list[str] = Field(default_factory=list, max_length=5)
 
 
 class CreatorEpisodeSubmission(BaseModel):
@@ -279,7 +280,7 @@ async def create_creator_story(
     user: AuthenticatedUser = Depends(get_current_user),
 ):
     return await supabase.user_rpc(
-        "save_creator_story",
+        "save_creator_story_v2",
         {
             "p_story_id": None,
             "p_title": submission.title,
@@ -287,6 +288,7 @@ async def create_creator_story(
             "p_tagline": submission.tagline,
             "p_synopsis": submission.synopsis,
             "p_first_episode_free": submission.first_episode_free,
+            "p_genres": submission.genres,
         },
         user.access_token,
     )
