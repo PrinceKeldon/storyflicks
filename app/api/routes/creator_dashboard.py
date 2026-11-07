@@ -289,6 +289,7 @@ async def get_creator_analytics(
                 "public_reviews": 0, "private_feedback": 0,
                 "completion_rate": 0,
             },
+            "period_summary": {"unique_contributors": 0, "progress_records_updated": 0, "reactions": 0, "public_reviews": 0, "private_feedback": 0},
             "timeline": [],
             "episodes": [],
         }
@@ -316,6 +317,7 @@ async def get_creator_analytics(
                 "public_reviews": 0, "private_feedback": 0,
                 "completion_rate": 0,
             },
+            "period_summary": {"unique_contributors": 0, "progress_records_updated": 0, "reactions": 0, "public_reviews": 0, "private_feedback": 0},
             "timeline": [],
             "episodes": [],
         }
@@ -464,6 +466,19 @@ async def get_creator_analytics(
             "active_readers": len(row["active_readers"]),
         })
 
+    period_readers: set[str] = set()
+    period_summary = {
+        "progress_records_updated": 0,
+        "reactions": 0,
+        "public_reviews": 0,
+        "private_feedback": 0,
+    }
+    for day in timeline_by_day.values():
+        period_readers.update(day["active_readers"])
+        for key in period_summary:
+            period_summary[key] += day[key]
+    period_summary["unique_contributors"] = len(period_readers)
+
     progress_count = len(progress)
     return {
         "range_days": days,
@@ -477,6 +492,7 @@ async def get_creator_analytics(
             "private_feedback": private_feedback,
             "completion_rate": round((completed_count / progress_count) * 100, 1) if progress_count else 0,
         },
+        "period_summary": period_summary,
         "timeline": timeline,
         "episodes": episode_rows,
     }
