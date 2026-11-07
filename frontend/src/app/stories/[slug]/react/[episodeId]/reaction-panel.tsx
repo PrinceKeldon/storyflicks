@@ -146,8 +146,8 @@ export default function ReactionPanel({ slug, episodeId }: { slug: string; episo
     <main className="contribution-shell">
       <header className="contribution-header">
         <Link className="reader-brand" href="/">STORY<span>FLICKS</span><i>.</i></Link>
-        <div className="reader-location"><Link href="/stories/${slug}">{data.story.title}</Link><span>/</span><span>YOUR TAKE</span></div>
-        <Link className="reader-exit" href="/stories/${slug}">Exit</Link>
+        <div className="reader-location"><Link href={`/stories/${slug}`}>{data.story.title}</Link><span>/</span><span>YOUR TAKE</span></div>
+        <Link className="reader-exit" href={`/stories/${slug}`}>Exit</Link>
       </header>
       <section className="contribution-content">
         <p className="eyebrow">END OF EPISODE {String(data.episode.sequence_number).padStart(2, "0")}</p>
@@ -205,7 +205,7 @@ export default function ReactionPanel({ slug, episodeId }: { slug: string; episo
           </> : data.next_episode ? <p>Your contribution is saved. If the next episode has not opened yet, your access will be ready when it is published.</p> : <p>Your response is recorded. There isn’t another episode available just yet.</p>}
         </section>}
 
-        <div className="contribution-bottom-links"><Link href="/stories/${slug}">Skip for now · Back to {data.story.title}</Link><Link href={`/stories/${slug}/reviews/${episodeId}`}>Reader discussion ↗</Link><Link href="/stories/${slug}#episodes">Episode guide ↗</Link></div>
+        <div className="contribution-bottom-links"><Link href={`/stories/${slug}`}>Skip for now · Back to {data.story.title}</Link><Link href={`/stories/${slug}/reviews/${episodeId}`}>Reader discussion ↗</Link><Link href="/stories/${slug}#episodes">Episode guide ↗</Link></div>
       </section>
       <footer className="reader-footer"><span>STORYFLICKS</span><span>Stories worth staying for.</span><span>© 2026</span></footer>
     </main>
