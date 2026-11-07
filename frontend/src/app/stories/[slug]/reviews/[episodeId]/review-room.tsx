@@ -152,11 +152,11 @@ export default function ReviewRoom({ slug, episodeId }: { slug: string; episodeI
     <main className="review-room-shell">
       <header className="review-room-header">
         <Link className="reader-brand" href="/">STORY<span>FLICKS</span><i>.</i></Link>
-        <div className="reader-location"><Link href="/stories/${slug}">{data.story.title}</Link><span>/</span><span>REVIEW ROOM</span></div>
-        <Link className="reader-exit" href="/stories/${slug}">Exit</Link>
+        <div className="reader-location"><Link href={`/stories/${slug}`}>{data.story.title}</Link><span>/</span><span>REVIEW ROOM</span></div>
+        <Link className="reader-exit" href={`/stories/${slug}`}>Exit</Link>
       </header>
       <section className="review-room-content">
-        <Link className="review-back-link" href="/stories/${slug}">← {data.story.title} · EPISODE GUIDE</Link>
+        <Link className="review-back-link" href={`/stories/${slug}`}>← {data.story.title} · EPISODE GUIDE</Link>
         <p className="eyebrow">THE READER CONVERSATION · EPISODE {String(data.episode.sequence_number).padStart(2, "0")}</p>
         <h1>Inside the story<span>.</span></h1>
         <p className="review-room-deck"><strong>{data.episode.title}</strong> — every reader brings a different perspective. Here’s what stayed with them.</p>
@@ -229,7 +229,7 @@ export default function ReviewRoom({ slug, episodeId }: { slug: string; episodeI
           )}
         </section>
         {error && <p className="review-room-error" role="alert">{error}</p>}
-        <div className="review-room-bottom"><Link href="/stories/${slug}">← Back to story</Link><Link href={`/stories/${slug}/react/${episodeId}`}>Share your take ↗</Link></div>
+        <div className="review-room-bottom"><Link href={`/stories/${slug}`}>← Back to story</Link><Link href={`/stories/${slug}/react/${episodeId}`}>Share your take ↗</Link></div>
       </section>
       <footer className="reader-footer"><span>STORYFLICKS</span><span>Stories worth staying for.</span><span>© 2026</span></footer>
     </main>
