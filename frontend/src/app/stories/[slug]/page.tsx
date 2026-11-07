@@ -70,12 +70,12 @@ export default async function StoryDetailPage({ params }: { params: Promise<{ sl
         <div className="section-heading"><div><p className="eyebrow">THE STORY SO FAR</p><h2>Episode guide<span>.</span></h2></div><span className="guide-count">{episodes.length} PUBLISHED</span></div>
         <div className="episode-list">
           {episodes.map((episode) => (
-            <article className="episode-row" key={episode.id || episode.sequence_number}>
+            {episode.id ? <Link href={`/stories/${slug}/read/${episode.id}`} className="episode-row" key={episode.id}> : <article className="episode-row" key={episode.sequence_number}>
               <span className="episode-number">{String(episode.sequence_number).padStart(2, "0")}</span>
               <div className="episode-copy"><h3>{episode.title}</h3><p>{episode.synopsis || (episode.sequence_number === 1 ? "Every secret has a beginning." : "The confession leaves its mark.")}</p></div>
               <span className="episode-status">PUBLISHED</span>
               <span className="episode-arrow">↗</span>
-            </article>
+            {episode.id ? </Link> : </article>}
           ))}
         </div>
         <p className="episode-note">More episodes are in the works. Follow the story as it unfolds.</p>
