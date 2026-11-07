@@ -1,6 +1,5 @@
 from typing import Literal
 from uuid import UUID, uuid4
-from fastapi import HTTPException
 from urllib.parse import quote
 
 from fastapi import APIRouter, Depends, HTTPException
@@ -136,42 +135,36 @@ async def complete_creator_asset_upload(
     if submission.asset_type == "cover":
         if submission.episode_id is not None:
             raise HTTPException(422, "A story cover cannot include an episode_id.")
-        if not submission.storage_path.startswith(f"{path_prefix}cover/"):
-            raise HTTPException(422, "Invalid story cover storage path.")
-
-        return await supabase.user_rpc(
-            "set_creator_story_cover",
+        expected_parent = f"{path_prefix}cover/"
+    else:
+        if submission.episode_id is None:
+            raise HTTPException(422, "An episode_id is required for an episode image.")
+        episodes = await supabase.admin_get(
+            "episodes",
             {
-                "p_story_id": str(story_id),
-                "p_storage_path": submission.storage_path,
+                "id": f"eq.{submission.episode_id}",
+                "story_id": f"eq.{story_id}",
+                "select": "id",
+                "limit": "1",
             },
-            user.access_token,
         )
+        if not episodes:
+            raise HTTPException(404, "Episode not found in this story.")
+        expected_parent = f"{path_prefix}episodes/{submission.episode_id}/"
 
-    if submission.episode_id is None:
-        raise HTTPException(422, "An episode_id is required for an episode image.")
-
-    episode_prefix = (
-        f"{path_prefix}episodes/{submission.episode_id}/"
-    )
-    if not submission.storage_path.startswith(episode_prefix):
-        raise HTTPException(422, "Invalid episode image storage path.")
-
-    expected_parent = (
-        f"{path_prefix}cover/"
-        if submission.asset_type == "cover"
-        else episode_prefix
-    )
     if not submission.storage_path.startswith(expected_parent):
         raise HTTPException(422, "Invalid image storage path.")
+
     filename = submission.storage_path[len(expected_parent):]
     stem, separator, extension = filename.rpartition(".")
     if not separator or "/" in filename:
         raise HTTPException(422, "Invalid image filename.")
     try:
-        UUID(stem)
+        parsed_asset_id = UUID(stem)
     except ValueError as exc:
         raise HTTPException(422, "Invalid image filename.") from exc
+    if str(parsed_asset_id) != stem.lower():
+        raise HTTPException(422, "Invalid image filename.")
 
     try:
         object_info = await supabase.get_storage_object_info(
@@ -187,8 +180,14 @@ async def complete_creator_asset_upload(
         raise
 
     metadata = object_info.get("metadata") or {}
-    content_type = metadata.get("mimetype") or object_info.get("mimetype")
-    object_size = metadata.get("size") or object_info.get("size")
+    content_type = (
+        metadata.get("mimetype")
+        or metadata.get("contentType")
+        or object_info.get("mimetype")
+    )
+    object_size = metadata.get("size")
+    if object_size is None:
+        object_size = object_info.get("size")
     try:
         object_size = int(object_size)
     except (TypeError, ValueError) as exc:
@@ -202,6 +201,16 @@ async def complete_creator_asset_upload(
         raise HTTPException(422, "The uploaded image format does not match its file type.")
     if object_size <= 0 or object_size > 10 * 1024 * 1024:
         raise HTTPException(422, "Images must be between 1 byte and 10 MB.")
+
+    if submission.asset_type == "cover":
+        return await supabase.user_rpc(
+            "set_creator_story_cover",
+            {
+                "p_story_id": str(story_id),
+                "p_storage_path": submission.storage_path,
+            },
+            user.access_token,
+        )
 
     return await supabase.user_rpc(
         "register_creator_episode_image",
