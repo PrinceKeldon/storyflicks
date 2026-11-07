@@ -67,7 +67,7 @@ export default function Library() {
   if(status==="error"||!data)return <main className="library-state"><span className="reader-state-mark">SF.</span><h1>We couldn’t open your library.</h1><p>{error}</p><button className="outline-button" onClick={()=>void load()}>Try again</button></main>;
 
   return <main className="library-shell">
-    <header className="library-header"><Link className="wordmark" href="/">STORY<span>FLICKS</span><i>.</i></Link><nav aria-label="Main navigation"><Link href="/">Discover</Link><Link className="active" href="/library">My Library</Link><Link href="/creator">Creator Studio</Link></nav><Link className="library-header-link" href="/">Explore stories <span>↗</span></Link></header>
+    <header className="library-header"><Link className="wordmark" href="/">STORY<span>FLICKS</span><i>.</i></Link><nav aria-label="Main navigation"><Link href="/">Discover</Link><Link className="active" href="/library">My Library</Link><span className="library-coming-soon">Creator Studio</span></nav><Link className="library-header-link" href="/">Explore stories <span>↗</span></Link></header>
     <section className="library-hero"><div><p className="eyebrow">YOUR STORY COLLECTION</p><h1>Every story leaves<br/>something <em>behind.</em></h1><p>Pick up where you left off, revisit a favourite, or see what you’ve shared with the STORYFLICKS community.</p></div><div className="library-count"><strong>{totalStories.toString().padStart(2,"0")}</strong><span>STORIES IN YOUR WORLD</span><i>✳</i></div></section>
     <div className="library-tabs" role="tablist" aria-label="Library sections">
       <button role="tab" aria-selected={tab==="reading"} className={tab==="reading"?"active":""} onClick={()=>setTab("reading")}>My Stories</button>
