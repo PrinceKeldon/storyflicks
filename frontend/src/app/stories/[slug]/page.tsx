@@ -1,4 +1,5 @@
 import Link from "next/link";
+import BookmarkButton from "./bookmark-button";
 
 type Episode = {
   id: string;
@@ -63,7 +64,7 @@ export default async function StoryDetailPage({ params }: { params: Promise<{ sl
           <p className="story-tagline">{story?.tagline ?? "Two lives. One secret. A confession that changes everything."}</p>
           <p className="story-synopsis">{story?.synopsis ?? "For over twenty years, Father James has kept his priestly life separate from the man he secretly becomes beyond the collar. But when Sophia enters his world, questions of faith, desire and identity begin to blur — and some secrets may be impossible to keep."}</p>
           <div className="story-facts"><span>{episodes.length} PUBLISHED EPISODES</span><span>ONGOING</span><span>FIRST EPISODE FREE</span></div>
-          <a href="#episodes" className="primary-button">Explore episodes <span>↓</span></a>
+          <div className="story-primary-actions"><a href="#episodes" className="primary-button">Explore episodes <span>↓</span></a>{story?.id && <BookmarkButton storyId={story.id} />}</div>
           {episodes[0]?.id && <Link href={`/stories/${slug}/reviews/${episodes[0].id}`} className="story-discussion-link">Enter the Review Room <span>↗</span></Link>}
         </div>
       </section>
