@@ -113,3 +113,5 @@ button{font:inherit}
 .unlock-waiting{margin-top:8px!important}
 .contribution-bottom-links{display:flex;justify-content:space-between;margin-top:35px}.contribution-bottom-links a{font-size:10px;color:#a1a69e}.contribution-bottom-links a:hover{color:#43b889}
 @media(max-width:650px){.contribution-header{padding:0 18px}.contribution-content{padding:54px 0 70px}.contribution-content>h1{font-size:42px}.reaction-section{margin-top:45px}.contribution-section-heading h2{font-size:23px}.reaction-grid{grid-template-columns:1fr}.reaction-choice{min-height:67px}.contribution-action-row{align-items:stretch;flex-direction:column}.contribution-action-row .primary-button{align-self:flex-start}.review-compose{padding:20px}.review-visibility{align-items:flex-start;flex-direction:column}.visibility-options{width:100%}.visibility-options button{flex:1}.contribution-bottom-links{gap:15px}.unlock-panel{padding:22px}}
+
+.contribution-rule{text-align:center;color:#43b889;font-size:10px;letter-spacing:.2px;margin:16px auto 0;line-height:1.7}
