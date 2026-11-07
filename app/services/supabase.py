@@ -1,4 +1,5 @@
 from typing import Any
+from urllib.parse import quote
 import logging
 
 import httpx
@@ -116,8 +117,6 @@ class SupabaseService:
         return payload
 
     async def create_signed_upload_url(self, bucket: str, storage_path: str) -> dict[str, Any]:
-        from urllib.parse import quote
-
         encoded_path = quote(storage_path, safe="/")
         endpoint = (
             f"{settings.supabase_url.rstrip('/')}/storage/v1/object/upload/sign/"
