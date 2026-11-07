@@ -31,7 +31,7 @@ function blockText(block: ContentBlock) {
   return "";
 }
 
-export default function ReadingRoom({ episodeId }: { episodeId: string }) {
+export default function ReadingRoom({ slug, episodeId }: { slug: string; episodeId: string }) {
   const [payload, setPayload] = useState<EpisodePayload | null>(null);
   const [status, setStatus] = useState<"loading" | "signed-out" | "ready" | "error">("loading");
   const [error, setError] = useState("");
@@ -56,7 +56,7 @@ export default function ReadingRoom({ episodeId }: { episodeId: string }) {
         headers: { Authorization: `Bearer ${session.access_token}` },
         cache: "no-store",
       }).catch(() => null);
-      if (preferencesResponse.ok) {
+      if (preferencesResponse?.ok) {
         const preferences = await preferencesResponse.json() as { theme?: "paper" | "sepia" | "night"; text_size?: "small" | "comfortable" | "large"; reading_width?: "narrow" | "standard" | "wide" };
         if (preferences.theme) setTheme(preferences.theme);
         if (preferences.text_size) setFontScale(preferences.text_size === "small" ? 90 : preferences.text_size === "large" ? 115 : 100);
@@ -125,19 +125,19 @@ export default function ReadingRoom({ episodeId }: { episodeId: string }) {
   const blocks = useMemo(() => extractBlocks(payload?.episode.content), [payload]);
 
   if (status === "loading") return <main className="reader-state"><span className="reader-state-mark">SF.</span><p>Preparing your reading room…</p></main>;
-  if (status === "signed-out") return <main className="reader-state"><span className="reader-state-mark">SF.</span><p className="eyebrow">YOUR STORY IS WAITING</p><h1>Sign in to enter the Reading Room.</h1><p>Your reading progress and episode access are tied to your account.</p><Link className="primary-button" href={`/sign-in?next=/stories/the-priest/read/${episodeId}`}>Sign in to continue <span>↗</span></Link></main>;
-  if (status === "error" || !payload) return <main className="reader-state"><span className="reader-state-mark">SF.</span><p className="eyebrow">A SMALL INTERRUPTION</p><h1>We couldn’t open this episode.</h1><p>{error}</p><Link className="text-button" href="/stories/the-priest">← Back to THE PRIEST</Link></main>;
+  if (status === "signed-out") return <main className="reader-state"><span className="reader-state-mark">SF.</span><p className="eyebrow">YOUR STORY IS WAITING</p><h1>Sign in to enter the Reading Room.</h1><p>Your reading progress and episode access are tied to your account.</p><Link className="primary-button" href={`/sign-in?next=/stories/${slug}/read/${episodeId}`}>Sign in to continue <span>↗</span></Link></main>;
+  if (status === "error" || !payload) return <main className="reader-state"><span className="reader-state-mark">SF.</span><p className="eyebrow">A SMALL INTERRUPTION</p><h1>We couldn’t open this episode.</h1><p>{error}</p><Link className="text-button" href="/stories/${slug}">← Back to {payload?.story.title || "the story"}</Link></main>;
 
   return (
     <main className={`reading-room theme-${theme}`}>
       <div className="reader-progress-track"><span style={{ width: `${progress}%` }} /></div>
       <header className="reader-toolbar">
         <Link className="reader-brand" href="/">STORY<span>FLICKS</span><i>.</i></Link>
-        <div className="reader-location"><Link href="/stories/the-priest">THE PRIEST</Link><span>/</span><span>EPISODE {String(payload.episode.sequence_number).padStart(2, "0")}</span></div>
+        <div className="reader-location"><Link href="/stories/${slug}">THE PRIEST</Link><span>/</span><span>EPISODE {String(payload.episode.sequence_number).padStart(2, "0")}</span></div>
         <div className="reader-tools">
           <span className="reader-progress-label">{progress}%</span>
           <button className="reader-tool-button" onClick={() => setShowSettings((value) => !value)} aria-expanded={showSettings}>Aa <span>Reading settings</span></button>
-          <Link className="reader-exit" href="/stories/the-priest">Exit</Link>
+          <Link className="reader-exit" href="/stories/${slug}">Exit</Link>
         </div>
       </header>
       {showSettings && <section className="reader-settings" aria-label="Reading settings">
