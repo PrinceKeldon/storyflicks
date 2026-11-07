@@ -123,7 +123,6 @@ export default function ReadingRoom({ episodeId }: { episodeId: string }) {
   }, [payload, status]);
 
   const blocks = useMemo(() => extractBlocks(payload?.episode.content), [payload]);
-  const nextUrl = payload ? `/stories/${payload.story.slug}#episodes` : "/";
 
   if (status === "loading") return <main className="reader-state"><span className="reader-state-mark">SF.</span><p>Preparing your reading room…</p></main>;
   if (status === "signed-out") return <main className="reader-state"><span className="reader-state-mark">SF.</span><p className="eyebrow">YOUR STORY IS WAITING</p><h1>Sign in to enter the Reading Room.</h1><p>Your reading progress and episode access are tied to your account.</p><Link className="primary-button" href={`/sign-in?next=/stories/the-priest/read/${episodeId}`}>Sign in to continue <span>↗</span></Link></main>;
