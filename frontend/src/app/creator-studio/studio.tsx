@@ -112,7 +112,7 @@ export default function CreatorStudio(){
 
  useEffect(()=>{void loadDashboard();},[loadDashboard]);
  useEffect(()=>{if(status==="ready"&&storyId)void loadWorkspace(storyId);},[status,storyId,loadWorkspace]);
- useEffect(()=>{if(workspace&&episodeId){const e=workspace.episodes.find(x=>x.id===episodeId);if(e){setEpisode({sequence_number:e.sequence_number,title:e.title,synopsis:e.synopsis||""});const b=blocksFrom(e.content);setBlocks(b.length?b:[{type:"paragraph",text:""}]);void loadRevisions(episodeId);}}else setRevisions([]);},[workspace?.story.id,episodeId,loadRevisions]);
+ useEffect(()=>{if(workspace&&episodeId){const e=workspace.episodes.find(x=>x.id===episodeId);if(e){setEpisode({sequence_number:e.sequence_number,title:e.title,synopsis:e.synopsis||""});const b=blocksFrom(e.content);setBlocks(b.length?b:[{type:"paragraph",text:""}]);void loadRevisions(episodeId);}}else setRevisions([]);},[workspace,episodeId,loadRevisions]);
 
  const loadAnalytics=useCallback(async(id:string,days:number)=>{
   if(!token)return;setAnalyticsBusy(true);setAnalytics(null);
