@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { getSupabaseBrowserClient } from "@/lib/supabase";
 
@@ -18,11 +19,15 @@ type Review = {
   author_reply: { id: string; body: string; created_at: string; creator: { username: string | null; display_name: string | null } | null } | null;
 };
 type Reaction = { code: string; statement: string; emoji: string; category: string; count: number };
+type AuthorNote = { id: string; title: string | null; body: string; is_pinned: boolean; published_at: string | null; author: { username: string | null; display_name: string | null } | null };
+type AvailableEpisode = { id: string; title: string; sequence_number: number };
 type Payload = {
   episode: { id: string; title: string; sequence_number: number };
   reaction_summary: Reaction[];
   reviews: Review[];
   review_count: number;
+  author_notes: AuthorNote[];
+  available_episodes: AvailableEpisode[];
 };
 type SortMode = "featured" | "newest" | "helpful";
 type Status = "loading" | "signed-out" | "ready" | "error";
@@ -49,6 +54,7 @@ function dateLabel(value: string | null) {
 }
 
 export default function ReviewRoom({ episodeId }: { episodeId: string }) {
+  const router = useRouter();
   const [data, setData] = useState<Payload | null>(null);
   const [status, setStatus] = useState<Status>("loading");
   const [error, setError] = useState("");
@@ -153,6 +159,7 @@ export default function ReviewRoom({ episodeId }: { episodeId: string }) {
         <p className="eyebrow">THE READER CONVERSATION · EPISODE {String(data.episode.sequence_number).padStart(2, "0")}</p>
         <h1>Inside the story<span>.</span></h1>
         <p className="review-room-deck"><strong>{data.episode.title}</strong> — every reader brings a different perspective. Here’s what stayed with them.</p>
+        {data.available_episodes.length > 1 && <div className="review-episode-filter"><label htmlFor="review-episode">EPISODE</label><select id="review-episode" value={episodeId} onChange={(event) => router.push(`/stories/the-priest/reviews/${event.target.value}`)}>{data.available_episodes.map((episode) => <option value={episode.id} key={episode.id}>{String(episode.sequence_number).padStart(2, "0")} · {episode.title}</option>)}</select></div>}
 
         <div className="review-room-stats">
           <div><strong>{data.review_count}</strong><span>PUBLIC REVIEWS</span></div>
@@ -171,6 +178,8 @@ export default function ReviewRoom({ episodeId }: { episodeId: string }) {
             {data.reaction_summary.every((item) => item.count === 0) && <p className="review-room-empty-note">The first reactions are still arriving.</p>}
           </div>
         </section>
+
+        {data.author_notes.length > 0 && <section className="review-author-notes"><div className="review-room-section-heading"><div><p className="eyebrow">A WORD FROM THE AUTHOR</p><h2>Behind the story.</h2></div><span>OFFICIAL AUTHOR NOTES</span></div>{data.author_notes.map((note) => <article className="review-author-note" key={note.id}>{note.is_pinned && <span className="review-note-pinned">PINNED NOTE</span>}<h3>{note.title || "A note from the author"}</h3><p>{note.body}</p><small>{displayName(note.author)} · {dateLabel(note.published_at)}</small></article>)}</section>}
 
         <section className="review-feed">
           <div className="review-feed-heading"><div><p className="eyebrow">THE CONVERSATION</p><h2>Reader reviews <span>({visibleReviews.length})</span></h2></div>
@@ -205,7 +214,7 @@ export default function ReviewRoom({ episodeId }: { episodeId: string }) {
                     <div className="review-card-content">
                       {isRevealed ? <><h3>{review.headline || "A reader’s take"}</h3><p>{review.body}</p></> : <button type="button" className="review-reveal" onClick={() => setRevealed((current) => [...current, review.id])}><span>◌</span><strong>{review.headline || "A reader has shared their thoughts"}</strong><small>Reveal review · may contain spoilers</small></button>}
                     </div>
-                    {review.author_reply && <div className="review-author-reply"><div><span>↳</span><strong>{displayName(review.author_reply.creator)} · AUTHOR</strong></div><p>{review.author_reply.body}</p><small>{dateLabel(review.author_reply.created_at)}</small></div>}
+                    {review.author_reply && isRevealed && <div className="review-author-reply"><div><span>↳</span><strong>{displayName(review.author_reply.creator)} · AUTHOR</strong></div><p>{review.author_reply.body}</p><small>{dateLabel(review.author_reply.created_at)}</small></div>}
                     <div className="review-card-actions">
                       <button type="button" disabled={isOwn || voting === review.id} className={review.helpful_by_me ? "voted" : ""} onClick={() => void toggleHelpful(review)}>
                         {review.helpful_by_me ? "✓ Helpful" : "♡ Helpful"} <span>{review.helpful_count}</span>
