@@ -1,7 +1,8 @@
 "use client";
 
 import Link from "next/link";
-import { FormEvent, useState } from "react";
+import { useState } from "react";
+import type { FormEvent } from "react";
 import { getSupabaseBrowserClient } from "@/lib/supabase";
 
 export default function SignInForm({ redirectTo }: { redirectTo: string }) {
@@ -17,16 +18,21 @@ export default function SignInForm({ redirectTo }: { redirectTo: string }) {
     setBusy(true); setError(""); setMessage("");
     const supabase = getSupabaseBrowserClient();
     if (!supabase) { setError("Sign-in is not configured yet. Please try again later."); setBusy(false); return; }
-    const result = mode === "signin"
-      ? await supabase.auth.signInWithPassword({ email: email.trim(), password })
-      : await supabase.auth.signUp({ email: email.trim(), password });
-    setBusy(false);
-    if (result.error) { setError(result.error.message); return; }
-    if (mode === "signup" && !result.data.session) {
-      setMessage("Check your email for a confirmation link. Once confirmed, come back here to sign in.");
-      return;
+    try {
+      const result = mode === "signin"
+        ? await supabase.auth.signInWithPassword({ email: email.trim(), password })
+        : await supabase.auth.signUp({ email: email.trim(), password });
+      if (result.error) { setError(result.error.message); return; }
+      if (mode === "signup" && !result.data.session) {
+        setMessage("Check your email for a confirmation link. Once confirmed, come back here to sign in.");
+        return;
+      }
+      window.location.assign(redirectTo);
+    } catch {
+      setError("We couldn’t reach the sign-in service. Please try again.");
+    } finally {
+      setBusy(false);
     }
-    window.location.assign(redirectTo);
   }
 
   return (
