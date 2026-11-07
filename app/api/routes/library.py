@@ -205,6 +205,7 @@ async def get_library(
             "story": story,
             "last_read_episode": last_read,
             "latest_published_episode": latest_episode,
+            "first_published_episode": story_episodes[0],
             "published_episode_count": len(story_episodes),
             "completed_episode_count": sum(
                 1 for episode in story_episodes
