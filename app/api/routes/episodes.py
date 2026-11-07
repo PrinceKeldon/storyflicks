@@ -223,6 +223,31 @@ async def submit_review(
     )
 
 
+
+@router.post("/reviews/{review_id}/helpful")
+async def vote_review_helpful(
+    review_id: str,
+    user: AuthenticatedUser = Depends(get_current_user),
+):
+    return await supabase.user_rpc(
+        "vote_review_helpful",
+        {"p_review_id": review_id},
+        user.access_token,
+    )
+
+
+@router.delete("/reviews/{review_id}/helpful")
+async def remove_review_helpful_vote(
+    review_id: str,
+    user: AuthenticatedUser = Depends(get_current_user),
+):
+    return await supabase.user_rpc(
+        "remove_review_helpful_vote",
+        {"p_review_id": review_id},
+        user.access_token,
+    )
+
+
 @router.get("/episodes/{episode_id}/review-room")
 async def get_review_room(
     episode_id: str,
@@ -266,11 +291,17 @@ async def get_review_room(
 
     reaction_counts = defaultdict(int)
     my_reactions = set()
+    reactions_by_user = defaultdict(list)
+    definitions_by_id = {
+        definition["id"]: definition for definition in definitions
+    }
 
     for reaction in reader_reactions:
-        reaction_counts[reaction["reaction_id"]] += 1
+        reaction_id = reaction["reaction_id"]
+        reaction_counts[reaction_id] += 1
+        reactions_by_user[reaction["user_id"]].append(reaction_id)
         if reaction["user_id"] == user.id:
-            my_reactions.add(reaction["reaction_id"])
+            my_reactions.add(reaction_id)
 
     reaction_summary = [
         {
@@ -350,6 +381,16 @@ async def get_review_room(
         review_results.append({
             **review,
             "author": profile_map.get(review["user_id"]),
+            "reaction_tags": [
+                {
+                    "code": definitions_by_id[reaction_id]["code"],
+                    "statement": definitions_by_id[reaction_id]["statement"],
+                    "emoji": definitions_by_id[reaction_id]["emoji"],
+                    "category": definitions_by_id[reaction_id]["category"],
+                }
+                for reaction_id in reactions_by_user.get(review["user_id"], [])
+                if reaction_id in definitions_by_id
+            ],
             "helpful_count": helpful_counts[review["id"]],
             "helpful_by_me": review["id"] in my_helpful_votes,
             "author_reply": reply_map.get(review["id"]),
