@@ -87,7 +87,7 @@ export default function CreatorStudio(){
   }catch(e){setError(message(e,"Image upload failed."));}finally{setAssetBusy(false);}
  }
  async function importManuscript(file:File){
-  try{const raw=await file.text();const next=raw.split(/\\r?\\n\\s*\\r?\\n/).map(text=>text.trim()).filter(Boolean).map(text=>({type:"paragraph" as const,text}));if(!next.length){setError("The selected file did not contain readable text.");return;}setBlocks(next);setNotice(next.length+" manuscript text blocks imported. Review before saving.");}
+  try{const raw=await file.text();const next=raw.split(/\r?\n\s*\r?\n/).map(text=>text.trim()).filter(Boolean).map(text=>({type:"paragraph" as const,text}));if(!next.length){setError("The selected file did not contain readable text.");return;}setBlocks(next);setNotice(next.length+" manuscript text blocks imported. Review before saving.");}
   catch{setError("The text file could not be read.");}
  }
  async function createStory(ev:FormEvent<HTMLFormElement>){ev.preventDefault();setBusy("create");setError("");try{const data=await request("/creator/stories",{method:"POST",body:JSON.stringify(newStory)}) as {story_id:string};setNewStoryOpen(false);setStoryId(data.story_id);setTab("episodes");setNotice("Story workspace created. Add your first episode when ready.");setNewStory({title:"",slug:"",tagline:"",synopsis:"",first_episode_free:true});await loadDashboard();setStoryId(data.story_id);}catch(e){setError(message(e,"Could not create story."));}finally{setBusy("");}}
