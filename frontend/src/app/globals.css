@@ -186,3 +186,14 @@ button{font:inherit}
 .story-discussion-link{display:inline-block;margin-left:15px;border-bottom:1px solid #53665d;padding:13px 0;color:#aab6ad;font-size:10px}
 .story-discussion-link span{color:var(--mint);padding-left:7px}
 @media(max-width:700px){.review-room-header{padding:0 18px}.review-room-content{padding:38px 0 65px}.review-back-link{margin-bottom:38px}.review-room-stats{gap:20px;justify-content:space-around;padding:18px 4px}.review-room-stats>div strong{font-size:21px}.review-room-stats>div span{font-size:7px}.review-room-stats>a{margin:0;font-size:9px}.review-room-section-heading,.review-feed-heading{align-items:flex-start;flex-direction:column}.review-room-section-heading h2,.review-feed-heading h2{font-size:25px}.review-feed-controls{width:100%;flex-wrap:wrap}.review-feed-controls select{flex:1;min-width:0}.review-feed-controls label{font-size:7px}.review-card{padding:18px 15px}.review-card-tags,.review-card-content,.review-author-reply{margin-left:0}.review-card-content{margin-top:15px}.review-card-meta{gap:9px}.author-response-label{font-size:6px}.review-reveal{align-items:flex-start;flex-wrap:wrap}.review-reveal small{width:100%;padding-left:32px}.review-room-bottom{gap:15px}.story-discussion-link{margin:16px 0 0;display:block;width:max-content}}
+
+.review-episode-filter{display:flex;align-items:center;justify-content:center;gap:12px;margin:22px auto 0}
+.review-episode-filter label{font:8px 'DM Mono',monospace;letter-spacing:1px;color:#858d84}
+.review-episode-filter select{min-width:240px;max-width:100%;background:#1a1d1f;border:1px solid #383e3e;color:#e8e3d9;padding:10px 13px;font:10px 'DM Sans',sans-serif}
+.review-author-notes{margin-top:58px}
+.review-author-note{position:relative;margin-top:12px;padding:24px 26px;border:1px solid rgba(67,184,137,.25);background:#17201d}
+.review-author-note h3{font:500 21px 'Playfair Display',Georgia,serif;margin:8px 0 12px}
+.review-author-note p{font-size:11px;line-height:1.9;color:#c4cbc3;white-space:pre-wrap;margin:0 0 13px}
+.review-author-note>small{font:8px 'DM Mono',monospace;letter-spacing:.4px;color:#8b9a8e}
+.review-note-pinned{font:8px 'DM Mono',monospace;letter-spacing:1px;color:var(--mint)}
+@media(max-width:700px){.review-episode-filter{align-items:flex-start;flex-direction:column}.review-episode-filter select{width:100%;min-width:0}.review-author-note{padding:19px}}
