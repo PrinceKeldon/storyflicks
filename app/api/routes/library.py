@@ -75,6 +75,9 @@ async def get_library(
     episode_ids = {
         item["episode_id"]
         for item in progress + reactions + reviews
+    } | {
+        item["episode_id"]
+        for item in entitlements
     }
 
     bookmarked_story_ids = {
@@ -208,6 +211,15 @@ async def get_library(
                 if episode["id"] in completed_episode_ids
             ),
             "reading_progress": story_progress,
+            "available_episode": next(
+                (
+                    episode_map[item["episode_id"]]
+                    for item in entitlements
+                    if item["episode_id"] in episode_map
+                    and episode_map[item["episode_id"]]["story_id"] == story_id
+                ),
+                None,
+            ),
         }
 
         if story_id in bookmarked_ids:
