@@ -22,6 +22,7 @@ type Reaction = { code: string; statement: string; emoji: string; category: stri
 type AuthorNote = { id: string; title: string | null; body: string; is_pinned: boolean; published_at: string | null; author: { username: string | null; display_name: string | null } | null };
 type AvailableEpisode = { id: string; title: string; sequence_number: number };
 type Payload = {
+  story: { id: string; slug: string; title: string };
   episode: { id: string; title: string; sequence_number: number };
   reaction_summary: Reaction[];
   reviews: Review[];
@@ -53,7 +54,7 @@ function dateLabel(value: string | null) {
   return new Intl.DateTimeFormat("en-GB", { day: "numeric", month: "short", year: "numeric" }).format(date);
 }
 
-export default function ReviewRoom({ episodeId }: { episodeId: string }) {
+export default function ReviewRoom({ slug, episodeId }: { slug: string; episodeId: string }) {
   const router = useRouter();
   const [data, setData] = useState<Payload | null>(null);
   const [status, setStatus] = useState<Status>("loading");
@@ -144,27 +145,27 @@ export default function ReviewRoom({ episodeId }: { episodeId: string }) {
   }
 
   if (status === "loading") return <main className="reader-state"><span className="reader-state-mark">SF.</span><p>Opening the conversation…</p></main>;
-  if (status === "signed-out") return <main className="reader-state"><span className="reader-state-mark">SF.</span><h1>Join the conversation.</h1><p>Sign in to read and take part in the Review Room.</p><Link className="primary-button" href={`/sign-in?next=/stories/the-priest/reviews/${episodeId}`}>Sign in to continue <span>↗</span></Link></main>;
-  if (status === "error" || !data) return <main className="reader-state"><span className="reader-state-mark">SF.</span><h1>The conversation isn’t available.</h1><p>{error}</p><Link href="/stories/the-priest">Back to THE PRIEST</Link></main>;
+  if (status === "signed-out") return <main className="reader-state"><span className="reader-state-mark">SF.</span><h1>Join the conversation.</h1><p>Sign in to read and take part in the Review Room.</p><Link className="primary-button" href={`/sign-in?next=/stories/${slug}/reviews/${episodeId}`}>Sign in to continue <span>↗</span></Link></main>;
+  if (status === "error" || !data) return <main className="reader-state"><span className="reader-state-mark">SF.</span><h1>The conversation isn’t available.</h1><p>{error}</p><Link href="/stories/${slug}">Back to THE PRIEST</Link></main>;
 
   return (
     <main className="review-room-shell">
       <header className="review-room-header">
         <Link className="reader-brand" href="/">STORY<span>FLICKS</span><i>.</i></Link>
-        <div className="reader-location"><Link href="/stories/the-priest">THE PRIEST</Link><span>/</span><span>REVIEW ROOM</span></div>
-        <Link className="reader-exit" href="/stories/the-priest">Exit</Link>
+        <div className="reader-location"><Link href="/stories/${slug}">THE PRIEST</Link><span>/</span><span>REVIEW ROOM</span></div>
+        <Link className="reader-exit" href="/stories/${slug}">Exit</Link>
       </header>
       <section className="review-room-content">
-        <Link className="review-back-link" href="/stories/the-priest">← THE PRIEST · EPISODE GUIDE</Link>
+        <Link className="review-back-link" href="/stories/${slug}">← {data.story.title} · EPISODE GUIDE</Link>
         <p className="eyebrow">THE READER CONVERSATION · EPISODE {String(data.episode.sequence_number).padStart(2, "0")}</p>
         <h1>Inside the story<span>.</span></h1>
         <p className="review-room-deck"><strong>{data.episode.title}</strong> — every reader brings a different perspective. Here’s what stayed with them.</p>
-        {data.available_episodes.length > 1 && <div className="review-episode-filter"><label htmlFor="review-episode">EPISODE</label><select id="review-episode" value={episodeId} onChange={(event) => router.push(`/stories/the-priest/reviews/${event.target.value}`)}>{data.available_episodes.map((episode) => <option value={episode.id} key={episode.id}>{String(episode.sequence_number).padStart(2, "0")} · {episode.title}</option>)}</select></div>}
+        {data.available_episodes.length > 1 && <div className="review-episode-filter"><label htmlFor="review-episode">EPISODE</label><select id="review-episode" value={episodeId} onChange={(event) => router.push(`/stories/${slug}/reviews/${event.target.value}`)}>{data.available_episodes.map((episode) => <option value={episode.id} key={episode.id}>{String(episode.sequence_number).padStart(2, "0")} · {episode.title}</option>)}</select></div>}
 
         <div className="review-room-stats">
           <div><strong>{data.review_count}</strong><span>PUBLIC REVIEWS</span></div>
           <div><strong>{data.reaction_summary.reduce((sum, item) => sum + item.count, 0)}</strong><span>QUICK REACTIONS</span></div>
-          <Link href={`/stories/the-priest/react/${episodeId}`}>Add your take <span>↗</span></Link>
+          <Link href={`/stories/${slug}/react/${episodeId}`}>Add your take <span>↗</span></Link>
         </div>
 
         <section className="review-room-reactions">
@@ -197,7 +198,7 @@ export default function ReviewRoom({ episodeId }: { episodeId: string }) {
           </div>
           <p className="review-spoiler-note">Reader reviews may discuss plot details. Reveal each review before reading.</p>
 
-          {visibleReviews.length === 0 ? <div className="review-feed-empty"><span>✳</span><h3>{data.review_count ? "No reviews in this reaction yet." : "A little quiet in here."}</h3><p>{data.review_count ? "Try another filter, or be the first to write about this reaction." : "Be the first to share a public review of this episode."}</p><Link href={`/stories/the-priest/react/${episodeId}`}>Write the first review <span>↗</span></Link></div> : (
+          {visibleReviews.length === 0 ? <div className="review-feed-empty"><span>✳</span><h3>{data.review_count ? "No reviews in this reaction yet." : "A little quiet in here."}</h3><p>{data.review_count ? "Try another filter, or be the first to write about this reaction." : "Be the first to share a public review of this episode."}</p><Link href={`/stories/${slug}/react/${episodeId}`}>Write the first review <span>↗</span></Link></div> : (
             <div className="review-cards">
               {visibleReviews.map((review) => {
                 const author = displayName(review.author);
@@ -228,7 +229,7 @@ export default function ReviewRoom({ episodeId }: { episodeId: string }) {
           )}
         </section>
         {error && <p className="review-room-error" role="alert">{error}</p>}
-        <div className="review-room-bottom"><Link href="/stories/the-priest">← Back to story</Link><Link href={`/stories/the-priest/react/${episodeId}`}>Share your take ↗</Link></div>
+        <div className="review-room-bottom"><Link href="/stories/${slug}">← Back to story</Link><Link href={`/stories/${slug}/react/${episodeId}`}>Share your take ↗</Link></div>
       </section>
       <footer className="reader-footer"><span>STORYFLICKS</span><span>Stories worth staying for.</span><span>© 2026</span></footer>
     </main>
