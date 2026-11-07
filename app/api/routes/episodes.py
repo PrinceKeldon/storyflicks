@@ -229,6 +229,15 @@ async def vote_review_helpful(
     review_id: str,
     user: AuthenticatedUser = Depends(get_current_user),
 ):
+    review_rows = await supabase.admin_get(
+        "reviews",
+        {"select": "id,episode_id,status,visibility", "id": f"eq.{review_id}", "limit": "1"},
+    )
+    if not review_rows or review_rows[0]["status"] != "submitted" or review_rows[0]["visibility"] != "public":
+        raise HTTPException(status_code=404, detail="Public review not found.")
+    episode, story = await get_episode_and_story(review_rows[0]["episode_id"])
+    if not await reader_can_access(user.id, episode, story):
+        raise HTTPException(status_code=403, detail="You cannot vote on a discussion for an episode you cannot access.")
     return await supabase.user_rpc(
         "vote_review_helpful",
         {"p_review_id": review_id},
@@ -241,6 +250,15 @@ async def remove_review_helpful_vote(
     review_id: str,
     user: AuthenticatedUser = Depends(get_current_user),
 ):
+    review_rows = await supabase.admin_get(
+        "reviews",
+        {"select": "id,episode_id,status,visibility", "id": f"eq.{review_id}", "limit": "1"},
+    )
+    if not review_rows or review_rows[0]["status"] != "submitted" or review_rows[0]["visibility"] != "public":
+        raise HTTPException(status_code=404, detail="Public review not found.")
+    episode, story = await get_episode_and_story(review_rows[0]["episode_id"])
+    if not await reader_can_access(user.id, episode, story):
+        raise HTTPException(status_code=403, detail="You cannot change a vote on a discussion for an episode you cannot access.")
     return await supabase.user_rpc(
         "remove_review_helpful_vote",
         {"p_review_id": review_id},
@@ -318,6 +336,19 @@ async def get_review_room(
     my_helpful_votes = set()
     author_replies = []
     profiles = []
+    author_notes = await supabase.admin_get(
+        "author_notes",
+        {
+            "select": "id,episode_id,creator_id,title,body,is_pinned,published_at",
+            "story_id": f"eq.{story['id']}",
+            "status": "eq.published",
+            "order": "is_pinned.desc,published_at.desc",
+        },
+    )
+    author_notes = [
+        note for note in author_notes
+        if note.get("episode_id") is None or note.get("episode_id") == episode_id
+    ]
 
     if review_ids:
         review_filter = f"in.({','.join(review_ids)})"
@@ -349,6 +380,8 @@ async def get_review_room(
             review["user_id"] for review in reviews
         } | {
             reply["creator_id"] for reply in author_replies
+        } | {
+            note["creator_id"] for note in author_notes
         }
 
         if profile_ids:
@@ -395,6 +428,36 @@ async def get_review_room(
             "helpful_by_me": review["id"] in my_helpful_votes,
             "author_reply": reply_map.get(review["id"]),
         })
+
+    author_note_results = [
+        {
+            "id": note["id"],
+            "title": note.get("title"),
+            "body": note["body"],
+            "is_pinned": note["is_pinned"],
+            "published_at": note["published_at"],
+            "author": profile_map.get(note["creator_id"]),
+        }
+        for note in author_notes
+    ]
+
+    available_episode_rows = await supabase.admin_get(
+        "episodes",
+        {
+            "select": "id,title,sequence_number,publication_status",
+            "story_id": f"eq.{story['id']}",
+            "publication_status": "eq.published",
+            "order": "sequence_number.asc",
+        },
+    )
+    available_episodes = []
+    for available_episode in available_episode_rows:
+        if await reader_can_access(user.id, available_episode, story):
+            available_episodes.append({
+                "id": available_episode["id"],
+                "title": available_episode["title"],
+                "sequence_number": available_episode["sequence_number"],
+            })
 
     own_reviews = await supabase.admin_get(
         "reviews",
@@ -461,4 +524,6 @@ async def get_review_room(
         "reaction_summary": reaction_summary,
         "reviews": review_results,
         "review_count": len(review_results),
+        "author_notes": author_note_results,
+        "available_episodes": available_episodes,
     }
