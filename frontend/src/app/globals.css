@@ -460,3 +460,8 @@ button{font:inherit}
 .studio-report-meta small{font:8px/1.6 'DM Sans',sans-serif;color:#8e978d}
 .studio-report-actions{display:flex;gap:9px;align-items:center;flex-wrap:wrap;margin-top:14px}
 @media(max-width:700px){.studio-community-card{padding:15px}.studio-community-card-head{flex-direction:column}.studio-community-card-head>small{text-align:left}.studio-note-actions{justify-content:flex-start}.studio-community-card-foot{align-items:flex-start;flex-direction:column}.studio-report-toolbar{justify-content:flex-start}.studio-report-toolbar label{align-items:flex-start;flex-direction:column}}
+
+.studio-notification-settings>p{margin-bottom:15px}
+.studio-preference-list{max-width:620px;margin:14px 0 18px;border-top:1px solid #343c37}
+.studio-preference-list label{display:flex;flex-direction:row;align-items:center;justify-content:space-between;padding:13px 0;border-bottom:1px solid #343c37;font:10px 'DM Sans',sans-serif;color:#c0c9be}
+.studio-preference-list input{width:16px;height:16px;accent-color:var(--mint)}
