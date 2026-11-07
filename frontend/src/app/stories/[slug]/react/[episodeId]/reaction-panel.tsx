@@ -140,13 +140,13 @@ export default function ReactionPanel({ slug, episodeId }: { slug: string; episo
 
   if (status === "loading") return <main className="reader-state"><span className="reader-state-mark">SF.</span><p>Gathering your thoughts…</p></main>;
   if (status === "signed-out") return <main className="reader-state"><span className="reader-state-mark">SF.</span><h1>Sign in to share your take.</h1><Link className="primary-button" href={`/sign-in?next=/stories/${slug}/react/${episodeId}`}>Sign in to continue <span>↗</span></Link></main>;
-  if (status === "error" || !data) return <main className="reader-state"><span className="reader-state-mark">SF.</span><h1>We couldn’t load this page.</h1><p>{error}</p><Link href="/stories/${slug}">Back to {data?.story.title || "the story"}</Link></main>;
+  if (status === "error" || !data) return <main className="reader-state"><span className="reader-state-mark">SF.</span><h1>We couldn’t load this page.</h1><p>{error}</p><Link href={`/stories/${slug}`}>Back to {data?.story.title || "the story"}</Link></main>;
 
   return (
     <main className="contribution-shell">
       <header className="contribution-header">
         <Link className="reader-brand" href="/">STORY<span>FLICKS</span><i>.</i></Link>
-        <div className="reader-location"><Link href="/stories/${slug}">THE PRIEST</Link><span>/</span><span>YOUR TAKE</span></div>
+        <div className="reader-location"><Link href="/stories/${slug}">{data.story.title}</Link><span>/</span><span>YOUR TAKE</span></div>
         <Link className="reader-exit" href="/stories/${slug}">Exit</Link>
       </header>
       <section className="contribution-content">
