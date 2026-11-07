@@ -41,6 +41,44 @@ class SupabaseService:
         return data if isinstance(data, list) else []
 
 
+    async def admin_get_all(
+        self,
+        table: str,
+        params: dict[str, str] | None = None,
+        page_size: int = 500,
+    ) -> list[dict[str, Any]]:
+        """Fetch every matching row using bounded PostgREST offset pages."""
+        if page_size < 1 or page_size > 1000:
+            raise ValueError("page_size must be between 1 and 1000")
+
+        rows: list[dict[str, Any]] = []
+        offset = 0
+        while True:
+            page_params = {
+                **(params or {}),
+                "limit": str(page_size),
+                "offset": str(offset),
+            }
+            async with httpx.AsyncClient(timeout=30.0) as client:
+                response = await client.get(
+                    f"{settings.supabase_rest_url}/{table}",
+                    headers=self._admin_headers(),
+                    params=page_params,
+                )
+
+            self._raise_for_supabase(response)
+            data = response.json()
+            if not isinstance(data, list):
+                break
+
+            rows.extend(data)
+            if len(data) < page_size:
+                break
+            offset += page_size
+
+        return rows
+
+
     async def admin_rpc(
         self,
         function_name: str,
