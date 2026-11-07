@@ -265,7 +265,7 @@ async def get_creator_analytics(
     if not profiles:
         raise HTTPException(403, "An active creator profile is required.")
 
-    assignments = await supabase.admin_get(
+    assignments = await supabase.admin_get_all(
         "story_creators",
         {"creator_id": f"eq.{user.id}", "select": "story_id,role"},
     )
@@ -294,10 +294,10 @@ async def get_creator_analytics(
         }
 
     story_filter = f"in.({','.join(sorted(allowed_story_ids))})"
-    stories = await supabase.admin_get(
+    stories = await supabase.admin_get_all(
         "stories", {"id": story_filter, "select": "id,title,slug"}
     )
-    episodes = await supabase.admin_get(
+    episodes = await supabase.admin_get_all(
         "episodes",
         {
             "story_id": story_filter,
@@ -323,21 +323,21 @@ async def get_creator_analytics(
     episode_ids = [row["id"] for row in episodes]
     episode_filter = f"in.({','.join(episode_ids)})"
     progress, reactions, reviews = await asyncio.gather(
-        supabase.admin_get(
+        supabase.admin_get_all(
             "reading_progress",
             {
                 "episode_id": episode_filter,
                 "select": "episode_id,user_id,progress_percent,completed_at,updated_at,started_at",
             },
         ),
-        supabase.admin_get(
+        supabase.admin_get_all(
             "reader_reactions",
             {
                 "episode_id": episode_filter,
                 "select": "episode_id,user_id,created_at",
             },
         ),
-        supabase.admin_get(
+        supabase.admin_get_all(
             "reviews",
             {
                 "episode_id": episode_filter,
