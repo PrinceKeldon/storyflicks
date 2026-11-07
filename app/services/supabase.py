@@ -93,6 +93,28 @@ class SupabaseService:
         self._raise_for_supabase(response)
         return response.json()
 
+    async def get_storage_object_info(
+        self, bucket: str, storage_path: str
+    ) -> dict[str, Any]:
+        encoded_path = quote(storage_path, safe="/")
+        endpoint = (
+            f"{settings.supabase_url.rstrip('/')}/storage/v1/object/info/"
+            f"{quote(bucket, safe='')}/{encoded_path}"
+        )
+        async with httpx.AsyncClient(timeout=20.0) as client:
+            response = await client.get(
+                endpoint,
+                headers=self._admin_headers(),
+            )
+        self._raise_for_supabase(response)
+        payload = response.json()
+        if not isinstance(payload, dict):
+            raise HTTPException(
+                status_code=502,
+                detail="Storage returned invalid object metadata.",
+            )
+        return payload
+
     async def create_signed_upload_url(self, bucket: str, storage_path: str) -> dict[str, Any]:
         from urllib.parse import quote
 
