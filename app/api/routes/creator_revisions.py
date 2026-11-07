@@ -37,11 +37,13 @@ async def list_creator_episode_revisions(
         {
             "story_id": f"eq.{episode['story_id']}",
             "creator_id": f"eq.{user.id}",
+            "role": "in.(owner,author,editor)",
+            "select": "role",
             "limit": "1",
         },
     )
-    if not assignments:
-        raise HTTPException(403, "You are not assigned to this story.")
+    if not assignments or assignments[0].get("role") not in ("owner", "author", "editor"):
+        raise HTTPException(403, "You do not have permission to manage this story.")
 
     revisions = await supabase.admin_get(
         "episode_revisions",
