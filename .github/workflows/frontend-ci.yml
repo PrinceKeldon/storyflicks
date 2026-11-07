@@ -35,6 +35,7 @@ jobs:
         with:
           node-version: 24
 
+      # Pull requests validate a generated lockfile; pushes commit it if it is new or changed.
       - name: Generate lockfile when missing
         run: npm install --package-lock-only --ignore-scripts
 
