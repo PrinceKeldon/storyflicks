@@ -516,6 +516,11 @@ async def get_review_room(
         }
 
     return {
+        "story": {
+            "id": story["id"],
+            "slug": story["slug"],
+            "title": story["title"],
+        },
         "episode": {
             "id": episode["id"],
             "title": episode["title"],
