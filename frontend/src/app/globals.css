@@ -283,3 +283,5 @@ button{font:inherit}
 
 .library-coming-soon{height:100%;display:flex;align-items:center;color:#515851;font-size:12px;cursor:default}
 @media(max-width:700px){.library-coming-soon{font-size:10px}}
+
+.nav-link-disabled{color:#515851;cursor:default}
