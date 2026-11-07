@@ -21,9 +21,9 @@ type StoryResponse = {
   episodes: Episode[];
 };
 
-const knownEpisodes = [
-  { sequence_number: 1, title: "The Confession" },
-  { sequence_number: 2, title: "Sins of Coffee-ssion" },
+const knownEpisodes: Episode[] = [
+  { id: "", sequence_number: 1, title: "The Confession", publication_status: "published" },
+  { id: "", sequence_number: 2, title: "Sins of Coffee-ssion", publication_status: "published" },
 ];
 
 async function getStory(slug: string): Promise<StoryResponse | null> {
@@ -46,7 +46,7 @@ export default async function StoryDetailPage({ params }: { params: Promise<{ sl
     return <main className="app-shell detail-shell"><Link href="/" className="back-link">← Discover</Link><p className="eyebrow">STORY NOT FOUND</p><h1 className="detail-heading">This story isn’t here.</h1></main>;
   }
   const story = result?.story;
-  const episodes = result?.episodes ?? (slug === "the-priest" ? knownEpisodes.map((episode) => ({ ...episode, id: "", publication_status: "published" })) : []);
+  const episodes = result?.episodes ?? (slug === "the-priest" ? knownEpisodes : []);
 
   return (
     <main className="app-shell detail-shell">
