@@ -41,26 +41,25 @@ async function getStory(slug: string): Promise<StoryResponse | null> {
 
 export default async function StoryDetailPage({ params }: { params: Promise<{ slug: string }> }) {
   const { slug } = await params;
-  if (slug !== "the-priest") {
+  const result = await getStory(slug);
+  if (!result && slug !== "the-priest") {
     return <main className="app-shell detail-shell"><Link href="/" className="back-link">← Discover</Link><p className="eyebrow">STORY NOT FOUND</p><h1 className="detail-heading">This story isn’t here.</h1></main>;
   }
-
-  const result = await getStory(slug);
   const story = result?.story;
-  const episodes = result?.episodes ?? knownEpisodes.map((episode) => ({ ...episode, id: "", publication_status: "published" }));
+  const episodes = result?.episodes ?? (slug === "the-priest" ? knownEpisodes.map((episode) => ({ ...episode, id: "", publication_status: "published" })) : []);
 
   return (
     <main className="app-shell detail-shell">
       <header className="detail-top"><Link href="/" className="back-link">← Back to Discover</Link><span className="detail-label">STORYFLICKS ORIGINAL / 001</span></header>
       <section className="story-intro">
-        <div className="story-poster" aria-label="THE PRIEST title artwork">
+        <div className="story-poster" aria-label={`${story?.title ?? "Story"} title artwork`}>
           <span className="poster-kicker">A STORY ABOUT FAITH, DESIRE &amp; SECRETS</span>
           <span className="poster-title">THE<br /><strong>PRIEST</strong></span>
           <span className="poster-foot">STORYFLICKS ORIGINAL</span>
         </div>
         <div className="story-info">
           <p className="eyebrow">DRAMA · ONGOING · EPISODIC</p>
-          <h1>{story?.title ?? "THE PRIEST"}</h1>
+          <h1>{story?.title ?? (slug === "the-priest" ? "THE PRIEST" : "Story")}</h1>
           <p className="story-tagline">{story?.tagline ?? "Two lives. One secret. A confession that changes everything."}</p>
           <p className="story-synopsis">{story?.synopsis ?? "For over twenty years, Father James has kept his priestly life separate from the man he secretly becomes beyond the collar. But when Sophia enters his world, questions of faith, desire and identity begin to blur — and some secrets may be impossible to keep."}</p>
           <div className="story-facts"><span>{episodes.length} PUBLISHED EPISODES</span><span>ONGOING</span><span>FIRST EPISODE FREE</span></div>
