@@ -5,6 +5,9 @@ on:
     branches: [main]
     paths:
       - "frontend/**"
+      - "app/**"
+      - "requirements.txt"
+      - "supabase/migrations/**"
       - ".github/workflows/frontend-ci.yml"
   pull_request:
     paths:
@@ -66,3 +69,34 @@ jobs:
               git push
             fi
           fi
+
+  backend:
+    name: Backend import and syntax checks
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Install backend dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt
+
+      - name: Check dependency consistency
+        run: pip check
+
+      - name: Compile backend modules
+        run: python -m compileall -q app
+
+      - name: Import FastAPI application
+        run: python -c "from app.main import app; assert app; print(f'Loaded {len(app.routes)} API routes')"
+        env:
+          SUPABASE_URL: https://example.supabase.co
+          SUPABASE_ANON_KEY: ci-anon-key
+          SUPABASE_SERVICE_ROLE_KEY: ci-service-role-key
+          SCHEDULER_SECRET: ci-scheduler-secret
