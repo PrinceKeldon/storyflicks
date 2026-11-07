@@ -47,6 +47,103 @@ async def moderate_report(
     )
 
 
+@router.get("/creator/reviews")
+async def get_creator_public_reviews(
+    story_id: UUID | None = None,
+    user: AuthenticatedUser = Depends(get_current_user),
+):
+    """Return public submitted reviews for stories assigned to this creator.
+
+    Private reviews are deliberately excluded from this creator-facing feed.
+    """
+    creator_profiles = await supabase.admin_get(
+        "creator_profiles",
+        {"id": f"eq.{user.id}", "status": "eq.active", "limit": "1"},
+    )
+    if not creator_profiles:
+        raise HTTPException(403, "An active creator profile is required.")
+
+    assignment_filters = {"creator_id": f"eq.{user.id}"}
+    if story_id:
+        assignment_filters["story_id"] = f"eq.{story_id}"
+    assignments = await supabase.admin_get("story_creators", assignment_filters)
+    assigned_story_ids = [
+        item["story_id"] for item in assignments
+        if item.get("role") in ("owner", "author", "editor")
+    ]
+    if not assigned_story_ids:
+        return {"reviews": []}
+
+    story_filter = f"in.({','.join(assigned_story_ids)})"
+    stories = await supabase.admin_get(
+        "stories", {"id": story_filter, "select": "id,title,slug"}
+    )
+    episodes = await supabase.admin_get(
+        "episodes",
+        {"story_id": story_filter, "select": "id,story_id,title,sequence_number"},
+    )
+    if not episodes:
+        return {"reviews": []}
+
+    episode_ids = [item["id"] for item in episodes]
+    episode_filter = f"in.({','.join(episode_ids)})"
+    reviews = await supabase.admin_get(
+        "reviews",
+        {
+            "episode_id": episode_filter,
+            "status": "eq.submitted",
+            "visibility": "eq.public",
+            "select": "id,user_id,episode_id,headline,body,submitted_at,created_at",
+            "order": "submitted_at.desc",
+            "limit": "100",
+        },
+    )
+    if not reviews:
+        return {"reviews": []}
+
+    review_ids = [item["id"] for item in reviews]
+    review_filter = f"in.({','.join(review_ids)})"
+    replies = await supabase.admin_get(
+        "author_replies",
+        {
+            "review_id": review_filter,
+            "status": "eq.published",
+            "select": "id,review_id,creator_id,body,created_at",
+            "order": "created_at.asc",
+        },
+    )
+    profile_ids = list({item["user_id"] for item in reviews} | {item["creator_id"] for item in replies})
+    profiles = await supabase.admin_get(
+        "profiles",
+        {"id": f"in.({','.join(profile_ids)})", "select": "id,username,display_name,avatar_path"},
+    ) if profile_ids else []
+    profile_map = {item["id"]: item for item in profiles}
+    episode_map = {item["id"]: item for item in episodes}
+    story_map = {item["id"]: item for item in stories}
+    reply_map: dict[str, list[dict[str, Any]]] = {}
+    for reply in replies:
+        reply_map.setdefault(reply["review_id"], []).append({
+            "id": reply["id"],
+            "body": reply["body"],
+            "created_at": reply["created_at"],
+            "creator": profile_map.get(reply["creator_id"]),
+        })
+
+    return {
+        "reviews": [
+            {
+                **review,
+                "reader": profile_map.get(review["user_id"]),
+                "episode": episode_map.get(review["episode_id"]),
+                "story": story_map.get(episode_map.get(review["episode_id"], {}).get("story_id")),
+                "author_replies": reply_map.get(review["id"], []),
+            }
+            for review in reviews
+            if review["episode_id"] in episode_map
+        ]
+    }
+
+
 class AuthorReplyWithReviewSubmission(BaseModel):
     review_id: UUID
     body: str
