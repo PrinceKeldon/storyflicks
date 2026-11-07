@@ -41,6 +41,7 @@ export default function ReadingRoom({ episodeId }: { episodeId: string }) {
   const [progress, setProgress] = useState(0);
   const [showSettings, setShowSettings] = useState(false);
   const saveTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const preferencesTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const tokenRef = useRef<string | null>(null);
   const apiUrl = process.env.NEXT_PUBLIC_API_URL?.replace(/\/$/, "");
 
@@ -51,6 +52,16 @@ export default function ReadingRoom({ episodeId }: { episodeId: string }) {
     if (!session?.access_token) { setStatus("signed-out"); return; }
     tokenRef.current = session.access_token;
     try {
+      const preferencesResponse = await fetch(`${apiUrl}/library/preferences`, {
+        headers: { Authorization: `Bearer ${session.access_token}` },
+        cache: "no-store",
+      });
+      if (preferencesResponse.ok) {
+        const preferences = await preferencesResponse.json() as { theme?: "paper" | "sepia" | "night"; text_size?: "small" | "comfortable" | "large"; reading_width?: "narrow" | "standard" | "wide" };
+        if (preferences.theme) setTheme(preferences.theme);
+        if (preferences.text_size) setFontScale(preferences.text_size === "small" ? 90 : preferences.text_size === "large" ? 115 : 100);
+        if (preferences.reading_width) setWidth(preferences.reading_width === "wide" ? "wide" : "comfortable");
+      }
       const response = await fetch(`${apiUrl}/episodes/${episodeId}`, { headers: { Authorization: `Bearer ${session.access_token}` }, cache: "no-store" });
       if (response.status === 401) { setStatus("signed-out"); return; }
       if (!response.ok) {
@@ -64,7 +75,7 @@ export default function ReadingRoom({ episodeId }: { episodeId: string }) {
     } catch (cause) { setError(cause instanceof Error ? cause.message : "Something went wrong."); setStatus("error"); }
   }, [apiUrl, episodeId]);
 
-  useEffect(() => { void loadEpisode(); return () => { if (saveTimer.current) clearTimeout(saveTimer.current); }; }, [loadEpisode]);
+  useEffect(() => { void loadEpisode(); return () => { if (saveTimer.current) clearTimeout(saveTimer.current); if (preferencesTimer.current) clearTimeout(preferencesTimer.current); }; }, [loadEpisode]);
 
   const saveProgress = useCallback((scrollY: number, percent: number) => {
     if (!tokenRef.current || !apiUrl) return;
@@ -78,6 +89,20 @@ export default function ReadingRoom({ episodeId }: { episodeId: string }) {
       }).catch(() => undefined);
     }, 900);
   }, [apiUrl, episodeId]);
+
+  useEffect(() => {
+    if (status !== "ready" || !tokenRef.current || !apiUrl) return;
+    if (preferencesTimer.current) clearTimeout(preferencesTimer.current);
+    preferencesTimer.current = setTimeout(() => {
+      const textSize = fontScale <= 95 ? "small" : fontScale >= 110 ? "large" : "comfortable";
+      void fetch(`${apiUrl}/library/preferences`, {
+        method: "PUT",
+        headers: { "Content-Type": "application/json", Authorization: `Bearer ${tokenRef.current}` },
+        body: JSON.stringify({ theme, text_size: textSize, reading_width: width === "wide" ? "wide" : "standard" }),
+      }).catch(() => undefined);
+    }, 700);
+    return () => { if (preferencesTimer.current) clearTimeout(preferencesTimer.current); };
+  }, [apiUrl, fontScale, status, theme, width]);
 
   useEffect(() => {
     if (status !== "ready") return;
@@ -94,7 +119,7 @@ export default function ReadingRoom({ episodeId }: { episodeId: string }) {
   useEffect(() => {
     if (status !== "ready" || !payload?.reading_progress?.last_position?.scrollY) return;
     const y = payload.reading_progress.last_position.scrollY;
-    requestAnimationFrame(() => window.scrollTo({ top: y, behavior: "instant" }));
+    requestAnimationFrame(() => window.scrollTo(0, y));
   }, [payload, status]);
 
   const blocks = useMemo(() => extractBlocks(payload?.episode.content), [payload]);
