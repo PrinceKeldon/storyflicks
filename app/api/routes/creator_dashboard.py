@@ -1,5 +1,6 @@
+import asyncio
 from collections import defaultdict
-from datetime import date, datetime, timedelta, timezone
+from datetime import datetime, timedelta, timezone
 from uuid import UUID
 
 from fastapi import APIRouter, Depends, HTTPException, Query
@@ -321,7 +322,7 @@ async def get_creator_analytics(
 
     episode_ids = [row["id"] for row in episodes]
     episode_filter = f"in.({','.join(episode_ids)})"
-    progress, reactions, reviews = await __import__("asyncio").gather(
+    progress, reactions, reviews = await asyncio.gather(
         supabase.admin_get(
             "reading_progress",
             {
@@ -346,7 +347,6 @@ async def get_creator_analytics(
         ),
     )
 
-    episode_map = {row["id"]: row for row in episodes}
     story_map = {row["id"]: row for row in stories}
     by_episode = {
         row["id"]: {
@@ -365,7 +365,6 @@ async def get_creator_analytics(
         for row in episodes
     }
 
-    active_readers_by_day: dict[str, set[str]] = defaultdict(set)
     today = datetime.now(timezone.utc).date()
     start_day = today - timedelta(days=days - 1)
     timeline_by_day = {
@@ -402,7 +401,6 @@ async def get_creator_analytics(
             if event_date in timeline_by_day:
                 timeline_by_day[event_date]["progress_updates"] += 1
                 timeline_by_day[event_date]["active_readers"].add(reader)
-                active_readers_by_day[event_date].add(reader)
 
     for row in reactions:
         item = by_episode.get(row["episode_id"])
@@ -421,7 +419,6 @@ async def get_creator_analytics(
             if event_date in timeline_by_day:
                 timeline_by_day[event_date]["reactions"] += 1
                 timeline_by_day[event_date]["active_readers"].add(reader)
-                active_readers_by_day[event_date].add(reader)
 
     public_reviews = 0
     private_feedback = 0
