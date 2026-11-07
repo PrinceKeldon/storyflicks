@@ -41,6 +41,7 @@ export default function ReadingRoom({ slug, episodeId }: { slug: string; episode
   const [progress, setProgress] = useState(0);
   const [showSettings, setShowSettings] = useState(false);
   const saveTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const pendingProgress = useRef<{ scrollY: number; percent: number } | null>(null);
   const preferencesTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const tokenRef = useRef<string | null>(null);
   const apiUrl = process.env.NEXT_PUBLIC_API_URL?.replace(/\/$/, "");
@@ -75,20 +76,33 @@ export default function ReadingRoom({ slug, episodeId }: { slug: string; episode
     } catch (cause) { setError(cause instanceof Error ? cause.message : "Something went wrong."); setStatus("error"); }
   }, [apiUrl, episodeId]);
 
-  useEffect(() => { void loadEpisode(); return () => { if (saveTimer.current) clearTimeout(saveTimer.current); if (preferencesTimer.current) clearTimeout(preferencesTimer.current); }; }, [loadEpisode]);
+  useEffect(() => { void loadEpisode(); return () => { if (preferencesTimer.current) clearTimeout(preferencesTimer.current); }; }, [loadEpisode]);
+
+  const flushProgress = useCallback(() => {
+    const latest = pendingProgress.current;
+    if (!latest || !tokenRef.current || !apiUrl) return;
+    pendingProgress.current = null;
+    if (saveTimer.current) {
+      clearTimeout(saveTimer.current);
+      saveTimer.current = null;
+    }
+    void fetch(`${apiUrl}/episodes/${episodeId}/progress`, {
+      method: "PUT",
+      headers: { "Content-Type": "application/json", Authorization: `Bearer ${tokenRef.current}` },
+      body: JSON.stringify({ progress_percent: latest.percent, last_position: { scrollY: latest.scrollY } }),
+      keepalive: true,
+    }).catch(() => undefined);
+  }, [apiUrl, episodeId]);
 
   const saveProgress = useCallback((scrollY: number, percent: number) => {
     if (!tokenRef.current || !apiUrl) return;
+    pendingProgress.current = { scrollY, percent };
     if (saveTimer.current) clearTimeout(saveTimer.current);
     saveTimer.current = setTimeout(() => {
-      void fetch(`${apiUrl}/episodes/${episodeId}/progress`, {
-        method: "PUT",
-        headers: { "Content-Type": "application/json", Authorization: `Bearer ${tokenRef.current}` },
-        body: JSON.stringify({ progress_percent: percent, last_position: { scrollY } }),
-        keepalive: true,
-      }).catch(() => undefined);
+      saveTimer.current = null;
+      flushProgress();
     }, 900);
-  }, [apiUrl, episodeId]);
+  }, [apiUrl, flushProgress]);
 
   useEffect(() => {
     if (status !== "ready" || !tokenRef.current || !apiUrl) return;
@@ -112,9 +126,19 @@ export default function ReadingRoom({ slug, episodeId }: { slug: string; episode
       setProgress(next);
       saveProgress(window.scrollY, next);
     };
+    const flushWhenHidden = () => {
+      if (document.visibilityState === "hidden") flushProgress();
+    };
     window.addEventListener("scroll", update, { passive: true });
-    return () => window.removeEventListener("scroll", update);
-  }, [saveProgress, status]);
+    window.addEventListener("pagehide", flushProgress);
+    document.addEventListener("visibilitychange", flushWhenHidden);
+    return () => {
+      window.removeEventListener("scroll", update);
+      window.removeEventListener("pagehide", flushProgress);
+      document.removeEventListener("visibilitychange", flushWhenHidden);
+      flushProgress();
+    };
+  }, [flushProgress, saveProgress, status]);
 
   useEffect(() => {
     if (status !== "ready" || !payload?.reading_progress?.last_position?.scrollY) return;
