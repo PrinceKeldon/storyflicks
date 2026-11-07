@@ -217,6 +217,7 @@ async def get_library(
                     for item in entitlements
                     if item["episode_id"] in episode_map
                     and episode_map[item["episode_id"]]["story_id"] == story_id
+                    and episode_map[item["episode_id"]]["publication_status"] == "published"
                 ),
                 None,
             ),
