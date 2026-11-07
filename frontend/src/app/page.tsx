@@ -11,13 +11,13 @@ export default function DiscoverPage() {
         <a className="wordmark" href="/" aria-label="STORYFLICKS home">STORY<span>FLICKS</span><i>.</i></a>
         <nav className="main-nav" aria-label="Main navigation">
           {navItems.map((item, index) => (
-            <a className={index === 0 ? "nav-link active" : "nav-link"} href={index === 0 ? "/" : "#"} key={item}>{item}</a>
+            <a className={index === 0 ? "nav-link active" : "nav-link"} href={index === 0 ? "/" : index === 1 ? "/library" : "/creator"} key={item}>{item}</a>
           ))}
         </nav>
         <div className="account-actions">
           <button className="icon-button" aria-label="Search"><span className="search-icon" /></button>
-          <a className="sign-in" href="#sign-in">Sign in</a>
-          <a className="join-button" href="#join">Join free <span>↗</span></a>
+          <a className="sign-in" href="/sign-in?next=/library">Sign in</a>
+          <a className="join-button" href="/sign-in?mode=signup">Join free <span>↗</span></a>
         </div>
       </header>
 
@@ -59,7 +59,7 @@ export default function DiscoverPage() {
         <div className="empty-shelf">
           <div className="empty-mark">↗</div>
           <div><h3>Your next chapter is waiting.</h3><p>Sign in to keep your reading progress, save stories and pick up right where you left off.</p></div>
-          <a href="#join" className="outline-button">Create your free account</a>
+          <a href="/sign-in?mode=signup" className="outline-button">Create your free account</a>
         </div>
       </section>
 
