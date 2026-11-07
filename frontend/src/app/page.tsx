@@ -10,9 +10,10 @@ export default function DiscoverPage() {
       <header className="topbar">
         <a className="wordmark" href="/" aria-label="STORYFLICKS home">STORY<span>FLICKS</span><i>.</i></a>
         <nav className="main-nav" aria-label="Main navigation">
-          {navItems.map((item, index) => (
-            <a className={index === 0 ? "nav-link active" : "nav-link"} href={index === 0 ? "/" : index === 1 ? "/library" : "#"} key={item}>{item}</a>
-          ))}
+          {navItems.map((item, index) => index === 2
+            ? <span className="nav-link nav-link-disabled" key={item}>{item}</span>
+            : <a className={index === 0 ? "nav-link active" : "nav-link"} href={index === 0 ? "/" : "/library"} key={item}>{item}</a>
+          )}
         </nav>
         <div className="account-actions">
           <button className="icon-button" aria-label="Search"><span className="search-icon" /></button>
