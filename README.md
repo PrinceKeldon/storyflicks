@@ -99,7 +99,7 @@ The API validates the access token with Supabase Auth. Reader/creator RPC calls 
 ### Creator Studio
 
 - `GET /api/creator/dashboard`
-- `GET /api/creator/analytics?days=30&story_id=<optional UUID>` — aggregate creator activity, daily progress/reaction/review trends, unique contributors and published-episode engagement; supports 7–90 day windows. Private review content is never returned.
+- `GET /api/creator/analytics?days=30&story_id=UUID (optional)` — aggregate creator activity, daily progress/reaction/review trends, unique contributors and published-episode engagement; supports 7–90 day windows. Private review content is never returned.
 - `POST /api/creator/stories`
 - `PUT /api/creator/stories/{story_id}`
 - `POST /api/creator/stories/{story_id}/publish`
