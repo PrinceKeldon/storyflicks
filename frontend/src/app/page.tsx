@@ -18,7 +18,7 @@ export default function DiscoverPage() {
           )}
         </nav>
         <div className="account-actions">
-          <button className="icon-button" aria-label="Search"><span className="search-icon" /></button>
+          <Link className="icon-button" href="/search" aria-label="Search"><span className="search-icon" /></Link>
           <Link className="sign-in" href="/sign-in?next=/library">Sign in</Link>
           <Link className="join-button" href="/sign-in?mode=signup">Join free <span>↗</span></Link>
         </div>
@@ -68,7 +68,7 @@ export default function DiscoverPage() {
 
       <section className="browse-row">
         <div><p className="eyebrow">FIND YOUR KIND OF STORY</p><h2>What are you in the mood for?</h2></div>
-        <div className="genre-list"><a href="#drama">Drama <span>↗</span></a><a href="#thriller">Thriller <span>↗</span></a><a href="#romance">Romance <span>↗</span></a><a href="#mystery">Mystery <span>↗</span></a></div>
+        <div className="genre-list"><Link href="/search?genre=Drama">Drama <span>↗</span></Link><Link href="/search?genre=Thriller">Thriller <span>↗</span></Link><Link href="/search?genre=Romance">Romance <span>↗</span></Link><Link href="/search?genre=Mystery">Mystery <span>↗</span></Link></div>
       </section>
 
       <footer className="footer"><Link className="wordmark" href="/">STORY<span>FLICKS</span><i>.</i></Link><p>Stories worth staying for.</p><span>© 2026 STORYFLICKS</span></footer>
