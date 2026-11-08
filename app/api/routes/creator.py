@@ -284,8 +284,16 @@ class CreatorEpisodeSubmission(BaseModel):
         if len(encoded) > 2 * 1024 * 1024:
             raise ValueError("Episode content must be 2 MB or smaller.")
         blocks = value.get("blocks")
-        if blocks is not None and (not isinstance(blocks, list) or len(blocks) > 2000):
-            raise ValueError("An episode can contain at most 2,000 content blocks.")
+        if blocks is not None:
+            if not isinstance(blocks, list) or len(blocks) > 2000:
+                raise ValueError("An episode can contain at most 2,000 content blocks.")
+            for block in blocks:
+                if not isinstance(block, dict):
+                    raise ValueError("Each episode content block must be an object.")
+                if block.get("type") not in {"paragraph", "heading", "quote"}:
+                    raise ValueError("Episode content blocks must be paragraphs, headings or quotes.")
+                if not isinstance(block.get("text"), str) or len(block["text"]) > 100000:
+                    raise ValueError("Each content block must contain text of 100,000 characters or fewer.")
         return value
 
 
