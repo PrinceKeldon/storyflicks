@@ -8,7 +8,7 @@ from fastapi import HTTPException
 
 logger = logging.getLogger(__name__)
 
-GEMINI_MODEL = os.getenv("GEMINI_MODEL", "gemini-3.6-flash")
+GEMINI_MODEL = os.getenv("GEMINI_MODEL", "gemini-3.5-flash-lite")
 GEMINI_ENDPOINT = "https://generativelanguage.googleapis.com/v1beta/models/{model}:generateContent"
 
 
@@ -47,18 +47,18 @@ async def analyse_manuscript_structure(blocks: list[dict[str, Any]], story_title
             "sections": {
                 "type": "array",
                 "items": {
-                    "type": "OBJECT",
+                    "type": "object",
                     "properties": {
                         "start_block": {"type": "integer"},
-                        "end_block": {"type": "INTEGER"},
+                        "end_block": {"type": "integer"},
                         "title": {"type": "string"},
                         "confidence": {"type": "number"},
-                        "reason": {"type": "STRING"},
+                        "reason": {"type": "string"},
                     },
                     "required": ["start_block", "end_block", "title", "confidence", "reason"],
                 },
             },
-            "warnings": {"type": "ARRAY", "items": {"type": "STRING"}},
+            "warnings": {"type": "array", "items": {"type": "STRING"}},
         },
         "required": ["sections", "warnings"],
     }
@@ -76,7 +76,7 @@ async def analyse_manuscript_structure(blocks: list[dict[str, Any]], story_title
         async with httpx.AsyncClient(timeout=httpx.Timeout(60.0, connect=10.0)) as client:
             response = await client.post(
                 GEMINI_ENDPOINT.format(model=GEMINI_MODEL),
-                params={"key": api_key},
+                headers={"x-goog-api-key": api_key},
                 json=payload,
             )
     except httpx.TimeoutException as exc:
