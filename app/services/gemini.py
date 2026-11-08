@@ -42,17 +42,17 @@ async def analyse_manuscript_structure(blocks: list[dict[str, Any]], story_title
         + json.dumps(outline, ensure_ascii=False, separators=(",", ":"))
     )
     schema = {
-        "type": "OBJECT",
+        "type": "object",
         "properties": {
             "sections": {
-                "type": "ARRAY",
+                "type": "array",
                 "items": {
                     "type": "OBJECT",
                     "properties": {
-                        "start_block": {"type": "INTEGER"},
+                        "start_block": {"type": "integer"},
                         "end_block": {"type": "INTEGER"},
-                        "title": {"type": "STRING"},
-                        "confidence": {"type": "NUMBER"},
+                        "title": {"type": "string"},
+                        "confidence": {"type": "number"},
                         "reason": {"type": "STRING"},
                     },
                     "required": ["start_block", "end_block", "title", "confidence", "reason"],
@@ -65,7 +65,8 @@ async def analyse_manuscript_structure(blocks: list[dict[str, Any]], story_title
     payload = {
         "contents": [{"role": "user", "parts": [{"text": prompt}]}],
         "generationConfig": {
-            "temperature": 0.1,
+            "candidateCount": 1,
+            "maxOutputTokens": 8192,
             "responseMimeType": "application/json",
             "responseJsonSchema": schema,
         },
@@ -95,7 +96,8 @@ async def analyse_manuscript_structure(blocks: list[dict[str, Any]], story_title
 
     try:
         payload = response.json()
-        text = payload["candidates"][0]["content"]["parts"][0]["text"]
+        parts = payload["candidates"][0]["content"]["parts"]
+        text = "".join(part.get("text", "") for part in parts if isinstance(part, dict) and not part.get("thought"))
         result = json.loads(text)
     except (ValueError, KeyError, IndexError, TypeError) as exc:
         raise HTTPException(status_code=502, detail="Gemini returned an unreadable analysis. The original manuscript has not been changed.") from exc
