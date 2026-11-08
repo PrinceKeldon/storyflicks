@@ -572,3 +572,46 @@ button{font:inherit}
 .search-result-art.has-cover{background:#111214;padding:8px}
 .catalogue-cover-image{position:absolute;inset:0;width:100%;height:100%;object-fit:contain}
 .search-result-art.has-cover:before{display:none}
+
+
+/* A real uploaded cover fully replaces every layer of generated placeholder artwork. */
+.feature-art.has-cover,
+.story-poster.has-cover,
+.search-result-art.has-cover{
+  position:relative;
+  isolation:isolate;
+  background:#111214;
+  padding:0;
+}
+.feature-art.has-cover::before,
+.feature-art.has-cover::after,
+.story-poster.has-cover::before,
+.story-poster.has-cover::after,
+.search-result-art.has-cover::before,
+.search-result-art.has-cover::after{
+  content:none!important;
+  display:none!important;
+}
+.feature-art.has-cover>.feature-cover-image,
+.story-poster.has-cover>.story-cover-image,
+.search-result-art.has-cover>.catalogue-cover-image{
+  position:absolute;
+  inset:0;
+  z-index:2;
+  display:block;
+  width:100%;
+  height:100%;
+  object-fit:contain;
+}
+.feature-art.has-cover>.art-grain,
+.feature-art.has-cover>.art-cross,
+.feature-art.has-cover>.art-caption,
+.feature-art.has-cover>.art-title,
+.feature-art.has-cover>.art-index,
+.story-poster.has-cover>.poster-kicker,
+.story-poster.has-cover>.poster-title,
+.story-poster.has-cover>.poster-foot,
+.search-result-art.has-cover>span,
+.search-result-art.has-cover>small{
+  display:none!important;
+}
