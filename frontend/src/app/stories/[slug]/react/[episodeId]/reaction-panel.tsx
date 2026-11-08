@@ -181,7 +181,7 @@ export default function ReactionPanel({ slug, episodeId }: { slug: string; episo
           <label htmlFor="review-headline">HEADLINE <span>OPTIONAL</span></label>
           <input id="review-headline" value={headline} onChange={(event) => setHeadline(event.target.value)} placeholder="Give your thoughts a title…" maxLength={300} />
           <label htmlFor="review-body">YOUR REVIEW</label>
-          <textarea id="review-body" value={body} onChange={(event) => setBody(event.target.value)} placeholder="What surprised you? What did you feel? What are you thinking now?" rows={7} />
+          <textarea id="review-body" maxLength={20000} value={body} onChange={(event) => setBody(event.target.value)} placeholder="What surprised you? What did you feel? What are you thinking now?" rows={7} />
           <div className="review-visibility">
             <div><strong>Who can read this?</strong><p>Private reviews stay yours. Public reviews join the conversation.</p></div>
             <div className="visibility-options"><button type="button" className={visibility === "public" ? "selected" : ""} onClick={() => setVisibility("public")}>Public</button><button type="button" className={visibility === "private" ? "selected" : ""} onClick={() => setVisibility("private")}>Private</button></div>
