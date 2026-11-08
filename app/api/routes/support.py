@@ -3,6 +3,8 @@ import hmac
 import json
 import time
 from datetime import datetime, timezone
+from uuid import uuid4
+from datetime import datetime, timezone
 from typing import Any
 from urllib.parse import urlencode
 from uuid import UUID
@@ -72,10 +74,12 @@ async def create_support_checkout(
         "payment_intent_data[metadata][user_id]": user.id,
         "payment_intent_data[metadata][purpose]": "reader_support",
     }
+    if user.email:
+        form["customer_email"] = user.email
     headers = {
         "Authorization": f"Bearer {settings.stripe_secret_key}",
         "Content-Type": "application/x-www-form-urlencoded",
-        "Idempotency-Key": f"story-support:{user.id}:{story['id']}:{submission.amount_cents}:{int(time.time() // 60)}",
+        "Idempotency-Key": f"story-support:{uuid4()}",
     }
     try:
         async with httpx.AsyncClient(timeout=20.0) as client:
