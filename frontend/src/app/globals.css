@@ -812,3 +812,35 @@ html[data-theme="light"] .user-settings-footer{border-color:rgba(43,55,44,.17)}
  .user-settings-panel{padding:22px}
  .theme-choice-grid{grid-template-columns:1fr}
 }
+
+
+/* Reading Room navigation: make essential controls immediately discoverable. */
+.reading-room .reader-toolbar{min-height:76px;height:auto;padding:10px 5.3%;gap:24px}
+.reading-room .reader-location{gap:14px;font-size:12px;letter-spacing:.65px;color:color-mix(in srgb,var(--reader-ink) 78%,var(--reader-muted))}
+.reading-room .reader-location a{font-weight:600}
+.reading-room .reader-tools{gap:22px}
+.reading-room .reader-progress-label{font-size:12px;color:color-mix(in srgb,var(--reader-ink) 78%,var(--reader-muted))}
+.reading-room .reader-tool-button{min-height:42px;padding:9px 14px;gap:9px;border:1px solid color-mix(in srgb,#23845f 58%,var(--reader-ink));border-radius:3px;background:color-mix(in srgb,#43b889 13%,var(--reader-bg));color:var(--reader-ink);font-size:14px;font-weight:600;letter-spacing:.05px}
+.reading-room .reader-tool-button:first-letter{font-size:19px}
+.reading-room .reader-tool-button span{color:inherit;font-size:13px;font-weight:600}
+.reading-room .reader-tool-button:hover{background:color-mix(in srgb,#43b889 24%,var(--reader-bg));border-color:#23845f}
+.reading-room .reader-exit{padding:10px 0 10px 18px;font-size:13px;font-weight:600}
+.reading-room .reader-settings>div>span{font-size:10px;letter-spacing:1.1px}
+.reading-room .setting-options button{min-height:36px;padding:8px 12px;font-size:12px}
+.reading-room .setting-options strong{font-size:12px}
+.reading-room .reader-tool-button:focus-visible,.reading-room .reader-exit:focus-visible,.reading-room .reader-location a:focus-visible,.reading-room .setting-options button:focus-visible{outline:2px solid #23845f;outline-offset:3px}
+@media(max-width:650px){
+ .reading-room .reader-toolbar{min-height:68px;padding:9px 17px;gap:8px}
+ .reading-room .reader-brand{font-size:15px}
+ .reading-room .reader-location{font-size:10px;gap:7px;letter-spacing:.25px}
+ .reading-room .reader-tools{gap:9px}
+ .reading-room .reader-progress-label{font-size:10px}
+ .reading-room .reader-tool-button{min-height:40px;padding:8px 10px;gap:6px;font-size:13px}
+ .reading-room .reader-tool-button span{font-size:12px}
+ .reading-room .reader-exit{padding-left:10px;font-size:12px}
+}
+@media(max-width:430px){
+ .reading-room .reader-toolbar{flex-wrap:wrap}
+ .reading-room .reader-location{order:3;flex-basis:100%;padding-top:3px}
+ .reading-room .reader-tools{margin-left:auto}
+}
