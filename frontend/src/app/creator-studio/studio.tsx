@@ -24,7 +24,7 @@ type CreatorNote = {id:string;story_id:string;story_title:string;episode_id:stri
 type CreatorReview = {id:string;headline:string|null;body:string;submitted_at:string;reader:{username:string|null;display_name:string|null}|null;episode:{title:string;sequence_number:number}|null;story:{title:string}|null;author_replies:{id:string;body:string;created_at:string;creator:{display_name:string|null;username:string|null}|null}[]};
 type CreatorReport = {report_id:string;target_type:"review"|"author_reply"|"author_note";target_id:string;reason:string;details:string|null;status:string;created_at:string;story:{id:string;title:string};episode_title:string|null;content:{title:string|null;body:string;author:{username:string|null;display_name:string|null}|null};reporter:{username:string|null;display_name:string|null}|null};
 
-type Block = { type:"paragraph"|"heading"|"quote"; text:string };
+type Block = { type:"paragraph"|"heading"|"quote"|"dialogue"|"emphasis"|"scene_break"; text:string };
 type Tab = "overview"|"stories"|"episodes"|"community"|"audience"|"insights"|"settings";
 const tabs: {id:Tab;label:string}[] = [{id:"overview",label:"Overview"},{id:"stories",label:"My Stories"},{id:"episodes",label:"Episode Manager"},{id:"community",label:"Community"},{id:"audience",label:"Audience"},{id:"insights",label:"Insights"},{id:"settings",label:"Settings"}];
 function slugify(s:string){return s.toLowerCase().trim().normalize("NFKD").replace(/[\u0300-\u036f]/g,"").replace(/[^a-z0-9]+/g,"-").replace(/^-|-$/g,"");}
@@ -39,7 +39,7 @@ function blocksFrom(value:unknown):Block[]{
  return raw.map((item):Block|null=>{
   if(!item||typeof item!=="object")return null;
   const block=item as Record<string,unknown>;
-  const type:Block["type"]=block.type==="heading"||block.type==="quote"?block.type:"paragraph";
+  const type:Block["type"]=block.type==="heading"||block.type==="quote"||block.type==="dialogue"||block.type==="emphasis"||block.type==="scene_break"?block.type:"paragraph";
   const text=typeof block.text==="string"?block.text:typeof block.content==="string"?block.content:"";
   return {type,text};
  }).filter((block):block is Block=>block!==null&&block.text.trim().length>0);
@@ -180,8 +180,45 @@ export default function CreatorStudio(){
   }catch(e){setError(message(e,"Image upload failed."));}finally{setAssetBusy(false);}
  }
  async function importManuscript(file:File){
-  try{const raw=await file.text();const next=raw.split(/\r?\n\s*\r?\n/).map(text=>text.trim()).filter(Boolean).map(text=>({type:"paragraph" as const,text}));if(!next.length){setError("The selected file did not contain readable text.");return;}setBlocks(next);setNotice(next.length+" manuscript text blocks imported. Review before saving.");}
+  try{const raw=await file.text();const next=raw.split(/\r?\n\s*\r?\n/).map(text=>text.trim()).filter(Boolean).map((text):Block=>({type:/^break\.?$/i.test(text)?"scene_break":/^[“"‘]/.test(text)?"dialogue":"paragraph",text}));if(!next.length){setError("The selected file did not contain readable text.");return;}setBlocks(next);setNotice(next.length+" manuscript paragraphs imported. Dialogue paragraphs and scene breaks were retained separately; review before saving.");}
   catch{setError("The text file could not be read.");}
+ }
+ async function importEpisodePack(files:FileList|null){
+  if(!workspace||!files?.length)return;
+  const selected=Array.from(files);
+  const parsed=await Promise.all(selected.map(async file=>{
+   const match=file.name.match(/^episode[_-]?(\d+)/i);
+   if(!match)throw new Error(file.name+" does not start with an episode number.");
+   const sequence_number=Number(match[1]);
+   const raw=await file.text();
+   const contentBlocks=raw.split(/\r?\n\s*\r?\n/).map(text=>text.trim()).filter(Boolean).map((text):Block=>({type:/^break\.?$/i.test(text)?"scene_break":/^[“"‘]/.test(text)?"dialogue":"paragraph",text}));
+   if(!contentBlocks.length)throw new Error(file.name+" contains no readable paragraphs.");
+   return {file:file.name,sequence_number,blocks:contentBlocks};
+  }));
+  const sequences=parsed.map(item=>item.sequence_number);
+  if(new Set(sequences).size!==parsed.length)throw new Error("The selected files contain duplicate episode numbers.");
+  const missing=workspace.episodes.filter(item=>!sequences.includes(item.sequence_number));
+  if(missing.length)throw new Error("Missing episode files: "+missing.map(item=>"Episode "+item.sequence_number).join(", ")+". Select the complete episode pack.");
+  const unknown=parsed.filter(item=>!workspace.episodes.some(ep=>ep.sequence_number===item.sequence_number));
+  if(unknown.length)throw new Error("No existing episode record found for: "+unknown.map(item=>"Episode "+item.sequence_number).join(", ")+".");
+  parsed.sort((a,b)=>a.sequence_number-b.sequence_number);
+  setBusy("import-pack");setError("");setNotice("");
+  let saved=0;
+  try{
+   for(const item of parsed){
+    const existing=workspace.episodes.find(ep=>ep.sequence_number===item.sequence_number)!;
+    const payload={season_id:null,sequence_number:item.sequence_number,title:existing.title,synopsis:existing.synopsis||null,content:{blocks:item.blocks}};
+    const route="/creator/stories/"+storyId+"/episodes/"+existing.id;
+    await request(route,{method:"PUT",body:JSON.stringify(payload)});
+    saved++;
+   }
+   await loadWorkspace(storyId);
+   setEpisodeId("");
+   setNotice("Imported "+saved+" episode manuscripts as draft revisions. Existing published editions remain live until you explicitly publish their new revisions.");
+  }catch(e){
+   await loadWorkspace(storyId);
+   setError("Imported "+saved+" of "+parsed.length+" episodes before an error: "+message(e,"Import failed.")+". You can safely retry the full pack; each episode will receive a new draft revision.");
+  }finally{setBusy("");}
  }
  async function createStory(ev:FormEvent<HTMLFormElement>){ev.preventDefault();setBusy("create");setError("");try{const data=await request("/creator/stories",{method:"POST",body:JSON.stringify({...newStory,genres:parseGenres(newStory.genres)})}) as {story_id:string};setNewStoryOpen(false);setStoryId(data.story_id);setTab("episodes");setNotice("Story workspace created. Add your first episode when ready.");setNewStory({title:"",slug:"",tagline:"",synopsis:"",genres:"",first_episode_free:true});await loadDashboard();setStoryId(data.story_id);}catch(e){setError(message(e,"Could not create story."));}finally{setBusy("");}}
  async function saveStory(ev:FormEvent<HTMLFormElement>){ev.preventDefault();if(!workspace)return;setBusy("save-story");setError("");try{await request("/creator/stories/"+storyId,{method:"PUT",body:JSON.stringify({...story,genres:parseGenres(story.genres)})});setNotice("Story details saved.");await loadWorkspace(storyId);await loadDashboard();}catch(e){setError(message(e,"Could not save story details."));}finally{setBusy("");}}
@@ -230,9 +267,9 @@ export default function CreatorStudio(){
     <div className="studio-episode-layout"><aside className="studio-episode-sidebar"><div className="studio-sidebar-heading"><span>EPISODE CATALOGUE</span><small>{workspace.episodes.length}</small></div>{workspace.episodes.map(e=><button key={e.id} className={episodeId===e.id?"studio-episode-choice active":"studio-episode-choice"} onClick={()=>setEpisodeId(e.id)}><span>{String(e.sequence_number).padStart(2,"0")}</span><span><strong>{e.title}</strong><small>{e.publication_status}{e.scheduled_at?" · "+dateLabel(e.scheduled_at):""}</small></span></button>)}{!workspace.episodes.length&&<p className="studio-sidebar-empty">No episodes yet. Create the first one.</p>}</aside>
      <div className="studio-editor-column"><form className="studio-form studio-episode-editor" onSubmit={saveEpisode}><div className="studio-form-title"><span>{episodeId?"EPISODE EDITOR":"NEW EPISODE"}</span><span>{selected?.publication_status||"draft"}</span></div><div className="studio-form-grid">
       <label>Episode number<input type="number" min="1" required value={episode.sequence_number} onChange={e=>setEpisode(v=>({...v,sequence_number:Number(e.target.value)}))}/></label><label>Episode title<input required maxLength={200} value={episode.title} onChange={e=>setEpisode(v=>({...v,title:e.target.value}))}/></label><label className="studio-span-two">Episode synopsis<textarea rows={2} maxLength={10000} value={episode.synopsis} onChange={e=>setEpisode(v=>({...v,synopsis:e.target.value}))}/></label>
-     </div><div className="studio-block-heading"><div><span>MANUSCRIPT</span><small>Arrange the reading experience with ordered text blocks.</small></div><div className="studio-editor-actions"><label className="studio-import-control">Import .txt<input type="file" accept=".txt,text/plain" onChange={e=>{const file=e.target.files?.[0];if(file)void importManuscript(file);e.target.value="";}}/></label><button type="button" onClick={()=>setPreview(v=>!v)}>{preview?"Hide preview":"Preview"}</button><button type="button" onClick={()=>setBlocks(v=>[...v,{type:"paragraph",text:""}])}>＋ Add block</button></div></div>
-     <div className="studio-block-list">{blocks.map((b,i)=><div className="studio-content-block" key={i}><div className="studio-block-tools"><span>BLOCK {String(i+1).padStart(2,"0")}</span><select aria-label="Block type" value={b.type} onChange={e=>setBlocks(v=>v.map((x,n)=>n===i?{...x,type:e.target.value as Block["type"]}:x))}><option value="paragraph">Paragraph</option><option value="heading">Heading</option><option value="quote">Quote</option></select><button type="button" disabled={blocks.length===1} onClick={()=>setBlocks(v=>v.filter((_,n)=>n!==i))}>Remove</button></div><textarea rows={b.type==="paragraph"?5:2} maxLength={100000} value={b.text} onChange={e=>setBlocks(v=>v.map((x,n)=>n===i?{...x,text:e.target.value}:x))} placeholder={b.type==="heading"?"Section heading":b.type==="quote"?"A memorable line…":"Write your episode here…"}/></div>)}</div>
-     {preview&&<div className="studio-live-preview"><p className="eyebrow">READING ROOM PREVIEW</p><h3>{episode.title||"Untitled episode"}</h3>{blocks.filter(b=>b.text.trim()).map((b,i)=>b.type==="heading"?<h4 key={i}>{b.text}</h4>:b.type==="quote"?<blockquote key={i}>{b.text}</blockquote>:<p key={i}>{b.text}</p>)}</div>}
+     </div><div className="studio-block-heading"><div><span>MANUSCRIPT</span><small>Arrange the reading experience with ordered text blocks.</small></div><div className="studio-editor-actions"><label className="studio-import-control">{busy==="import-pack"?"Importing episodes…":"Import episode pack"}<input type="file" multiple accept=".txt,text/plain" disabled={busy==="import-pack"||!workspace} onChange={e=>{const files=e.target.files;if(files)void importEpisodePack(files).catch(err=>setError(message(err,"Could not read episode pack.")));e.target.value="";}}/></label><label className="studio-import-control">Import .txt<input type="file" accept=".txt,text/plain" onChange={e=>{const file=e.target.files?.[0];if(file)void importManuscript(file);e.target.value="";}}/></label><button type="button" onClick={()=>setPreview(v=>!v)}>{preview?"Hide preview":"Preview"}</button><button type="button" onClick={()=>setBlocks(v=>[...v,{type:"paragraph",text:""}])}>＋ Add block</button></div></div>
+     <div className="studio-block-list">{blocks.map((b,i)=><div className="studio-content-block" key={i}><div className="studio-block-tools"><span>BLOCK {String(i+1).padStart(2,"0")}</span><select aria-label="Block type" value={b.type} onChange={e=>setBlocks(v=>v.map((x,n)=>n===i?{...x,type:e.target.value as Block["type"]}:x))}><option value="paragraph">Paragraph</option><option value="dialogue">Dialogue</option><option value="heading">Heading</option><option value="quote">Quote</option><option value="emphasis">Emphasis</option><option value="scene_break">Scene break</option></select><button type="button" disabled={blocks.length===1} onClick={()=>setBlocks(v=>v.filter((_,n)=>n!==i))}>Remove</button></div><textarea rows={b.type==="paragraph"?5:2} maxLength={100000} value={b.text} onChange={e=>setBlocks(v=>v.map((x,n)=>n===i?{...x,text:e.target.value}:x))} placeholder={b.type==="heading"?"Section heading":b.type==="quote"?"A memorable line…":"Write your episode here…"}/></div>)}</div>
+     {preview&&<div className="studio-live-preview"><p className="eyebrow">READING ROOM PREVIEW</p><h3>{episode.title||"Untitled episode"}</h3>{blocks.filter(b=>b.text.trim()).map((b,i)=>b.type==="heading"?<h4 key={i}>{b.text}</h4>:b.type==="quote"?<blockquote key={i}>{b.text}</blockquote>:b.type==="scene_break"?<div className="manuscript-divider" key={i}>✦</div>:<p className={b.type==="dialogue"?"manuscript-dialogue":b.type==="emphasis"?"manuscript-emphasis":""} key={i}>{b.text}</p>)}</div>}
      {episodeId&&<div className="studio-episode-assets"><div><span>EPISODE IMAGES</span><small>Images registered here are attached to this episode in the Reading Room.</small></div><div className="studio-asset-strip">{assets.filter(a=>a.episode_id===episodeId).map(a=>a.public_url&&<figure key={a.id}><img src={a.public_url} alt={a.alt_text||"Episode image"}/><figcaption>{a.alt_text||"Episode image"}</figcaption></figure>)}</div><label className="studio-upload-control">{assetBusy?"Uploading…":"Add episode image"}<input type="file" accept="image/jpeg,image/png,image/webp,image/avif" disabled={assetBusy} onChange={e=>{const file=e.target.files?.[0];if(file)void uploadAsset(file,"episode_image",episodeId);e.target.value="";}}/></label></div>}
      <div className="studio-form-actions"><button className="studio-primary" disabled={busy==="save-episode"}>{busy==="save-episode"?"Saving revision…":"Save draft revision ↗"}</button><span className="studio-save-hint">Published readers keep the current version until you publish a revision.</span></div>
     </form>
