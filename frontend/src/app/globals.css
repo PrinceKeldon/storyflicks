@@ -628,20 +628,8 @@ button{font:inherit}
 .personalised-cover-image{position:absolute;inset:0;z-index:2;display:block;width:100%;height:100%;object-fit:contain}
 
 
-/* Preserve the shared cover treatment added after the visual pass branch was created. */
-/* Story cover artwork is shared across every personal reading surface. */
-.library-story-art.has-cover,
-.personalised-story-art.has-cover{position:relative;isolation:isolate;background:#111214;padding:0}
-.library-story-art.has-cover::before,
-.library-story-art.has-cover::after,
-.personalised-story-art.has-cover::before,
-.personalised-story-art.has-cover::after{content:none!important;display:none!important}
-.library-cover-image,
-.personalised-cover-image{position:absolute;inset:0;z-index:2;display:block;width:100%;height:100%;object-fit:contain}
-
-
 /* Refine small uppercase editorial metadata: more legible, still regular weight. */
-.app-shell :is(.eyebrow,.feature-overline,.feature-kicker,.feature-meta,.art-caption,.art-index,.detail-label,.guide-count,.poster-kicker,.poster-foot,.story-facts,.episode-status,.studio-story-status,.studio-catalogue-top,.studio-workspace-status span,.studio-workspace-status small,.studio-episode-choice small,.studio-revision-row span,.studio-revision-row small,.studio-revision-row strong,.studio-publication-controls>div:first-child span,.studio-publication-controls>div:first-child small,.studio-community-card-head>span,.studio-episode-analytics-title>span) {
+:is(.eyebrow,.feature-overline,.feature-kicker,.feature-meta,.art-caption,.art-index,.detail-label,.guide-count,.poster-kicker,.poster-foot,.story-facts,.episode-status,.studio-story-status,.studio-catalogue-top,.studio-workspace-status span,.studio-workspace-status small,.studio-episode-choice small,.studio-revision-row span,.studio-revision-row small,.studio-revision-row strong,.studio-publication-controls>div:first-child span,.studio-publication-controls>div:first-child small,.studio-community-card-head>span,.studio-episode-analytics-title>span,.reader-location,.reading-kicker,.reader-settings>div>span,.reader-progress-label,.reader-footer,.auth-form label) {
   font-weight: 500;
 }
 .feature-overline { color: #aeb6ac; font-size: 10px; letter-spacing: 1.35px; }
