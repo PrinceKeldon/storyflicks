@@ -1,4 +1,5 @@
 import Link from "next/link";
+import PersonalisedShelf from "./personalised-shelf";
 
 type DiscoverStory = {
   id: string;
@@ -105,17 +106,7 @@ export default async function DiscoverPage() {
         </section>
       )}
 
-      <section className="shelf-section">
-        <div className="section-heading">
-          <div><p className="eyebrow">PICK UP WHERE YOU LEFT OFF</p><h2>Keep the story going<span>.</span></h2></div>
-          <Link href="/library" className="subtle-link">Your library <span>→</span></Link>
-        </div>
-        <div className="empty-shelf">
-          <div className="empty-mark">↗</div>
-          <div><h3>Your next chapter is waiting.</h3><p>Your reading progress, saved stories and contributions live together in My Library.</p></div>
-          <Link href="/library" className="outline-button">Open My Library <span>↗</span></Link>
-        </div>
-      </section>
+      <PersonalisedShelf />
 
       {moreStories.length > 0 && (
         <section className="shelf-section catalogue-section">
