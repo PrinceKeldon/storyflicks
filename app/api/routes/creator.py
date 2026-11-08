@@ -1,9 +1,10 @@
 from datetime import datetime
+import json
 from typing import Any, Literal
 from uuid import UUID
 
 from fastapi import APIRouter, Depends, HTTPException
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, field_validator
 
 from app.api.deps import get_current_user, supabase
 from app.core.security import AuthenticatedUser
@@ -146,7 +147,7 @@ async def get_creator_public_reviews(
 
 class AuthorReplyWithReviewSubmission(BaseModel):
     review_id: UUID
-    body: str
+    body: str = Field(min_length=1, max_length=10000)
 
 
 @router.post("/creator/reviews/reply")
@@ -166,11 +167,11 @@ async def publish_author_reply(
 
 class AuthorNoteSubmission(BaseModel):
     story_id: UUID
-    body: str
+    body: str = Field(min_length=1, max_length=50000)
     action: Literal["draft", "publish", "schedule", "withdraw"]
     note_id: UUID | None = None
     episode_id: UUID | None = None
-    title: str | None = None
+    title: str | None = Field(default=None, max_length=200)
     scheduled_at: datetime | None = None
 
 
@@ -234,7 +235,7 @@ async def set_author_note_pin(
 
 
 class AuthorReplyBodySubmission(BaseModel):
-    body: str
+    body: str = Field(min_length=1, max_length=10000)
 
 
 @router.post("/creator/reviews/{review_id}/reply")
@@ -258,20 +259,34 @@ async def publish_author_reply(
 # =========================================================
 
 class CreatorStorySubmission(BaseModel):
-    title: str
-    slug: str
-    tagline: str | None = None
-    synopsis: str | None = None
+    title: str = Field(min_length=1, max_length=160)
+    slug: str = Field(min_length=1, max_length=100, pattern=r"^[a-z0-9]+(-[a-z0-9]+)*$")
+    tagline: str | None = Field(default=None, max_length=240)
+    synopsis: str | None = Field(default=None, max_length=10000)
     first_episode_free: bool = True
     genres: list[str] = Field(default_factory=list, max_length=5)
 
 
 class CreatorEpisodeSubmission(BaseModel):
     season_id: UUID | None = None
-    sequence_number: int
-    title: str
-    synopsis: str | None = None
+    sequence_number: int = Field(ge=1, le=100000)
+    title: str = Field(min_length=1, max_length=200)
+    synopsis: str | None = Field(default=None, max_length=10000)
     content: dict[str, Any]
+
+    @field_validator("content")
+    @classmethod
+    def validate_content_size(cls, value: dict[str, Any]) -> dict[str, Any]:
+        try:
+            encoded = json.dumps(value, ensure_ascii=False, separators=(",", ":")).encode("utf-8")
+        except (TypeError, ValueError) as exc:
+            raise ValueError("Episode content must be valid JSON.") from exc
+        if len(encoded) > 2 * 1024 * 1024:
+            raise ValueError("Episode content must be 2 MB or smaller.")
+        blocks = value.get("blocks")
+        if blocks is not None and (not isinstance(blocks, list) or len(blocks) > 2000):
+            raise ValueError("An episode can contain at most 2,000 content blocks.")
+        return value
 
 
 @router.post("/creator/stories")
