@@ -642,3 +642,115 @@ html[data-theme="light"] .feature-overline { color: #59675d; }
 html[data-theme="light"] .feature-meta { color: #48574c; }
 html[data-theme="light"] .feature-kicker { color: #18724f; }
 html[data-theme="light"] .art-caption,html[data-theme="light"] .art-index,html[data-theme="light"] .poster-kicker,html[data-theme="light"] .poster-foot { color: #4e554c; }
+
+
+/* STORYFLICKS global light theme: real surface, text, border and control overrides. */
+html[data-theme="light"] {
+  color-scheme: light;
+  --ink: #f4f1e9;
+  --slate: #e9e5dc;
+  --paper: #242923;
+  --muted: #626a61;
+  --mint: #23845f;
+  --amber: #a96d35;
+  --line: rgba(38, 48, 40, .16);
+  background: #f4f1e9;
+}
+html[data-theme="light"] body {
+  background: #f4f1e9 !important;
+  color: #242923 !important;
+}
+html[data-theme="light"] :is(.app-shell,.detail-shell,.auth-shell,.library-shell,.studio-shell,.search-page) {
+  color: #242923;
+}
+html[data-theme="light"] :is(.topbar,.detail-top,.auth-header,.library-header,.studio-header,.footer,.library-footer,.studio-footer,.episode-guide,.browse-row) {
+  border-color: rgba(38,48,40,.17) !important;
+}
+html[data-theme="light"] :is(.nav-link,.nav-link.active,.account-actions,.sign-in,.back-link,.text-button,.subtle-link,.genre-list a,.section-heading h2,.browse-row h2,.welcome-row h1,.featured h2,.story-info h1,.episode-copy h3,.auth-panel h1,.search-page>h1,.search-results-heading h2) {
+  color: #242923 !important;
+}
+html[data-theme="light"] :is(.nav-link,.nav-link.active,.account-actions,.sign-in,.back-link,.text-button,.subtle-link,.genre-list a,.welcome-note,.story-synopsis,.episode-copy p,.episode-note,.auth-intro,.search-intro,.search-result-copy>p:not(.eyebrow),.section-heading .subtle-link) {
+  color: #59645a !important;
+}
+html[data-theme="light"] :is(.featured,.empty-shelf,.empty-shelf>div,.search-result-card,.personalised-story-card,.library-story-card,.library-empty-shelf,.library-empty-large,.library-contribution-card,.studio-metric,.studio-story-row,.studio-catalogue-card,.studio-empty,.studio-form,.studio-intro,.studio-episode-sidebar,.studio-sidebar-empty,.studio-content-block,.studio-revision-panel,.studio-revision-row,.studio-info-panel,.studio-notice,.studio-community-card,.studio-analytics-toolbar,.studio-activity-chart,.studio-episode-analytics-row,.studio-state,.library-state,.auth-panel,.search-page-form input) {
+  background-color: #fffdf8 !important;
+  color: #283129 !important;
+  border-color: rgba(43,55,44,.17) !important;
+}
+html[data-theme="light"] :is(.featured,.personalised-story-card,.library-story-card,.search-result-card,.studio-catalogue-card,.studio-metric,.studio-community-card,.studio-episode-analytics-row) {
+  box-shadow: 0 8px 24px rgba(48,55,42,.045);
+}
+html[data-theme="light"] :is(.featured-copy,.story-info,.episode-copy,.search-result-copy,.personalised-story-copy,.library-contribution-copy,.studio-form,.studio-info-panel,.studio-community-card,.studio-note-composer,.studio-report-meta,.studio-preference-list) {
+  color: #283129;
+}
+html[data-theme="light"] :is(.feature-tagline,.story-tagline,.library-story-tagline,.studio-note-body,.studio-info-panel p,.studio-community-card p,.studio-preference-list label,.studio-report-meta span,.studio-activity-legend,.studio-episode-analytics-title>strong,.studio-episode-analytics-row>div strong) {
+  color: #485449 !important;
+}
+html[data-theme="light"] :is(.feature-overline,.feature-meta,.detail-label,.guide-count,.story-facts,.episode-status,.library-story-meta,.library-shelf-heading>small,.library-count span,.library-card-footer>span,.studio-story-name small,.studio-story-count,.studio-catalogue-top small,.studio-catalogue-stats,.studio-metric>span,.studio-metric small,.studio-workspace-status small,.studio-episode-choice small,.studio-block-heading small,.studio-block-tools>span,.studio-save-hint,.studio-revision-row span,.studio-revision-row small,.studio-footnote,.studio-cover-manager small,.studio-episode-assets small,.studio-community-card-head>small,.studio-community-card-foot>small,.studio-review-author,.studio-note-actions>span,.studio-report-toolbar label,.studio-report-meta small,.studio-analytics-toolbar label,.studio-episode-analytics-title>span,.studio-episode-analytics-row>div small,.reader-location,.reader-progress-label,.reader-footer,.auth-form label,.search-result-count,.personalised-progress-meta,.personalised-story-footer) {
+  color: #5c685e !important;
+}
+html[data-theme="light"] :is(.feature-art,.story-poster,.search-result-art,.library-story-art,.personalised-story-art) {
+  background-color: #e7e1d5;
+}
+html[data-theme="light"] :is(.empty-shelf,.library-empty-shelf,.library-empty-large,.studio-empty,.studio-sidebar-empty,.studio-state,.library-state) {
+  border-color: rgba(43,55,44,.2) !important;
+}
+html[data-theme="light"] :is(.outline-button,.library-card-footer button,.library-tabs button,.studio-tabs button,.studio-community-tabs button,.studio-form-title button,.studio-block-tools button,.studio-text-action,.studio-outline-action,.story-save-button,.reader-tool-button,.reader-exit,.setting-options button,.genre-chip,.search-clear) {
+  color: #34483b !important;
+  border-color: rgba(43,55,44,.25) !important;
+}
+html[data-theme="light"] :is(.library-tabs button.active,.studio-tabs button.active,.studio-community-tabs button.active,.genre-chip.active) {
+  color: #176b4a !important;
+  border-color: #23845f !important;
+}
+html[data-theme="light"] :is(.primary-button,.join-button) {
+  background: #23845f !important;
+  color: #fff !important;
+}
+html[data-theme="light"] :is(input:not([type="checkbox"]):not([type="radio"]),textarea,select,.studio-form input:not([type="checkbox"]),.studio-form textarea,.studio-workspace-select select,.studio-block-tools select,.studio-note-composer select,.studio-report-toolbar select,.studio-analytics-toolbar select,.studio-reply-composer textarea,.search-page-form input) {
+  background: #fffefa !important;
+  color: #283129 !important;
+  border-color: #b9c4b8 !important;
+}
+html[data-theme="light"] :is(input,textarea,select)::placeholder {
+  color: #778176 !important;
+}
+html[data-theme="light"] :is(.studio-community-tabs,.studio-preference-list,.studio-analytics-toolbar,.studio-activity-chart,.studio-episode-analytics-row,.studio-reader-bar,.library-progress-track,.personalised-progress-track) {
+  border-color: rgba(43,55,44,.18) !important;
+}
+html[data-theme="light"] :is(.studio-note-composer>label select,.studio-report-toolbar select,.studio-analytics-toolbar select) {
+  background: #fffefa !important;
+}
+html[data-theme="light"] :is(.studio-asset-strip figure,.studio-published-reply,.studio-upload-control,.studio-import-control,.studio-cover-manager,.studio-episode-assets,.studio-workspace-select,.studio-episode-choice,.studio-episode-choice.active,.studio-episode-choice:hover,.studio-block-tools,.studio-activity-bar) {
+  background-color: #eeeae1 !important;
+  color: #344238 !important;
+  border-color: rgba(43,55,44,.2) !important;
+}
+html[data-theme="light"] :is(.studio-note-body,.studio-review-author,.studio-published-reply p,.studio-reply-composer,.studio-report-meta small,.studio-asset-strip figcaption) {
+  color: #526055 !important;
+}
+html[data-theme="light"] :is(.library-story-art.has-cover,.personalised-story-art.has-cover,.feature-art.has-cover,.story-poster.has-cover,.search-result-art.has-cover) {
+  background: #e9e5dc !important;
+}
+html[data-theme="light"] .theme-switch {
+  background: #fffdf8 !important;
+  color: #26352b !important;
+  border-color: rgba(43,55,44,.25) !important;
+  box-shadow: 0 5px 18px rgba(30,40,30,.15);
+}
+html[data-theme="light"] :is(.reader-state) {
+  background: #f4f1e9 !important;
+  color: #242923 !important;
+}
+html[data-theme="light"] :is(.reader-state p:not(.eyebrow)) {
+  color: #59645a !important;
+}
+html[data-theme="light"] .reading-room {
+  /* Reader's Paper / Sepia / Night controls remain independent of app chrome. */
+}
+@media (prefers-reduced-motion: no-preference) {
+  html[data-theme="light"] body,
+  html[data-theme="light"] :is(.featured,.search-result-card,.personalised-story-card,.library-story-card,.studio-catalogue-card) {
+    transition: background-color .2s ease, color .2s ease, border-color .2s ease;
+  }
+}
