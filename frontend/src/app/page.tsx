@@ -10,6 +10,7 @@ type DiscoverStory = {
   genres: string[];
   completion_status: string | null;
   published_at?: string | null;
+  cover_url?: string | null;
 };
 
 const previewStory: DiscoverStory = {
@@ -89,7 +90,8 @@ export default async function DiscoverPage() {
               <Link className="text-button" href={"/stories/" + featured.slug + "#episodes"}>View episode guide <span>→</span></Link>
             </div>
           </div>
-          <div className="feature-art" role="img" aria-label={"Typographic artwork for " + featured.title}>
+          <div className={featured.cover_url ? "feature-art has-cover" : "feature-art"} role="img" aria-label={featured.title + " book cover artwork"}>
+            {featured.cover_url ? <img className="feature-cover-image" src={featured.cover_url} alt={featured.title + " book cover"} /> : null}
             <div className="art-grain" />
             <div className="art-cross" />
             <div className="art-caption">STORIES THAT STAY<br />WITH YOU</div>
@@ -117,9 +119,8 @@ export default async function DiscoverPage() {
           <div className="search-results">
             {moreStories.slice(0, 6).map((story) => (
               <Link key={story.id || story.slug} className="search-result-card" href={"/stories/" + story.slug}>
-                <div className="search-result-art" role="img" aria-label={story.title + " title artwork"}>
-                  <span>{story.title}</span>
-                  <small>STORYFLICKS ORIGINAL</small>
+                <div className={story.cover_url ? "search-result-art has-cover" : "search-result-art"} role="img" aria-label={story.title + " book cover artwork"}>
+                  {story.cover_url ? <img className="catalogue-cover-image" src={story.cover_url} alt={story.title + " book cover"} /> : <><span>{story.title}</span><small>STORYFLICKS ORIGINAL</small></>}
                 </div>
                 <div className="search-result-copy">
                   <p className="eyebrow">{story.genres?.join(" · ") || "STORYFLICKS ORIGINAL"} <span>·</span> {(story.completion_status || "EPISODIC").toUpperCase()}</p>
