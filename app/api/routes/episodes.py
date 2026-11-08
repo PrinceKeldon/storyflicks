@@ -1,9 +1,10 @@
 
+import json
 from typing import Any, Literal
 from collections import defaultdict
 
 from fastapi import APIRouter, Depends, HTTPException
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, field_validator
 
 from app.api.deps import get_current_user, supabase
 from app.core.security import AuthenticatedUser
@@ -15,16 +16,30 @@ router = APIRouter()
 class ReactionSubmission(BaseModel):
     reaction_codes: list[str] = Field(default_factory=list, max_length=8)
 
+    @field_validator("reaction_codes")
+    @classmethod
+    def validate_reaction_codes(cls, value: list[str]) -> list[str]:
+        if any(not code or len(code) > 64 for code in value):
+            raise ValueError("Reaction codes must contain between 1 and 64 characters.")
+        return value
+
 
 class ReviewSubmission(BaseModel):
     headline: str | None = Field(default=None, max_length=300)
-    body: str = Field(min_length=1)
+    body: str = Field(min_length=1, max_length=20000)
     visibility: Literal["public", "private"] = "public"
 
 
 class ReadingProgressSubmission(BaseModel):
     progress_percent: float = Field(ge=0, le=100)
     last_position: dict[str, Any] | None = None
+
+    @field_validator("last_position")
+    @classmethod
+    def validate_last_position(cls, value: dict[str, Any] | None) -> dict[str, Any] | None:
+        if value is not None and len(json.dumps(value, separators=(",", ":")).encode("utf-8")) > 8192:
+            raise ValueError("Reading position metadata must be 8 KB or smaller.")
+        return value
 
 
 async def get_episode_and_story(episode_id: str):
