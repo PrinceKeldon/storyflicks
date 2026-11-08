@@ -2,10 +2,8 @@ import hashlib
 import hmac
 import json
 from datetime import datetime, timezone
-from uuid import uuid4
-from datetime import datetime, timezone
+from uuid import UUID, uuid4
 from urllib.parse import urlencode
-from uuid import UUID
 
 import httpx
 from fastapi import APIRouter, Depends, Header, HTTPException, Request
@@ -16,9 +14,6 @@ from app.core.config import settings
 from app.core.security import AuthenticatedUser
 
 router = APIRouter()
-ALLOWED_AMOUNTS = {200, 500, 1000, 1500, 2000, 2500, 5000}
-
-
 class SupportCheckoutRequest(BaseModel):
     story_id: UUID
     amount_cents: int = Field(ge=200, le=50000)
@@ -32,7 +27,7 @@ async def create_support_checkout(
     if not settings.stripe_secret_key or not settings.stripe_secret_key.startswith("sk_test_"):
         raise HTTPException(503, "Reader support sandbox payments are not configured yet.")
 
-    if submission.amount_cents not in ALLOWED_AMOUNTS and submission.amount_cents % 100 != 0:
+    if submission.amount_cents % 100 != 0:
         raise HTTPException(422, "Choose a whole-euro contribution amount.")
     if submission.amount_cents < 200 or submission.amount_cents > 50000:
         raise HTTPException(422, "Contributions must be between €2 and €500.")
