@@ -1257,3 +1257,44 @@ html[data-theme="light"] .studio-published-reply {
 html[data-theme="light"] .studio-state { background: #f4f1e9 !important; }
 html[data-theme="light"] .studio-footer>span,
 html[data-theme="light"] .studio-footer>a:last-child { color: #566357 !important; }
+
+
+/* Complete-manuscript import: keep the bulk workflow distinct from single-section editing. */
+.studio-bulk-import-panel,
+.studio-bulk-review {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  margin: 22px 0;
+  padding: 22px;
+  border: 1px solid rgba(225, 220, 205, .18);
+  border-radius: 12px;
+  background: rgba(255, 255, 255, .035);
+}
+.studio-bulk-import-panel {
+  flex-direction: row;
+  align-items: center;
+  justify-content: space-between;
+}
+.studio-bulk-import-panel strong { font-size: 16px; }
+.studio-bulk-import-panel p,
+.studio-bulk-review>p { margin: 6px 0 0; color: #a7aaa4; font-size: 14px; line-height: 1.55; }
+.studio-bulk-review .studio-form-title { display:flex; justify-content:space-between; gap:12px; }
+.studio-bulk-review .studio-form-title span { font-size:12px; letter-spacing:.1em; }
+.studio-bulk-review .studio-form-title small { color:#a7aaa4; font-size:11px; }
+.studio-bulk-row { display:grid; grid-template-columns:110px minmax(0,1fr) 140px; gap:12px; align-items:center; }
+.studio-bulk-row>span { font-size:11px; letter-spacing:.08em; color:#a7aaa4; }
+.studio-bulk-row input { min-width:0; padding:11px 12px; border:1px solid rgba(225,220,205,.25); border-radius:6px; background:#191b1b; color:#f1eee5; font:inherit; }
+.studio-bulk-row>small { color:#a7aaa4; font-size:12px; }
+html[data-theme="light"] .studio-bulk-import-panel,
+html[data-theme="light"] .studio-bulk-review { background:#fffdf8; color:#283129; border-color:rgba(43,55,44,.2); }
+html[data-theme="light"] .studio-bulk-import-panel p,
+html[data-theme="light"] .studio-bulk-review>p,
+html[data-theme="light"] .studio-bulk-review .studio-form-title small,
+html[data-theme="light"] .studio-bulk-row>span,
+html[data-theme="light"] .studio-bulk-row>small { color:#566357; }
+html[data-theme="light"] .studio-bulk-row input { background:#fffefa; color:#283129; border-color:#aebbad; }
+@media (max-width: 680px) {
+  .studio-bulk-import-panel { flex-direction:column; align-items:stretch; }
+  .studio-bulk-row { grid-template-columns:1fr; gap:6px; }
+}
