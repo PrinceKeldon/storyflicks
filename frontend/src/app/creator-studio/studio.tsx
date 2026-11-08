@@ -199,7 +199,7 @@ export default function CreatorStudio(){
   }catch(e){setError(message(e,"The manuscript file could not be read."));}
  }
  async function importCompleteManuscript(file:File){
-  setError("");setNotice("");setBulkSections([]);
+  setError("");setNotice("");setBulkSections([]);setBulkSavedCount(0);
   try{
    let imported:Block[];
    if(file.name.toLowerCase().endsWith(".docx")) imported=await importDocx(file);
@@ -221,24 +221,25 @@ export default function CreatorStudio(){
     const content=imported.slice(start+1,end);
     return {title,blocks:content.length?content:[{type:"paragraph" as const,text:""}]};
    });
-   setBulkSections(sections);setBulkSavedCount(0);setBulkFirstSequence(Math.max(0,...(workspace?.episodes||[]).map(item=>item.sequence_number))+1);
+   setBulkSections(sections);setBulkSavedCount(0);setBulkFirstSequence(Math.max(0,...(workspace?.episodes||[]).map(item=>item.sequence_number))+1);setBulkImportOpen(true);
    setNotice(sections.length+" chapters detected. Review the chapter titles and contents before importing them as drafts.");
   }catch(e){setError(message(e,"The complete manuscript could not be read."));}
  }
  async function saveCompleteManuscript(){
   if(!storyId||!bulkSections.length)return;
   setBulkImportBusy(true);setError("");
+  let savedCount=bulkSavedCount;
   try{
    for(let index=bulkSavedCount;index<bulkSections.length;index++){
-    const section=bulkSections[index];
     const section=bulkSections[index];
     await request("/creator/stories/"+storyId+"/episodes",{method:"POST",body:JSON.stringify({
      season_id:null,sequence_number:bulkFirstSequence+index,title:section.title,synopsis:null,
      content:{blocks:section.blocks.filter(block=>block.type==="separator"||block.type==="spacer"||block.text.trim())}
     })});
+    savedCount=index+1;setBulkSavedCount(savedCount);
    }
    setBulkImportOpen(false);setBulkSections([]);setBulkSavedCount(0);setNotice(bulkSections.length+" manuscript chapters saved as drafts. Nothing has been published.");await loadWorkspace(storyId);await loadDashboard();
-  }catch(e){setError(message(e,"Import paused after "+bulkSavedCount+" of "+bulkSections.length+" chapters. Completed chapters are kept; retry to continue with the remaining chapters."));}
+  }catch(e){setBulkSavedCount(savedCount);setError(message(e,"Import paused after "+savedCount+" of "+bulkSections.length+" chapters. Completed chapters are marked; retry to continue with the remaining chapters."));}
   finally{setBulkImportBusy(false);}
  }
  async function createStory(ev:FormEvent<HTMLFormElement>){ev.preventDefault();setBusy("create");setError("");try{const data=await request("/creator/stories",{method:"POST",body:JSON.stringify({...newStory,genres:parseGenres(newStory.genres)})}) as {story_id:string};setNewStoryOpen(false);setStoryId(data.story_id);setTab("episodes");setNotice("Story workspace created. Add your first section when ready.");setNewStory({title:"",author_name:"",slug:"",tagline:"",synopsis:"",genres:"",first_episode_free:true,section_label:"Episode",section_label_plural:"Episodes"});await loadDashboard();setStoryId(data.story_id);}catch(e){setError(message(e,"Could not create story."));}finally{setBusy("");}}
