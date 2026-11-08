@@ -12,6 +12,7 @@ type EpisodeAccessGate = {
   message: string;
   required_action?: string;
   previous_episode?: { id: string; title: string; sequence_number: number };
+  locked_episode?: { id: string; title: string; sequence_number: number };
 };
 type EpisodePayload = {
   story: { id: string; slug: string; title: string };
@@ -181,7 +182,7 @@ export default function ReadingRoom({ slug, episodeId }: { slug: string; episode
       <span className="reader-state-mark">SF.</span>
       <p className="eyebrow">ONE MORE STEP</p>
       <h1>One more step to unlock this episode.</h1>
-      <p>{accessGate.message} Your next step is to share your take on Episode {String(accessGate.previous_episode.sequence_number).padStart(2, "0")}, <strong>{accessGate.previous_episode.title}</strong>. Either a quick reaction or a written review is enough.</p>
+      <p>{accessGate.locked_episode ? <>You’re almost at Episode {String(accessGate.locked_episode.sequence_number).padStart(2, "0")}: <strong>{accessGate.locked_episode.title}</strong>. </> : null}{accessGate.message} Your next step is to share your take on Episode {String(accessGate.previous_episode.sequence_number).padStart(2, "0")}, <strong>{accessGate.previous_episode.title}</strong>. Either a quick reaction or a written review is enough.</p>
       <button type="button" className="primary-button" onClick={() => setShowContribution(true)}>Share your take <span>→</span></button>
       <Link className="text-button" href={`/stories/${slug}/read/${accessGate.previous_episode.id}`}>← Return to Episode {String(accessGate.previous_episode.sequence_number).padStart(2, "0")}</Link>
       {showContribution && <div className="contribution-modal-backdrop" role="presentation">
