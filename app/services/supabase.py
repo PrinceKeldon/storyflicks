@@ -42,6 +42,29 @@ class SupabaseService:
         return data if isinstance(data, list) else []
 
 
+    async def admin_insert(self, table: str, payload: dict[str, Any]) -> Any:
+        async with httpx.AsyncClient(timeout=20.0) as client:
+            response = await client.post(
+                f"{settings.supabase_rest_url}/{table}",
+                headers={**self._admin_headers(), "Prefer": "return=minimal"},
+                json=payload,
+            )
+        self._raise_for_supabase(response)
+        return response.json() if response.content else None
+
+    async def admin_patch(
+        self, table: str, params: dict[str, str], payload: dict[str, Any]
+    ) -> Any:
+        async with httpx.AsyncClient(timeout=20.0) as client:
+            response = await client.patch(
+                f"{settings.supabase_rest_url}/{table}",
+                headers={**self._admin_headers(), "Prefer": "return=minimal"},
+                params=params,
+                json=payload,
+            )
+        self._raise_for_supabase(response)
+        return response.json() if response.content else None
+
     async def admin_get_all(
         self,
         table: str,

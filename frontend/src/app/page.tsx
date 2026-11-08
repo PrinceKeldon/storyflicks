@@ -1,5 +1,6 @@
 import Link from "next/link";
 import PersonalisedShelf from "./personalised-shelf";
+import CreatorStudioNavLink from "./creator-studio-nav-link";
 
 type DiscoverStory = {
   id: string;
@@ -28,7 +29,7 @@ const previewStory: DiscoverStory = {
   section_label_plural: "Episodes",
 };
 
-const navItems = ["Discover", "My Library", "Creator Studio"];
+const navItems = ["Discover", "My Library"];
 
 async function getCatalogue(): Promise<{ stories: DiscoverStory[]; unavailable: boolean }> {
   const apiUrl = process.env.NEXT_PUBLIC_API_URL?.replace(/\/+$/, "");
@@ -62,10 +63,8 @@ export default async function DiscoverPage() {
       <header className="topbar">
         <Link className="wordmark" href="/" aria-label="STORYFLICKS home">STORY<span>FLICKS</span><i>.</i></Link>
         <nav className="main-nav" aria-label="Main navigation">
-          {navItems.map((item, index) => index === 2
-            ? <Link className="nav-link" href="/creator-studio" key={item}>{item}</Link>
-            : <Link className={index === 0 ? "nav-link active" : "nav-link"} href={index === 0 ? "/" : "/library"} key={item}>{item}</Link>
-          )}
+          {navItems.map((item, index) => <Link className={index === 0 ? "nav-link active" : "nav-link"} href={index === 0 ? "/" : "/library"} key={item}>{item}</Link>)}
+          <CreatorStudioNavLink />
         </nav>
         <div className="account-actions">
           <Link className="icon-button" href="/search" aria-label="Search"><span className="search-icon" /></Link>

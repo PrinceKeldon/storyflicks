@@ -12,6 +12,9 @@ class Settings(BaseSettings):
     supabase_service_role_key: str
 
     scheduler_secret: str = ""
+    stripe_secret_key: str = ""
+    stripe_webhook_secret: str = ""
+    frontend_base_url: str = "http://localhost:3000"
     story_assets_bucket: str = "story-assets"
     cors_origins: list[str] = ["http://localhost:3000"]
 

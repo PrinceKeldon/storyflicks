@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import ReactionPanel from "../../react/[episodeId]/reaction-panel";
+import SupportStoryButton from "../../support-story-button";
 import { Fragment, useCallback, useEffect, useMemo, useRef, useState, type ReactNode } from "react";
 import { getSupabaseBrowserClient } from "@/lib/supabase";
 
@@ -274,7 +275,10 @@ export default function ReadingRoom({ slug, episodeId }: { slug: string; episode
           <span>END OF {(payload.story.section_label || "Episode").toUpperCase()} {String(payload.episode.sequence_number).padStart(2, "0")}</span>
           <h2>Let that one settle.</h2>
           <p>Take a moment to react or write a review. Either one unlocks what comes next.</p>
-          <button type="button" className="primary-button" onClick={() => setShowContribution(true)}>Share your take <span>→</span></button>
+          <div className="reading-end-actions">
+            <button type="button" className="primary-button" onClick={() => setShowContribution(true)}>Share your take <span>→</span></button>
+            <SupportStoryButton storyId={payload.story.id} slug={slug} compact />
+          </div>
         </footer>
       </article>
       <footer className="reader-footer"><span>STORYFLICKS</span><span>Stories worth staying for.</span><span>© 2026</span></footer>
