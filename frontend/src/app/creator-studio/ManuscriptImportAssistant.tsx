@@ -96,7 +96,7 @@ export default function ManuscriptImportAssistant({ storyId, storyTitle, episode
   const orderedEpisodes = useMemo(() => [...episodes].sort((a, b) => a.sequence_number - b.sequence_number), [episodes]);
   const included = sections.filter(section => section.include);
   const duplicateTargets = included.filter((section, index) => section.targetEpisodeId && included.findIndex(other => other.targetEpisodeId === section.targetEpisodeId) !== index).map(section => section.targetEpisodeId);
-  const canImport = included.length > 0 && included.every(section => section.title.trim()) && duplicateTargets.length === 0 && !busy;
+  const canImport = included.length > 0 && included.every(section => section.title.trim() && section.blocks.some(block => block.type === "separator" || block.type === "spacer" || block.text.trim())) && duplicateTargets.length === 0 && !busy;
 
   async function analyseFile(file: File) {
     setError(""); setNotice("");
@@ -212,7 +212,7 @@ export default function ManuscriptImportAssistant({ storyId, storyTitle, episode
       <div className="sf-manuscript-file"><div><strong>{fileName}</strong><small>{(fileSize / (1024 * 1024)).toFixed(2)} MB · {analysis.words.toLocaleString("en-GB")} words · {analysis.paragraphs.toLocaleString("en-GB")} paragraphs</small></div><button type="button" className="studio-text-action" disabled={busy} onClick={() => { setStage("upload"); setSections([]); setAnalysis(null); setError(""); setNotice(""); }}>Choose another file</button></div>
       <div className="sf-manuscript-metrics"><div><strong>{sections.length}</strong><span>Sections prepared</span></div><div><strong>{analysis.headings}</strong><span>Heading candidates</span></div><div><strong>{analysis.formattedRuns}</strong><span>Formatted text runs</span></div></div>
       {analysis.warnings.length > 0 && <div className="sf-manuscript-warnings"><strong>Review notes</strong>{analysis.warnings.map((warning, index) => <p key={index}>• {warning}</p>)}</div>}
-      <div className="sf-manuscript-reconcile-intro"><div><h4>Review chapter structure</h4><p>Rename, split or merge sections. Then choose whether each one becomes a new draft or a draft revision of an existing section.</p></div><button type="button" className="studio-outline-action" onClick={addSection}>＋ Add section</button></div>
+      <div className="sf-manuscript-reconcile-intro"><div><h4>Review chapter structure</h4><p>Rename, split or merge sections. Then choose whether each one becomes a new draft or a draft revision of an existing section.</p></div></div>
       <div className="sf-manuscript-section-list">
         {sections.map((section, index) => {
           const expanded = expandedId === section.id;
@@ -226,7 +226,7 @@ export default function ManuscriptImportAssistant({ storyId, storyTitle, episode
             </div>
             <div className="sf-manuscript-destination"><label>Import destination<select value={section.targetEpisodeId || "new"} disabled={section.saved} onChange={event => updateSection(section.id, { targetEpisodeId: event.target.value === "new" ? "" : event.target.value })}><option value="new">Create a new draft section</option>{orderedEpisodes.map(episode => <option key={episode.id} value={episode.id}>{episode.sequence_number}. {episode.title} · {episode.publication_status}</option>)}</select></label>{suggested && !section.targetEpisodeId && <small>Possible title match: {suggested.title}. It will remain untouched unless you select it.</small>}{section.targetEpisodeId && <small>This will create a draft revision. The published version remains unchanged.</small>}</div>
             {duplicateTargets.includes(section.targetEpisodeId) && section.targetEpisodeId && <p className="sf-manuscript-inline-warning">Two manuscript sections cannot be mapped to the same existing section.</p>}
-            {expanded && <div className="sf-manuscript-preview"><div className="sf-manuscript-preview-heading"><strong>Content preview</strong><span>{Math.min(section.blocks.length, 80)} of {section.blocks.length} blocks shown</span></div>{section.blocks.slice(0, 80).map(blockPreview)}{section.blocks.length > 80 && <button type="button" className="studio-text-action" onClick={() => setShowAllBlocks(value => !value)}>{showAllBlocks ? "Show fewer blocks" : "Show all blocks"}</button>}
+            {expanded && <div className="sf-manuscript-preview"><div className="sf-manuscript-preview-heading"><strong>Content preview</strong><span>{Math.min(section.blocks.length, 80)} of {section.blocks.length} blocks shown</span></div>{section.blocks.slice(0, 80).map(blockPreview)}{section.blocks.length > 80 && <p className="sf-manuscript-preview-note">Preview limited to the first 80 blocks. All blocks will be included in the import.</p>}
               {section.blocks.length > 1 && <div className="sf-manuscript-split-tools"><span>Need to correct a chapter boundary?</span>{section.blocks.slice(1).map((block, blockIndex) => <button type="button" key={blockIndex + 1} onClick={() => splitSection(section.id, blockIndex + 1)}>Split before: {(block.text || block.type).slice(0, 42)}{(block.text || "").length > 42 ? "…" : ""}</button>)}</div>}
               {index > 0 && <button type="button" className="studio-text-action" onClick={() => mergeIntoPrevious(section.id)}>Merge into previous section</button>}
             </div>}
