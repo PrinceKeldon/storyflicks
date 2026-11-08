@@ -1,10 +1,18 @@
 "use client";
 
 import Link from "next/link";
+import { useRouter } from "next/navigation";
+import ReactionPanel from "../../react/[episodeId]/reaction-panel";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { getSupabaseBrowserClient } from "@/lib/supabase";
 
 type ContentBlock = { type?: string; text?: string; html?: string; content?: string; level?: number; [key: string]: unknown };
+type EpisodeAccessGate = {
+  code: string;
+  message: string;
+  required_action?: string;
+  previous_episode?: { id: string; title: string; sequence_number: number };
+};
 type EpisodePayload = {
   story: { id: string; slug: string; title: string };
   episode: { id: string; sequence_number: number; title: string; synopsis?: string | null; content: unknown; assets?: { id: string; asset_type: string; public_url?: string | null; alt_text?: string | null; position: number }[] };
@@ -33,7 +41,10 @@ function blockText(block: ContentBlock) {
 
 export default function ReadingRoom({ slug, episodeId }: { slug: string; episodeId: string }) {
   const [payload, setPayload] = useState<EpisodePayload | null>(null);
-  const [status, setStatus] = useState<"loading" | "signed-out" | "ready" | "error">("loading");
+  const [status, setStatus] = useState<"loading" | "signed-out" | "ready" | "locked" | "error">("loading");
+  const [accessGate, setAccessGate] = useState<EpisodeAccessGate | null>(null);
+  const [showContribution, setShowContribution] = useState(false);
+  const router = useRouter();
   const [error, setError] = useState("");
   const [theme, setTheme] = useState<"paper" | "sepia" | "night">("paper");
   const [fontScale, setFontScale] = useState(100);
@@ -66,8 +77,14 @@ export default function ReadingRoom({ slug, episodeId }: { slug: string; episode
       const response = await fetch(`${apiUrl}/episodes/${episodeId}`, { headers: { Authorization: `Bearer ${session.access_token}` }, cache: "no-store" });
       if (response.status === 401) { setStatus("signed-out"); return; }
       if (!response.ok) {
-        const body = await response.json().catch(() => ({}));
-        throw new Error(body.detail || (response.status === 403 ? "This episode is not unlocked for your account yet." : "We couldn’t open this episode."));
+        const body = await response.json().catch(() => ({})) as { detail?: string | EpisodeAccessGate };
+        if (response.status === 403 && body.detail && typeof body.detail === "object" && body.detail.code === "contribution_required") {
+          setAccessGate(body.detail);
+          setStatus("locked");
+          return;
+        }
+        const detail = body.detail;
+        throw new Error(typeof detail === "string" ? detail : detail?.message || "We couldn’t open this episode.");
       }
       const data = await response.json() as EpisodePayload;
       setPayload(data);
@@ -159,6 +176,30 @@ export default function ReadingRoom({ slug, episodeId }: { slug: string; episode
 
   if (status === "loading") return <main className="reader-state"><span className="reader-state-mark">SF.</span><p>Preparing your reading room…</p></main>;
   if (status === "signed-out") return <main className="reader-state"><span className="reader-state-mark">SF.</span><p className="eyebrow">YOUR STORY IS WAITING</p><h1>Sign in to enter the Reading Room.</h1><p>Your reading progress and episode access are tied to your account.</p><Link className="primary-button" href={`/sign-in?next=/stories/${slug}/read/${episodeId}`}>Sign in to continue <span>↗</span></Link></main>;
+  if (status === "locked" && accessGate?.previous_episode) return (
+    <main className="reader-state reader-locked-state">
+      <span className="reader-state-mark">SF.</span>
+      <p className="eyebrow">ONE MORE STEP</p>
+      <h1>One more step to unlock this episode.</h1>
+      <p>{accessGate.message} Your next step is to share your take on Episode {String(accessGate.previous_episode.sequence_number).padStart(2, "0")}, <strong>{accessGate.previous_episode.title}</strong>. Either a quick reaction or a written review is enough.</p>
+      <button type="button" className="primary-button" onClick={() => setShowContribution(true)}>Share your take <span>→</span></button>
+      <Link className="text-button" href={`/stories/${slug}/read/${accessGate.previous_episode.id}`}>← Return to Episode {String(accessGate.previous_episode.sequence_number).padStart(2, "0")}</Link>
+      {showContribution && <div className="contribution-modal-backdrop" role="presentation">
+        <div className="contribution-modal-dialog" role="dialog" aria-modal="true" aria-label="Share your take">
+          <ReactionPanel
+            slug={slug}
+            episodeId={accessGate.previous_episode.id}
+            presentation="modal"
+            onClose={() => setShowContribution(false)}
+            onUnlocked={(nextEpisodeId) => {
+              setShowContribution(false);
+              router.replace(`/stories/${slug}/read/${nextEpisodeId}`);
+            }}
+          />
+        </div>
+      </div>}
+    </main>
+  );
   if (status === "error" || !payload) return <main className="reader-state"><span className="reader-state-mark">SF.</span><p className="eyebrow">A SMALL INTERRUPTION</p><h1>We couldn’t open this episode.</h1><p>{error}</p><Link className="text-button" href={`/stories/${slug}`}>← Back to {payload?.story.title || "the story"}</Link></main>;
 
   return (
