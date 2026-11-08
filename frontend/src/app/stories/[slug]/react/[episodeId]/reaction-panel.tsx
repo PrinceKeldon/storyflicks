@@ -38,7 +38,9 @@ const categoryLabels: Record<string, string> = {
   critical: "Not for me",
 };
 
-export default function ReactionPanel({ slug, episodeId }: { slug: string; episodeId: string }) {
+type ReactionPanelProps = { slug: string; episodeId: string; presentation?: "page" | "modal"; onClose?: () => void; onUnlocked?: (episodeId: string) => void };
+
+export default function ReactionPanel({ slug, episodeId, presentation = "page", onClose, onUnlocked }: ReactionPanelProps) {
   const [data, setData] = useState<ReviewRoomPayload | null>(null);
   const [selected, setSelected] = useState<string[]>([]);
   const [headline, setHeadline] = useState("");
@@ -128,6 +130,10 @@ export default function ReactionPanel({ slug, episodeId }: { slug: string; episo
         : visibility === "public"
           ? `Review published. Your public review is now visible in the Episode ${data.episode.sequence_number} Review Room.`
           : "Private review saved. Only you can see it; it will not appear in the public Review Room.");
+      if (presentation === "modal") {
+        if (unlocked?.publication_status === "published") onUnlocked?.(unlocked.id);
+        else onClose?.();
+      }
     } catch (cause) {
       setError(cause instanceof Error ? cause.message : "Something went wrong.");
     } finally {
@@ -140,17 +146,17 @@ export default function ReactionPanel({ slug, episodeId }: { slug: string; episo
     setError("");
   }
 
-  if (status === "loading") return <main className="reader-state"><span className="reader-state-mark">SF.</span><p>Gathering your thoughts…</p></main>;
-  if (status === "signed-out") return <main className="reader-state"><span className="reader-state-mark">SF.</span><h1>Sign in to share your take.</h1><Link className="primary-button" href={`/sign-in?next=/stories/${slug}/react/${episodeId}`}>Sign in to continue <span>↗</span></Link></main>;
-  if (status === "error" || !data) return <main className="reader-state"><span className="reader-state-mark">SF.</span><h1>We couldn’t load this page.</h1><p>{error}</p><Link href={`/stories/${slug}`}>Back to {data?.story.title || "the story"}</Link></main>;
+  if (status === "loading") return presentation === "modal"
+    ? <div className="contribution-modal-state">Gathering your thoughts…</div>
+    : <main className="reader-state"><span className="reader-state-mark">SF.</span><p>Gathering your thoughts…</p></main>;
+  if (status === "signed-out") return presentation === "modal"
+    ? <div className="contribution-modal-state"><p>Sign in to share your take.</p><Link className="primary-button" href={`/sign-in?next=/stories/${slug}/react/${episodeId}`}>Sign in to continue <span>↗</span></Link></div>
+    : <main className="reader-state"><span className="reader-state-mark">SF.</span><h1>Sign in to share your take.</h1><Link className="primary-button" href={`/sign-in?next=/stories/${slug}/react/${episodeId}`}>Sign in to continue <span>↗</span></Link></main>;
+  if (status === "error" || !data) return presentation === "modal"
+    ? <div className="contribution-modal-state"><p>We couldn’t load your response form.</p><p>{error}</p><button type="button" className="primary-button" onClick={onClose}>Close</button></div>
+    : <main className="reader-state"><span className="reader-state-mark">SF.</span><h1>We couldn’t load this page.</h1><p>{error}</p><Link href={`/stories/${slug}`}>Back to {data?.story.title || "the story"}</Link></main>;
 
-  return (
-    <main className="contribution-shell">
-      <header className="contribution-header">
-        <Link className="reader-brand" href="/">STORY<span>FLICKS</span><i>.</i></Link>
-        <div className="reader-location"><Link href={`/stories/${slug}`}>{data.story.title}</Link><span>/</span><span>YOUR TAKE</span></div>
-        <Link className="reader-exit" href={`/stories/${slug}`}>Exit</Link>
-      </header>
+  const contributionContent = (
       <section className="contribution-content">
         <p className="eyebrow">END OF EPISODE {String(data.episode.sequence_number).padStart(2, "0")}</p>
         <h1>So, what did you think?</h1>
@@ -171,7 +177,7 @@ export default function ReactionPanel({ slug, episodeId }: { slug: string; episo
           </div>
           <div className="contribution-action-row">
             <p>{selected.length} selected <span>·</span> A reaction on its own unlocks the next episode.</p>
-            <button className="primary-button" type="button" disabled={busy !== null || selected.length === 0} onClick={() => void submitContribution("reaction")}>{busy === "reaction" ? "Saving…" : "Save my reactions"} <span>→</span></button>
+            <button className="primary-button" type="button" disabled={busy !== null || selected.length === 0} onClick={() => void submitContribution("reaction")}>{busy === "reaction" ? "Submitting…" : presentation === "modal" ? "Submit reaction & continue" : "Save my reactions"} <span>→</span></button>
           </div>
         </section>
 
@@ -191,13 +197,13 @@ export default function ReactionPanel({ slug, episodeId }: { slug: string; episo
           </div>
           <div className="contribution-action-row review-submit-row">
             <p>A submitted review — public or private — also unlocks the next episode.</p>
-            <button className="primary-button" type="button" disabled={busy !== null || !body.trim()} onClick={() => void submitContribution("review")}>{busy === "review" ? "Submitting…" : data.my_review ? "Update my review" : "Submit my review"} <span>→</span></button>
+            <button className="primary-button" type="button" disabled={busy !== null || !body.trim()} onClick={() => void submitContribution("review")}>{busy === "review" ? "Submitting…" : presentation === "modal" ? (data.my_review ? "Update review & continue" : "Submit review & continue") : data.my_review ? "Update my review" : "Submit my review"} <span>→</span></button>
           </div>
         </section>
 
         {error && <p className="contribution-error" role="alert">{error}</p>}
 
-        {data.has_qualified && <section className="unlock-panel">
+        {presentation === "page" && data.has_qualified && <section className="unlock-panel">
           <p className="eyebrow">YOU’VE DONE YOUR PART</p>
           <h2>{unlock ? "Your next episode is unlocked." : data.next_episode ? "Your contribution is recorded." : "You’re all caught up."}</h2>
           {unlock ? <>
@@ -207,8 +213,30 @@ export default function ReactionPanel({ slug, episodeId }: { slug: string; episo
           </> : data.next_episode ? <p>Your contribution is saved. If the next episode has not opened yet, your access will be ready when it is published.</p> : <p>Your response is recorded. There isn’t another episode available just yet.</p>}
         </section>}
 
-        <div className="contribution-bottom-links"><Link href={`/stories/${slug}`}>Skip for now · Back to {data.story.title}</Link><Link href={`/stories/${slug}/reviews/${episodeId}`}>Reader discussion ↗</Link><Link href={`/stories/${slug}#episodes`}>Episode guide ↗</Link></div>
+        {presentation === "page" && <div className="contribution-bottom-links"><Link href={`/stories/${slug}`}>Skip for now · Back to {data.story.title}</Link><Link href={`/stories/${slug}/reviews/${episodeId}`}>Reader discussion ↗</Link><Link href={`/stories/${slug}#episodes`}>Episode guide ↗</Link></div>}
       </section>
+  );
+
+  if (presentation === "modal") {
+    return (
+      <div className="contribution-modal-panel">
+        <header className="contribution-modal-heading">
+          <div><p className="eyebrow">END OF EPISODE {String(data.episode.sequence_number).padStart(2, "0")}</p><h2>Share your take.</h2></div>
+          <button type="button" className="contribution-modal-close" onClick={onClose} aria-label="Close contribution window">×</button>
+        </header>
+        <div className="contribution-modal-scroll">{contributionContent}</div>
+      </div>
+    );
+  }
+
+  return (
+    <main className="contribution-shell">
+      <header className="contribution-header">
+        <Link className="reader-brand" href="/">STORY<span>FLICKS</span><i>.</i></Link>
+        <div className="reader-location"><Link href={`/stories/${slug}`}>{data.story.title}</Link><span>/</span><span>YOUR TAKE</span></div>
+        <Link className="reader-exit" href={`/stories/${slug}`}>Exit</Link>
+      </header>
+      {contributionContent}
       <footer className="reader-footer"><span>STORYFLICKS</span><span>Stories worth staying for.</span><span>© 2026</span></footer>
     </main>
   );
