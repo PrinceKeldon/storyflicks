@@ -87,7 +87,7 @@ export default function ReadingRoom({ slug, episodeId }: { slug: string; episode
           return;
         }
         const detail = body.detail;
-        throw new Error(typeof detail === "string" ? detail : detail?.message || "We couldn’t open this episode.");
+        throw new Error(typeof detail === "string" ? detail : detail?.message || "We couldn’t open this section.");
       }
       const data = await response.json() as EpisodePayload;
       setPayload(data);
@@ -183,7 +183,7 @@ export default function ReadingRoom({ slug, episodeId }: { slug: string; episode
     <main className="reader-state reader-locked-state">
       <span className="reader-state-mark">SF.</span>
       <p className="eyebrow">ONE MORE STEP</p>
-      <h1>One more step to unlock this episode.</h1>
+      <h1>One more step to unlock this {accessGate.section_label || "Episode"}.</h1>
       <p>{accessGate.locked_episode ? <>You’re almost at {accessGate.section_label || "Episode"} {String(accessGate.locked_episode.sequence_number).padStart(2, "0")}: <strong>{accessGate.locked_episode.title}</strong>. </> : null}{accessGate.message} Your next step is to share your take on {accessGate.section_label || "Episode"} {String(accessGate.previous_episode.sequence_number).padStart(2, "0")}, <strong>{accessGate.previous_episode.title}</strong>. Either a quick reaction or a written review is enough.</p>
       <button type="button" className="primary-button" onClick={() => setShowContribution(true)}>Share your take <span>→</span></button>
       <Link className="text-button" href={`/stories/${slug}/read/${accessGate.previous_episode.id}`}>← Return to {accessGate.section_label || "Episode"} {String(accessGate.previous_episode.sequence_number).padStart(2, "0")}</Link>
