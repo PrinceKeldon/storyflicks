@@ -601,6 +601,8 @@ async def get_review_room(
             "id": story["id"],
             "slug": story["slug"],
             "title": story["title"],
+            "section_label": story.get("section_label") or "Episode",
+            "section_label_plural": story.get("section_label_plural") or "Episodes",
         },
         "episode": {
             "id": episode["id"],
