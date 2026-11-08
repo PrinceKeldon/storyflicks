@@ -1029,3 +1029,231 @@ html[data-theme="light"] .user-settings-footer{border-color:rgba(43,55,44,.17)}
 
 /* DOCX-imported intentional blank paragraphs remain distinct from section breaks. */
 .manuscript-spacer{height:0.8em;}
+
+
+/* Creator Studio: complete theme coverage and accessible working typography. */
+/* Keep the editorial Reading Room manuscript styles independent. */
+.studio-shell {
+  background: var(--ink);
+  color: var(--paper);
+}
+.studio-header nav a { font-size: 14px; color: #b5beb4; }
+.studio-header nav a.active { color: var(--paper); }
+.studio-header-link { font-size: 13px; color: #c2c9c0; }
+.studio-hero>div:first-child>p:last-child { color: #c0c8bf; font-size: 15px; line-height: 1.75; }
+.studio-tabs button { font-size: 14px; color: #b8c1b7; }
+.studio-section-heading h2 { font-size: 34px; }
+.studio-intro { color: #bdc6bc; font-size: 14px; line-height: 1.75; }
+.studio-primary,.studio-outline-action { min-height: 44px; padding-inline: 18px; font-size: 13px; }
+.studio-text-action { font-size: 13px; }
+.studio-metric>span,.studio-metric small,
+.studio-story-name small,.studio-story-count,.studio-catalogue-top small,
+.studio-catalogue-stats,.studio-workspace-status small,
+.studio-episode-choice small,.studio-block-heading small,
+.studio-block-tools>span,.studio-save-hint,.studio-revision-row span,
+.studio-revision-row small,.studio-revision-row strong,
+.studio-footnote,.studio-cover-manager small,.studio-episode-assets small,
+.studio-community-card-head>small,.studio-community-card-foot>small,
+.studio-review-author,.studio-note-actions>span,.studio-report-toolbar label,
+.studio-report-meta small,.studio-analytics-toolbar label,
+.studio-episode-analytics-title>span,.studio-episode-analytics-row>div small,
+.studio-activity-day small,.studio-publication-controls>div:first-child span,
+.studio-publication-controls>div:first-child small,
+.studio-form-title,.studio-form-title button,.studio-form label,
+.studio-workspace-select label,.studio-sidebar-heading,
+.studio-block-heading span,.studio-cover-manager span,.studio-episode-assets span,
+.studio-community-tabs button,.studio-community-tabs small,
+.studio-note-actions>span,.studio-reply-composer {
+  font-size: 11px;
+}
+.studio-metric>span,.studio-story-name small,.studio-story-count,
+.studio-catalogue-top small,.studio-catalogue-stats,.studio-workspace-status small,
+.studio-episode-choice small,.studio-block-heading small,.studio-block-tools>span,
+.studio-save-hint,.studio-revision-row span,.studio-revision-row small,
+.studio-footnote,.studio-cover-manager small,.studio-episode-assets small,
+.studio-community-card-head>small,.studio-community-card-foot>small,
+.studio-review-author,.studio-report-meta small,.studio-episode-analytics-title>span,
+.studio-episode-analytics-row>div small,.studio-activity-day small {
+  color: #b2bdb2;
+}
+.studio-story-status,.studio-workspace-status span,.studio-block-heading button,
+.studio-editor-actions button,.studio-info-panel>span,
+.studio-community-card-head>span,.studio-published-reply span,
+.studio-episode-choice>span:first-child,.studio-metric strong {
+  color: #70ddb0;
+}
+.studio-story-name strong { font-size: 19px; }
+.studio-catalogue-card h3 { font-size: 26px; }
+.studio-catalogue-card>p,.studio-empty p,.studio-info-panel p,
+.studio-note-body,.studio-published-reply p,.studio-report-meta span,
+.studio-preference-list label,.studio-activity-legend { font-size: 14px; line-height: 1.7; }
+.studio-form-title { font-size: 11px; }
+.studio-form label,.studio-workspace-select label,
+.studio-analytics-toolbar label,.studio-report-toolbar label { font-size: 12px; }
+.studio-form input:not([type=checkbox]),.studio-form textarea,
+.studio-schedule-row input,.studio-workspace-select select,
+.studio-block-tools select,.studio-note-composer>label select,
+.studio-report-toolbar select,.studio-analytics-toolbar select,
+.studio-reply-composer textarea {
+  font-size: 14px;
+}
+.studio-content-block textarea { font-size: 15px; line-height: 1.8; }
+.studio-block-tools select { font-size: 12px; }
+.studio-block-tools button,.studio-upload-control,.studio-import-control { font-size: 11px; }
+.studio-episode-choice strong { font-size: 14px; }
+.studio-sidebar-empty,.studio-loading { font-size: 13px; line-height: 1.7; }
+.studio-revision-row { font-size: 12px; }
+.studio-revision-row strong,.studio-revision-row i { font-size: 11px; }
+.studio-save-hint { font-size: 11px; line-height: 1.6; }
+.studio-community-tabs button { font-size: 13px; }
+.studio-community-card h3 { font-size: 23px; }
+.studio-note-body { font-size: 14px; }
+.studio-published-reply p { font-size: 13px; }
+.studio-preference-list label { font-size: 14px; }
+.studio-info-panel>span { font-size: 11px; }
+.studio-episode-analytics-title>strong { font-size: 15px; }
+.studio-episode-analytics-row>div:not(:first-child)>strong { font-size: 20px; }
+.studio-state>p:not(.eyebrow) { color: #c0c8bf; font-size: 14px; line-height: 1.75; }
+
+html[data-theme="light"] .studio-shell {
+  background: #f4f1e9 !important;
+  color: #242923 !important;
+}
+html[data-theme="light"] .studio-header nav a,
+html[data-theme="light"] .studio-header-link,
+html[data-theme="light"] .studio-tabs button,
+html[data-theme="light"] .studio-outline-action,
+html[data-theme="light"] .studio-text-action,
+html[data-theme="light"] .studio-editor-actions button {
+  color: #34483b !important;
+}
+html[data-theme="light"] .studio-header nav a.active,
+html[data-theme="light"] .studio-tabs button.active { color: #176b4a !important; }
+html[data-theme="light"] .studio-hero>div:first-child>p:last-child,
+html[data-theme="light"] .studio-intro,
+html[data-theme="light"] .studio-state>p:not(.eyebrow) {
+  color: #4d5b50 !important;
+}
+html[data-theme="light"] .studio-hero-mark {
+  background: radial-gradient(ellipse at center,#f4eee1,#e5dfd2 72%) !important;
+  border-color: #c5cbbf;
+}
+html[data-theme="light"] .studio-hero-mark span,
+html[data-theme="light"] .studio-story-status,
+html[data-theme="light"] .studio-workspace-status span,
+html[data-theme="light"] .studio-block-heading button,
+html[data-theme="light"] .studio-info-panel>span,
+html[data-theme="light"] .studio-community-card-head>span,
+html[data-theme="light"] .studio-published-reply span,
+html[data-theme="light"] .studio-metric strong {
+  color: #176b4a !important;
+}
+html[data-theme="light"] .studio-hero-mark small { color: #4d5b50 !important; }
+html[data-theme="light"] .studio-metric,
+html[data-theme="light"] .studio-catalogue-card,
+html[data-theme="light"] .studio-form,
+html[data-theme="light"] .studio-episode-sidebar,
+html[data-theme="light"] .studio-content-block,
+html[data-theme="light"] .studio-revision-panel,
+html[data-theme="light"] .studio-info-panel,
+html[data-theme="light"] .studio-community-card,
+html[data-theme="light"] .studio-analytics-toolbar,
+html[data-theme="light"] .studio-activity-chart,
+html[data-theme="light"] .studio-episode-analytics-row,
+html[data-theme="light"] .studio-state {
+  background-color: #fffdf8 !important;
+  color: #283129 !important;
+  border-color: rgba(43,55,44,.2) !important;
+}
+html[data-theme="light"] .studio-workspace-select,
+html[data-theme="light"] .studio-episode-choice,
+html[data-theme="light"] .studio-episode-choice.active,
+html[data-theme="light"] .studio-episode-choice:hover,
+html[data-theme="light"] .studio-block-tools,
+html[data-theme="light"] .studio-cover-manager,
+html[data-theme="light"] .studio-episode-assets,
+html[data-theme="light"] .studio-asset-strip figure,
+html[data-theme="light"] .studio-activity-bar {
+  background-color: #eeeae1 !important;
+  color: #344238 !important;
+  border-color: rgba(43,55,44,.22) !important;
+}
+html[data-theme="light"] .studio-content-block textarea,
+html[data-theme="light"] .studio-revision-row,
+html[data-theme="light"] .studio-story-row,
+html[data-theme="light"] .studio-episode-choice,
+html[data-theme="light"] .studio-community-tabs button,
+html[data-theme="light"] .studio-preference-list label {
+  color: #283129 !important;
+}
+html[data-theme="light"] .studio-metric>span,
+html[data-theme="light"] .studio-metric small,
+html[data-theme="light"] .studio-story-name small,
+html[data-theme="light"] .studio-story-count,
+html[data-theme="light"] .studio-catalogue-top small,
+html[data-theme="light"] .studio-catalogue-stats,
+html[data-theme="light"] .studio-workspace-status small,
+html[data-theme="light"] .studio-episode-choice small,
+html[data-theme="light"] .studio-block-heading small,
+html[data-theme="light"] .studio-block-tools>span,
+html[data-theme="light"] .studio-save-hint,
+html[data-theme="light"] .studio-revision-row span,
+html[data-theme="light"] .studio-revision-row small,
+html[data-theme="light"] .studio-footnote,
+html[data-theme="light"] .studio-cover-manager small,
+html[data-theme="light"] .studio-episode-assets small,
+html[data-theme="light"] .studio-community-card-head>small,
+html[data-theme="light"] .studio-community-card-foot>small,
+html[data-theme="light"] .studio-review-author,
+html[data-theme="light"] .studio-report-meta small,
+html[data-theme="light"] .studio-episode-analytics-title>span,
+html[data-theme="light"] .studio-episode-analytics-row>div small,
+html[data-theme="light"] .studio-activity-day small {
+  color: #566357 !important;
+}
+html[data-theme="light"] .studio-catalogue-card>p,
+html[data-theme="light"] .studio-empty p,
+html[data-theme="light"] .studio-info-panel p,
+html[data-theme="light"] .studio-note-body,
+html[data-theme="light"] .studio-published-reply p,
+html[data-theme="light"] .studio-report-meta span,
+html[data-theme="light"] .studio-preference-list label,
+html[data-theme="light"] .studio-activity-legend,
+html[data-theme="light"] .studio-episode-analytics-title>strong,
+html[data-theme="light"] .studio-episode-analytics-row>div:not(:first-child)>strong {
+  color: #3f4d42 !important;
+}
+html[data-theme="light"] .studio-form-title,
+html[data-theme="light"] .studio-form-title button,
+html[data-theme="light"] .studio-form label,
+html[data-theme="light"] .studio-workspace-select label,
+html[data-theme="light"] .studio-analytics-toolbar label,
+html[data-theme="light"] .studio-report-toolbar label,
+html[data-theme="light"] .studio-block-heading span {
+  color: #435247 !important;
+}
+html[data-theme="light"] .studio-form input:not([type=checkbox]),
+html[data-theme="light"] .studio-form textarea,
+html[data-theme="light"] .studio-schedule-row input,
+html[data-theme="light"] .studio-workspace-select select,
+html[data-theme="light"] .studio-block-tools select,
+html[data-theme="light"] .studio-note-composer>label select,
+html[data-theme="light"] .studio-report-toolbar select,
+html[data-theme="light"] .studio-analytics-toolbar select,
+html[data-theme="light"] .studio-reply-composer textarea {
+  background: #fffefa !important;
+  color: #283129 !important;
+  border-color: #aebbad !important;
+}
+html[data-theme="light"] .studio-upload-control,
+html[data-theme="light"] .studio-import-control {
+  background: #fffdf8 !important;
+  color: #176b4a !important;
+  border-color: #9aab9b !important;
+}
+html[data-theme="light"] .studio-published-reply {
+  background: #f0eee6 !important;
+}
+html[data-theme="light"] .studio-state { background: #f4f1e9 !important; }
+html[data-theme="light"] .studio-footer>span,
+html[data-theme="light"] .studio-footer>a:last-child { color: #566357 !important; }
