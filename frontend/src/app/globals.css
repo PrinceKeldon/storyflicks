@@ -631,11 +631,11 @@ body { font-size: 16px; }
   outline: 2px solid var(--mint);
   outline-offset: 3px;
 }
-:where(.app-shell,.detail-shell,.auth-shell,.contribution-shell,.review-room-shell,.library-shell,.studio-shell,.search-page) {
+.app-shell,.detail-shell,.auth-shell,.contribution-shell,.review-room-shell,.library-shell,.studio-shell,.search-page {
   font-size: 15px;
 }
-:where(.app-shell,.detail-shell,.auth-shell,.contribution-shell,.review-room-shell,.library-shell,.studio-shell,.search-page)
-:where(p, label, input, textarea, select, button, a, small, li) {
+:is(.app-shell,.detail-shell,.auth-shell,.contribution-shell,.review-room-shell,.library-shell,.studio-shell,.search-page)
+:is(p, label, input, textarea, select, button, a, small, li) {
   font-size: max(12px, 1em);
 }
 :where(.app-shell,.detail-shell,.auth-shell,.contribution-shell,.review-room-shell,.library-shell,.studio-shell,.search-page)
@@ -856,3 +856,5 @@ html[data-theme="light"] .reader-state { color-scheme: light; }
 @media(max-width:650px) {
   .theme-switch { right: 14px; bottom: 14px; min-height: 44px; padding: 0 13px; }
 }
+
+html[data-theme="light"] :is(.app-shell,.detail-shell,.auth-shell,.library-shell,.studio-shell,.search-page,.contribution-shell,.review-room-shell) { background: #f4f2ed; }
