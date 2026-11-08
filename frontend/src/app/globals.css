@@ -626,3 +626,31 @@ button{font:inherit}
 .personalised-story-art.has-cover::after{content:none!important;display:none!important}
 .library-cover-image,
 .personalised-cover-image{position:absolute;inset:0;z-index:2;display:block;width:100%;height:100%;object-fit:contain}
+
+
+/* Preserve the shared cover treatment added after the visual pass branch was created. */
+/* Story cover artwork is shared across every personal reading surface. */
+.library-story-art.has-cover,
+.personalised-story-art.has-cover{position:relative;isolation:isolate;background:#111214;padding:0}
+.library-story-art.has-cover::before,
+.library-story-art.has-cover::after,
+.personalised-story-art.has-cover::before,
+.personalised-story-art.has-cover::after{content:none!important;display:none!important}
+.library-cover-image,
+.personalised-cover-image{position:absolute;inset:0;z-index:2;display:block;width:100%;height:100%;object-fit:contain}
+
+
+/* Refine small uppercase editorial metadata: more legible, still regular weight. */
+.app-shell :is(.eyebrow,.feature-overline,.feature-kicker,.feature-meta,.art-caption,.art-index,.detail-label,.guide-count,.poster-kicker,.poster-foot,.story-facts,.episode-status,.studio-story-status,.studio-catalogue-top,.studio-workspace-status span,.studio-workspace-status small,.studio-episode-choice small,.studio-revision-row span,.studio-revision-row small,.studio-revision-row strong,.studio-publication-controls>div:first-child span,.studio-publication-controls>div:first-child small,.studio-community-card-head>span,.studio-episode-analytics-title>span) {
+  font-weight: 500;
+}
+.feature-overline { color: #aeb6ac; font-size: 10px; letter-spacing: 1.35px; }
+.feature-meta { color: #c0c6bd; font-size: 9px; letter-spacing: 1.05px; }
+.feature-meta b { color: var(--mint); }
+.feature-kicker { color: #73dfb3; font-size: 10px; letter-spacing: 1.25px; }
+.eyebrow,.detail-label,.guide-count,.story-facts,.episode-status { letter-spacing: 1.05px; }
+.art-caption,.art-index,.poster-kicker,.poster-foot { color: #d2c2aa; font-weight: 500; }
+html[data-theme="light"] .feature-overline { color: #59675d; }
+html[data-theme="light"] .feature-meta { color: #48574c; }
+html[data-theme="light"] .feature-kicker { color: #18724f; }
+html[data-theme="light"] .art-caption,html[data-theme="light"] .art-index,html[data-theme="light"] .poster-kicker,html[data-theme="light"] .poster-foot { color: #4e554c; }
