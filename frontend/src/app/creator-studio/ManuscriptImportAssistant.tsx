@@ -98,6 +98,9 @@ export default function ManuscriptImportAssistant({ storyId, storyTitle, section
   const [fileName, setFileName] = useState("");
   const [fileSize, setFileSize] = useState(0);
   const [sections, setSections] = useState<Section[]>([]);
+  const [sourceBlocks, setSourceBlocks] = useState<Block[]>([]);
+  const [aiBusy, setAiBusy] = useState(false);
+  const [aiModel, setAiModel] = useState("");
   const [analysis, setAnalysis] = useState<{ paragraphs: number; words: number; headings: number; formattedRuns: number; warnings: string[] } | null>(null);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState("");
@@ -146,6 +149,7 @@ export default function ManuscriptImportAssistant({ storyId, storyTitle, section
       }
       if (!blocks.length || wordCount(blocks) === 0) throw new Error("No readable paragraphs were found in this file.");
       const detected = detectSections(blocks);
+      setSourceBlocks(blocks);
       const headings = blocks.filter(isChapterBoundary).length;
       const formattedRuns = blocks.reduce((sum, block) => sum + (block.runs?.filter(run => run.bold || run.italic || run.underline || run.strike).length || 0), 0);
       const warnings: string[] = [];
@@ -160,6 +164,56 @@ export default function ManuscriptImportAssistant({ storyId, storyTitle, section
     } catch (caught) {
       setError(caught instanceof Error ? caught.message : "The manuscript could not be analysed.");
     } finally { setBusy(false); }
+  }
+
+  async function runGeminiAnalysis() {
+    if (!sourceBlocks.length || aiBusy || busy) return;
+    setAiBusy(true);
+    setError("");
+    setNotice("");
+    try {
+      const result = await request("/creator/stories/" + storyId + "/manuscript/analyse", {
+        method: "POST",
+        body: JSON.stringify({
+          story_title: storyTitle,
+          blocks: sourceBlocks.map(block => ({ type: block.type, text: block.text })),
+        }),
+      }) as {
+        sections?: { start_block: number; end_block: number; title: string; confidence: number; reason: string }[];
+        warnings?: string[];
+        model?: string;
+      };
+      if (!Array.isArray(result.sections) || !result.sections.length) throw new Error("Gemini did not return usable chapter suggestions.");
+      let expectedStart = 0;
+      const suggested: Section[] = [];
+      for (const item of result.sections) {
+        if (!Number.isInteger(item.start_block) || !Number.isInteger(item.end_block) || item.start_block !== expectedStart || item.end_block < item.start_block || item.end_block >= sourceBlocks.length || !item.title?.trim()) {
+          throw new Error("Gemini returned incomplete or overlapping chapter boundaries. Your current analysis has been kept.");
+        }
+        suggested.push({
+          id: makeId(),
+          title: item.title.trim(),
+          blocks: sourceBlocks.slice(item.start_block, item.end_block + 1),
+          targetEpisodeId: "",
+          include: true,
+          saved: false,
+        });
+        expectedStart = item.end_block + 1;
+      }
+      if (expectedStart !== sourceBlocks.length) throw new Error("Gemini did not account for the entire manuscript. Your current analysis has been kept.");
+      setSections(suggested);
+      setAnalysis(current => current ? {
+        ...current,
+        headings: suggested.length,
+        warnings: [...current.warnings.filter(warning => !warning.startsWith("Gemini:")), ...(result.warnings || []).map(warning => "Gemini: " + warning)],
+      } : current);
+      setAiModel(result.model || "Gemini");
+      setNotice("Gemini analysis complete. Suggested boundaries are ready for your review; manuscript text and formatting have not been rewritten.");
+    } catch (caught) {
+      setError(caught instanceof Error ? caught.message : "Gemini could not analyse this manuscript. Your existing analysis is unchanged.");
+    } finally {
+      setAiBusy(false);
+    }
   }
 
   function updateSection(id: string, patch: Partial<Section>) {
@@ -247,9 +301,14 @@ export default function ManuscriptImportAssistant({ storyId, storyTitle, section
       <button type="button" className="studio-primary" disabled={busy} onClick={() => inputRef.current?.click()}>{busy ? "Analysing manuscript…" : "＋ Choose manuscript"}</button>
     </div>}
     {stage === "review" && analysis && <div className="sf-manuscript-review">
-      <div className="sf-manuscript-file"><div><strong>{fileName}</strong><small>{(fileSize / (1024 * 1024)).toFixed(2)} MB · {analysis.words.toLocaleString("en-GB")} words · {analysis.paragraphs.toLocaleString("en-GB")} paragraphs</small></div><button type="button" className="studio-text-action" disabled={busy} onClick={() => { setStage("upload"); setSections([]); setAnalysis(null); setError(""); setNotice(""); }}>Choose another file</button></div>
+      <div className="sf-manuscript-file"><div><strong>{fileName}</strong><small>{(fileSize / (1024 * 1024)).toFixed(2)} MB · {analysis.words.toLocaleString("en-GB")} words · {analysis.paragraphs.toLocaleString("en-GB")} paragraphs</small></div><button type="button" className="studio-text-action" disabled={busy} onClick={() => { setStage("upload"); setSections([]); setSourceBlocks([]); setAnalysis(null); setAiModel(""); setError(""); setNotice(""); }}>Choose another file</button></div>
       <div className="sf-manuscript-metrics"><div><strong>{sections.length}</strong><span>{sectionLabelPlural} prepared</span></div><div><strong>{analysis.headings}</strong><span>Heading candidates</span></div><div><strong>{analysis.formattedRuns}</strong><span>Formatted text runs</span></div></div>
       {analysis.warnings.length > 0 && <div className="sf-manuscript-warnings"><strong>Review notes</strong>{analysis.warnings.map((warning, index) => <p key={index}>• {warning}</p>)}</div>}
+      <div className="sf-manuscript-ai-panel">
+        <div><strong>Optional AI chapter analysis</strong><p>Gemini can review the extracted manuscript text and suggest chapter boundaries and titles. Your DOCX/TXT file is not uploaded as an asset. The extracted text is sent to Google for this analysis. Gemini cannot rewrite or save your story.</p></div>
+        <button type="button" className="studio-secondary" disabled={aiBusy || busy || sections.some(section => section.saved)} onClick={() => void runGeminiAnalysis()}>{aiBusy ? "Gemini is analysing…" : "✦ Analyse with Gemini"}</button>
+        {aiModel && <small>Last analysis: {aiModel}. Review all suggestions before importing.</small>}
+      </div>
       <div className="sf-manuscript-reconcile-intro"><div><h4>Review {sectionLabelPlural.toLowerCase()} structure</h4><p>Rename, reorder, split or merge {sectionLabelPlural.toLowerCase()}. Then choose whether each becomes a new draft or a draft revision of an existing {sectionLabel.toLowerCase()}.</p></div></div>
       <div className="sf-manuscript-section-list">
         {sections.map((section, index) => {
@@ -272,7 +331,7 @@ export default function ManuscriptImportAssistant({ storyId, storyTitle, section
         })}
       </div>
       <div className="sf-manuscript-final-check"><strong>Before import</strong><p>{included.length} selected section(s). {included.filter(section => !section.targetEpisodeId).length} will be new drafts; {included.filter(section => !!section.targetEpisodeId).length} will become draft revisions.</p><p>Existing sections are only changed where you explicitly choose them. Published editions remain published and unchanged. No content is published or scheduled.</p></div>
-      <div className="studio-form-actions"><button type="button" className="studio-primary" disabled={!canImport} onClick={() => void importSections()}>{busy ? "Importing drafts…" : "Confirm & import drafts ↗"}</button><button type="button" className="studio-text-action" disabled={busy} onClick={() => { setStage("upload"); setSections([]); setAnalysis(null); setNotice(""); setError(""); }}>Cancel import</button></div>
+      <div className="studio-form-actions"><button type="button" className="studio-primary" disabled={!canImport} onClick={() => void importSections()}>{busy ? "Importing drafts…" : "Confirm & import drafts ↗"}</button><button type="button" className="studio-text-action" disabled={busy} onClick={() => { setStage("upload"); setSections([]); setSourceBlocks([]); setAnalysis(null); setAiModel(""); setNotice(""); setError(""); }}>Cancel import</button></div>
     </div>}
     {stage === "complete" && <div className="sf-manuscript-complete"><strong>Your manuscript {sectionLabelPlural.toLowerCase()} are in Creator Studio.</strong><p>They have been saved as drafts. Review each {sectionLabel.toLowerCase()} in the Section Manager before publishing anything.</p><button type="button" className="studio-primary" onClick={() => { setStage("upload"); setSections([]); setAnalysis(null); setNotice(""); setError(""); setFileName(""); }}>Import another manuscript</button></div>}
   </section>;
