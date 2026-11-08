@@ -8,7 +8,7 @@ from fastapi import HTTPException
 
 logger = logging.getLogger(__name__)
 
-GEMINI_MODEL = os.getenv("GEMINI_MODEL", "gemini-2.5-flash")
+GEMINI_MODEL = os.getenv("GEMINI_MODEL", "gemini-3.6-flash")
 GEMINI_ENDPOINT = "https://generativelanguage.googleapis.com/v1beta/models/{model}:generateContent"
 
 
@@ -67,7 +67,7 @@ async def analyse_manuscript_structure(blocks: list[dict[str, Any]], story_title
         "generationConfig": {
             "temperature": 0.1,
             "responseMimeType": "application/json",
-            "responseSchema": schema,
+            "responseJsonSchema": schema,
         },
     }
 
