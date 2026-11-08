@@ -193,7 +193,7 @@ export default function ManuscriptImportAssistant({ storyId, storyTitle, section
         suggested.push({
           id: makeId(),
           title: item.title.trim(),
-          blocks: sourceBlocks.slice(item.start_block, item.end_block + 1),
+          blocks: sourceBlocks.slice(item.start_block, item.end_block + 1).filter((block, blockIndex) => !(blockIndex === 0 && (block.type === "heading" || /^(chapter|episode|part|section|book)\\s+/i.test(block.text.trim()))),
           targetEpisodeId: "",
           include: true,
           saved: false,
@@ -306,7 +306,7 @@ export default function ManuscriptImportAssistant({ storyId, storyTitle, section
       {analysis.warnings.length > 0 && <div className="sf-manuscript-warnings"><strong>Review notes</strong>{analysis.warnings.map((warning, index) => <p key={index}>• {warning}</p>)}</div>}
       <div className="sf-manuscript-ai-panel">
         <div><strong>Optional AI chapter analysis</strong><p>Gemini can review the extracted manuscript text and suggest chapter boundaries and titles. Your DOCX/TXT file is not uploaded as an asset. The extracted text is sent to Google for this analysis. Gemini cannot rewrite or save your story.</p></div>
-        <button type="button" className="studio-secondary" disabled={aiBusy || busy || sections.some(section => section.saved)} onClick={() => void runGeminiAnalysis()}>{aiBusy ? "Gemini is analysing…" : "✦ Analyse with Gemini"}</button>
+        <button type="button" className="studio-primary" disabled={aiBusy || busy || sections.some(section => section.saved)} onClick={() => void runGeminiAnalysis()}>{aiBusy ? "Gemini is analysing…" : "✦ Analyse with Gemini"}</button>
         {aiModel && <small>Last analysis: {aiModel}. Review all suggestions before importing.</small>}
       </div>
       <div className="sf-manuscript-reconcile-intro"><div><h4>Review {sectionLabelPlural.toLowerCase()} structure</h4><p>Rename, reorder, split or merge {sectionLabelPlural.toLowerCase()}. Then choose whether each becomes a new draft or a draft revision of an existing {sectionLabel.toLowerCase()}.</p></div></div>
