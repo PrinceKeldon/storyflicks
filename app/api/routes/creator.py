@@ -266,6 +266,8 @@ class CreatorStorySubmission(BaseModel):
     synopsis: str | None = Field(default=None, max_length=10000)
     first_episode_free: bool = True
     genres: list[str] = Field(default_factory=list, max_length=5)
+    section_label: str = Field(default="Episode", min_length=1, max_length=32)
+    section_label_plural: str = Field(default="Episodes", min_length=1, max_length=40)
 
 
 class CreatorEpisodeSubmission(BaseModel):
@@ -304,7 +306,7 @@ async def create_creator_story(
     user: AuthenticatedUser = Depends(get_current_user),
 ):
     return await supabase.user_rpc(
-        "save_creator_story_v3",
+        "save_creator_story_v4",
         {
             "p_story_id": None,
             "p_title": submission.title,
@@ -314,6 +316,8 @@ async def create_creator_story(
             "p_synopsis": submission.synopsis,
             "p_first_episode_free": submission.first_episode_free,
             "p_genres": submission.genres,
+            "p_section_label": submission.section_label,
+            "p_section_label_plural": submission.section_label_plural,
         },
         user.access_token,
     )
