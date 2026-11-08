@@ -4,6 +4,7 @@ import Link from "next/link";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { getSupabaseBrowserClient } from "@/lib/supabase";
 import CreatorStudioNavLink from "../creator-studio-nav-link";
+import AccountNavigation from "../account-navigation";
 
 type Story = { id: string; slug: string; title: string; author_name?: string | null; tagline: string | null; synopsis: string | null; completion_status: "ongoing" | "completed"; cover_url: string | null; section_label?: string | null; section_label_plural?: string | null };
 type Episode = { id: string; story_id: string; sequence_number: number; title: string; publication_status: string };
@@ -68,7 +69,7 @@ export default function Library() {
   if(status==="error"||!data)return <main className="library-state"><span className="reader-state-mark">SF.</span><h1>We couldn’t open your library.</h1><p>{error}</p><button className="outline-button" onClick={()=>void load()}>Try again</button></main>;
 
   return <main className="library-shell">
-    <header className="library-header"><Link className="wordmark" href="/">STORY<span>FLICKS</span><i>.</i></Link><nav aria-label="Main navigation"><Link href="/">Discover</Link><Link className="active" href="/library">My Library</Link><CreatorStudioNavLink /><Link href="/settings">Settings</Link></nav><Link className="library-header-link" href="/">Explore stories <span>↗</span></Link></header>
+    <header className="library-header"><Link className="wordmark" href="/">STORY<span>FLICKS</span><i>.</i></Link><nav aria-label="Main navigation"><Link href="/">Discover</Link><Link className="active" href="/library">My Library</Link><CreatorStudioNavLink /></nav><AccountNavigation /><Link className="library-header-link" href="/">Explore stories <span>↗</span></Link></header>
     <section className="library-hero"><div><p className="eyebrow">YOUR STORY COLLECTION</p><h1>Every story leaves<br/>something <em>behind.</em></h1><p>Pick up where you left off, revisit a favourite, or see what you’ve shared with the STORYFLICKS community.</p></div><div className="library-count"><strong>{totalStories.toString().padStart(2,"0")}</strong><span>STORIES IN YOUR WORLD</span><i>✳</i></div></section>
     <div className="library-tabs" role="tablist" aria-label="Library sections">
       <button role="tab" aria-selected={tab==="reading"} className={tab==="reading"?"active":""} onClick={()=>setTab("reading")}>My Stories</button>

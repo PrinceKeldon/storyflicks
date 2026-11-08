@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import AccountNavigation from "@/app/account-navigation";
 import { useCallback, useEffect, useMemo, useState, type FormEvent, type ReactNode } from "react";
 import { getSupabaseBrowserClient } from "@/lib/supabase";
 import { importDocx, type ImportedManuscriptBlock } from "@/lib/docx-import";
@@ -292,7 +293,7 @@ export default function CreatorStudio(){
 
  const o=dashboard?.overview;
  return <main className="studio-shell">
-  <header className="studio-header"><Link className="wordmark" href="/">STORY<span>FLICKS</span><i>.</i></Link><nav><Link href="/">Discover</Link><Link href="/library">My Library</Link><Link className="active" href="/creator-studio">Creator Studio</Link><Link href="/settings">Settings</Link></nav><Link className="studio-header-link" href="/">View platform ↗</Link></header>
+  <header className="studio-header"><Link className="wordmark" href="/">STORY<span>FLICKS</span><i>.</i></Link><nav><Link href="/">Discover</Link><Link href="/library">My Library</Link><Link className="active" href="/creator-studio">Creator Studio</Link><Link href="/settings">Settings</Link></nav><div className="studio-header-account"><AccountNavigation /><Link className="studio-header-link" href="/">View platform ↗</Link></div></header>
   <section className="studio-hero"><div><p className="eyebrow">YOUR CREATIVE WORKSPACE</p><h1>Make stories<br/><em>worth staying for.</em></h1><p>Shape your catalogue, build each episode, and decide when your stories meet their readers.</p></div><div className="studio-hero-mark"><span>SF.</span><small>CREATOR<br/>STUDIO / 01</small></div></section>
   <div className="studio-tabs" role="tablist">{tabs.map(t=><button key={t.id} role="tab" aria-selected={tab===t.id} className={tab===t.id?"active":""} onClick={()=>setTab(t.id)}>{t.id==="episodes"?`${sectionLabelPlural} manager`:t.label}</button>)}</div>
   {error&&<p className="studio-alert" role="alert">{error}</p>}{notice&&<p className="studio-notice" role="status">{notice}</p>}

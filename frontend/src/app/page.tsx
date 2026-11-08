@@ -1,6 +1,7 @@
 import Link from "next/link";
 import PersonalisedShelf from "./personalised-shelf";
 import CreatorStudioNavLink from "./creator-studio-nav-link";
+import AccountNavigation from "./account-navigation";
 
 type DiscoverStory = {
   id: string;
@@ -68,8 +69,7 @@ export default async function DiscoverPage() {
         </nav>
         <div className="account-actions">
           <Link className="icon-button" href="/search" aria-label="Search"><span className="search-icon" /></Link>
-          <Link className="sign-in" href="/settings">Settings</Link><Link className="sign-in" href="/sign-in?next=/library">Sign in</Link>
-          <Link className="join-button" href="/sign-in?mode=signup">Join free <span>↗</span></Link>
+          <AccountNavigation />
         </div>
       </header>
 
