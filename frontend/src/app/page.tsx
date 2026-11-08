@@ -1,5 +1,6 @@
 import Link from "next/link";
 import PersonalisedShelf from "./personalised-shelf";
+import AccountNavigation, { CreatorStudioNavLink } from "./account-navigation";
 
 type DiscoverStory = {
   id: string;
@@ -63,14 +64,14 @@ export default async function DiscoverPage() {
         <Link className="wordmark" href="/" aria-label="STORYFLICKS home">STORY<span>FLICKS</span><i>.</i></Link>
         <nav className="main-nav" aria-label="Main navigation">
           {navItems.map((item, index) => index === 2
-            ? <Link className="nav-link" href="/creator-studio" key={item}>{item}</Link>
+            ? <CreatorStudioNavLink className="nav-link" key={item} />
             : <Link className={index === 0 ? "nav-link active" : "nav-link"} href={index === 0 ? "/" : "/library"} key={item}>{item}</Link>
           )}
         </nav>
         <div className="account-actions">
           <Link className="icon-button" href="/search" aria-label="Search"><span className="search-icon" /></Link>
-          <Link className="sign-in" href="/settings">Settings</Link><Link className="sign-in" href="/sign-in?next=/library">Sign in</Link>
-          <Link className="join-button" href="/sign-in?mode=signup">Join free <span>↗</span></Link>
+          <Link className="sign-in" href="/settings">Settings</Link>
+          <AccountNavigation />
         </div>
       </header>
 
