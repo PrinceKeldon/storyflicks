@@ -126,9 +126,9 @@ export default function ReactionPanel({ slug, episodeId, presentation = "page", 
         } : current.my_review,
       } : current);
       setNotice(kind === "reaction"
-        ? "Reaction saved. Your response is recorded and the next {(data.story.section_label || "Episode").toLowerCase()} is unlocked."
+        ? `Reaction saved. Your response is recorded and the next ${sectionLabel.toLowerCase()} is unlocked.`
         : visibility === "public"
-          ? `Review published. Your public review is now visible in the Episode ${data.episode.sequence_number} Review Room.`
+          ? `Review published. Your public review is now visible in the ${sectionLabel} ${data.episode.sequence_number} Review Room.`
           : "Private review saved. Only you can see it; it will not appear in the public Review Room.");
       if (presentation === "modal") {
         if (unlocked?.publication_status === "published") onUnlocked?.(unlocked.id);
@@ -156,12 +156,15 @@ export default function ReactionPanel({ slug, episodeId, presentation = "page", 
     ? <div className="contribution-modal-state"><p>We couldn’t load your response form.</p><p>{error}</p><button type="button" className="primary-button" onClick={onClose}>Close</button></div>
     : <main className="reader-state"><span className="reader-state-mark">SF.</span><h1>We couldn’t load this page.</h1><p>{error}</p><Link href={`/stories/${slug}`}>Back to {data?.story.title || "the story"}</Link></main>;
 
+  const sectionLabel = data.story.section_label || "Episode";
+  const sectionLabelPlural = data.story.section_label_plural || "Episodes";
+
   const contributionContent = (
       <section className="contribution-content">
-        <p className="eyebrow">END OF EPISODE {String(data.episode.sequence_number).padStart(2, "0")}</p>
+        <p className="eyebrow">{sectionLabel.toUpperCase()} {String(data.episode.sequence_number).padStart(2, "0")}</p>
         <h1>So, what did you think?</h1>
         <p className="contribution-deck">Every reader takes something different from a story. Tell us what stayed with you.</p>
-        <p className="contribution-rule">A reaction OR a review is enough to unlock the next {(data.story.section_label || "Episode").toLowerCase()}. You can also do both, or skip and return later.</p>
+        <p className="contribution-rule">A reaction OR a review is enough to unlock the next {sectionLabel.toLowerCase()}. You can also do both, or skip and return later.</p>
         {notice && <p className="contribution-notice contribution-notice-prominent" role="status">{notice}</p>}
 
         <section className="reaction-section">
@@ -176,7 +179,7 @@ export default function ReactionPanel({ slug, episodeId, presentation = "page", 
             ))}
           </div>
           <div className="contribution-action-row">
-            <p>{selected.length} selected <span>·</span> A reaction on its own unlocks the next {(data.story.section_label || "Episode").toLowerCase()}.</p>
+            <p>{selected.length} selected <span>·</span> A reaction on its own unlocks the next {sectionLabel.toLowerCase()}.</p>
             <button className="primary-button" type="button" disabled={busy !== null || selected.length === 0} onClick={() => void submitContribution("reaction")}>{busy === "reaction" ? "Submitting…" : presentation === "modal" ? "Submit reaction & continue" : "Save my reactions"} <span>→</span></button>
           </div>
         </section>
@@ -196,7 +199,7 @@ export default function ReactionPanel({ slug, episodeId, presentation = "page", 
             <div className="visibility-options"><button type="button" className={visibility === "public" ? "selected" : ""} onClick={() => setVisibility("public")}>Public</button><button type="button" className={visibility === "private" ? "selected" : ""} onClick={() => setVisibility("private")}>Private</button></div>
           </div>
           <div className="contribution-action-row review-submit-row">
-            <p>A submitted review — public or private — also unlocks the next {(data.story.section_label || "Episode").toLowerCase()}.</p>
+            <p>A submitted review — public or private — also unlocks the next {sectionLabel.toLowerCase()}.</p>
             <button className="primary-button" type="button" disabled={busy !== null || !body.trim()} onClick={() => void submitContribution("review")}>{busy === "review" ? "Submitting…" : presentation === "modal" ? (data.my_review ? "Update review & continue" : "Submit review & continue") : data.my_review ? "Update my review" : "Submit my review"} <span>→</span></button>
           </div>
         </section>
@@ -205,15 +208,15 @@ export default function ReactionPanel({ slug, episodeId, presentation = "page", 
 
         {presentation === "page" && data.has_qualified && <section className="unlock-panel">
           <p className="eyebrow">YOU’VE DONE YOUR PART</p>
-          <h2>{unlock ? "Your next {(data.story.section_label || "Episode").toLowerCase()} is unlocked." : data.next_episode ? "Your contribution is recorded." : "You’re all caught up."}</h2>
+          <h2>{unlock ? `Your next ${sectionLabel.toLowerCase()} is unlocked.` : data.next_episode ? "Your contribution is recorded." : "You’re all caught up."}</h2>
           {unlock ? <>
             <p><strong>{unlock.title}</strong> is now in your library{unlock.publication_status !== "published" ? " and will be ready when it is published" : ""}.</p>
-            {unlock.publication_status === "published" && <Link className="primary-button" href={`/stories/${slug}/read/${unlock.id}`}>Read next {(data.story.section_label || "Episode").toLowerCase()} <span>↗</span></Link>}
-            {unlock.publication_status !== "published" && <p className="unlock-waiting">We’ll keep your access ready. Come back when the episode is released.</p>}
-          </> : data.next_episode ? <p>Your contribution is saved. If the next {(data.story.section_label || "Episode").toLowerCase()} has not opened yet, your access will be ready when it is published.</p> : <p>Your response is recorded. There isn’t another episode available just yet.</p>}
+            {unlock.publication_status === "published" && <Link className="primary-button" href={`/stories/${slug}/read/${unlock.id}`}>Read next {sectionLabel.toLowerCase()} <span>↗</span></Link>}
+            {unlock.publication_status !== "published" && <p className="unlock-waiting">We’ll keep your access ready. Come back when the {sectionLabel.toLowerCase()} is released.</p>}
+          </> : data.next_episode ? <p>Your contribution is saved. If the next {sectionLabel.toLowerCase()} has not opened yet, your access will be ready when it is published.</p> : <p>Your response is recorded. There isn’t another episode available just yet.</p>}
         </section>}
 
-        {presentation === "page" && <div className="contribution-bottom-links"><Link href={`/stories/${slug}`}>Skip for now · Back to {data.story.title}</Link><Link href={`/stories/${slug}/reviews/${episodeId}`}>Reader discussion ↗</Link><Link href={`/stories/${slug}#episodes`}>Episode guide ↗</Link></div>}
+        {presentation === "page" && <div className="contribution-bottom-links"><Link href={`/stories/${slug}`}>Skip for now · Back to {data.story.title}</Link><Link href={`/stories/${slug}/reviews/${episodeId}`}>Reader discussion ↗</Link><Link href={`/stories/${slug}#episodes`}>{sectionLabelPlural} guide ↗</Link></div>}
       </section>
   );
 
@@ -221,7 +224,7 @@ export default function ReactionPanel({ slug, episodeId, presentation = "page", 
     return (
       <div className="contribution-modal-panel">
         <header className="contribution-modal-heading">
-          <div><p className="eyebrow">END OF EPISODE {String(data.episode.sequence_number).padStart(2, "0")}</p><h2>Share your take.</h2></div>
+          <div><p className="eyebrow">{sectionLabel.toUpperCase()} {String(data.episode.sequence_number).padStart(2, "0")}</p><h2>Share your take.</h2></div>
           <button type="button" className="contribution-modal-close" onClick={onClose} aria-label="Close contribution window">×</button>
         </header>
         <div className="contribution-modal-scroll">{contributionContent}</div>
