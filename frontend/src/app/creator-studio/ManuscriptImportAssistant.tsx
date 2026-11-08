@@ -193,7 +193,7 @@ export default function ManuscriptImportAssistant({ storyId, storyTitle, section
         suggested.push({
           id: makeId(),
           title: item.title.trim(),
-          blocks: sourceBlocks.slice(item.start_block, item.end_block + 1).filter((block, blockIndex) => !(blockIndex === 0 && (block.type === "heading" || /^(chapter|episode|part|section|book)\\s+/i.test(block.text.trim()))),
+          blocks: sourceBlocks.slice(item.start_block, item.end_block + 1).filter((block, blockIndex) => !(blockIndex === 0 && (block.type === "heading" || /^(chapter|episode|part|section|book)\s+/i.test(block.text.trim()))),
           targetEpisodeId: "",
           include: true,
           saved: false,
