@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import AccountNavigation from "@/app/account-navigation";
 import { useCallback, useEffect, useMemo, useState, type FormEvent, type ReactNode } from "react";
 import { getSupabaseBrowserClient } from "@/lib/supabase";
 import { importDocx, type ImportedManuscriptBlock } from "@/lib/docx-import";
@@ -216,12 +217,12 @@ export default function CreatorStudio(){
 
  if(status==="loading")return <main className="studio-state"><span className="reader-state-mark">SF.</span><p>Opening Creator Studio…</p></main>;
  if(status==="signed-out")return <main className="studio-state"><span className="reader-state-mark">SF.</span><p className="eyebrow">THE CREATOR SPACE</p><h1>Your stories start here.</h1><p>Sign in with an active creator account to manage stories and episodes.</p><Link className="primary-button" href="/sign-in?next=/creator-studio">Sign in to Creator Studio ↗</Link></main>;
- if(status==="forbidden")return <main className="studio-state"><span className="reader-state-mark">SF.</span><p className="eyebrow">CREATOR ACCESS</p><h1>Your creator profile isn’t active yet.</h1><p>Creator Studio requires an active creator profile. Your reader library remains available.</p><Link className="text-button" href="/library">Return to My Library ↗</Link></main>;
+ if(status==="forbidden")return <main className="studio-state"><span className="reader-state-mark">SF.</span><p className="eyebrow">CREATOR ACCESS</p><h1>Your creator profile isn’t active yet.</h1><p>Creator Studio is available by invitation to approved creators. You can still use your reader library and enjoy every story.</p><Link className="text-button" href="/library">Return to My Library ↗</Link></main>;
  if(status==="error")return <main className="studio-state"><h1>We couldn’t open Creator Studio.</h1><p>{error}</p><button className="outline-button" onClick={()=>void loadDashboard()}>Try again</button></main>;
 
  const o=dashboard?.overview;
  return <main className="studio-shell">
-  <header className="studio-header"><Link className="wordmark" href="/">STORY<span>FLICKS</span><i>.</i></Link><nav><Link href="/">Discover</Link><Link href="/library">My Library</Link><Link className="active" href="/creator-studio">Creator Studio</Link><Link href="/settings">Settings</Link></nav><Link className="studio-header-link" href="/">View platform ↗</Link></header>
+  <header className="studio-header"><Link className="wordmark" href="/">STORY<span>FLICKS</span><i>.</i></Link><nav><Link href="/">Discover</Link><Link href="/library">My Library</Link><Link className="active" href="/creator-studio">Creator Studio</Link><Link href="/settings">Settings</Link></nav><div className="studio-header-account"><Link className="studio-header-link" href="/">View platform ↗</Link><AccountNavigation /></div></header>
   <section className="studio-hero"><div><p className="eyebrow">YOUR CREATIVE WORKSPACE</p><h1>Make stories<br/><em>worth staying for.</em></h1><p>Shape your catalogue, build each episode, and decide when your stories meet their readers.</p></div><div className="studio-hero-mark"><span>SF.</span><small>CREATOR<br/>STUDIO / 01</small></div></section>
   <div className="studio-tabs" role="tablist">{tabs.map(t=><button key={t.id} role="tab" aria-selected={tab===t.id} className={tab===t.id?"active":""} onClick={()=>setTab(t.id)}>{t.id==="episodes"?`${sectionLabelPlural} manager`:t.label}</button>)}</div>
   {error&&<p className="studio-alert" role="alert">{error}</p>}{notice&&<p className="studio-notice" role="status">{notice}</p>}
