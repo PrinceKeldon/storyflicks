@@ -22,6 +22,8 @@ type Section = {
 type Props = {
   storyId: string;
   storyTitle: string;
+  sectionLabel: string;
+  sectionLabelPlural: string;
   episodes: ExistingEpisode[];
   request: (path: string, init?: RequestInit) => Promise<unknown>;
   onImported: () => Promise<void>;
@@ -81,7 +83,7 @@ function blockPreview(block: Block, index: number) {
   </Tag>;
 }
 
-export default function ManuscriptImportAssistant({ storyId, storyTitle, episodes, request, onImported }: Props) {
+export default function ManuscriptImportAssistant({ storyId, storyTitle, sectionLabel, sectionLabelPlural, episodes, request, onImported }: Props) {
   const inputRef = useRef<HTMLInputElement>(null);
   const [stage, setStage] = useState<Stage>("upload");
   const [fileName, setFileName] = useState("");
@@ -161,18 +163,30 @@ export default function ManuscriptImportAssistant({ storyId, storyTitle, episode
       const source = current[index];
       if (blockIndex <= 0 || blockIndex >= source.blocks.length) return current;
       const first = { ...source, blocks: source.blocks.slice(0, blockIndex) };
-      const second: Section = { id: makeId(), title: "New chapter", blocks: source.blocks.slice(blockIndex), targetEpisodeId: "", include: true, saved: false };
+      const second: Section = { id: makeId(), title: "New " + sectionLabel.toLowerCase(), blocks: source.blocks.slice(blockIndex), targetEpisodeId: "", include: true, saved: false };
       const next = [...current]; next.splice(index, 1, first, second); return next;
     });
     setExpandedId("");
+  }
+  function moveSection(sectionId: string, direction: -1 | 1) {
+    setSections(current => {
+      const index = current.findIndex(section => section.id === sectionId);
+      const target = index + direction;
+      if (index < 0 || target < 0 || target >= current.length || current[index].saved || current[target].saved) return current;
+      const next = [...current];
+      [next[index], next[target]] = [next[target], next[index]];
+      return next;
+    });
   }
   function mergeIntoPrevious(sectionId: string) {
     setSections(current => {
       const index = current.findIndex(section => section.id === sectionId);
       if (index <= 0) return current;
       const previous = current[index - 1], currentSection = current[index];
+      if (previous.saved || currentSection.saved) return current;
+      const sameDestination = previous.targetEpisodeId === currentSection.targetEpisodeId;
       const next = [...current];
-      next[index - 1] = { ...previous, blocks: [...previous.blocks, ...currentSection.blocks] };
+      next[index - 1] = { ...previous, blocks: [...previous.blocks, ...currentSection.blocks], targetEpisodeId: sameDestination ? previous.targetEpisodeId : "" };
       next.splice(index, 1);
       return next;
     });
@@ -225,9 +239,9 @@ export default function ManuscriptImportAssistant({ storyId, storyTitle, episode
     </div>}
     {stage === "review" && analysis && <div className="sf-manuscript-review">
       <div className="sf-manuscript-file"><div><strong>{fileName}</strong><small>{(fileSize / (1024 * 1024)).toFixed(2)} MB · {analysis.words.toLocaleString("en-GB")} words · {analysis.paragraphs.toLocaleString("en-GB")} paragraphs</small></div><button type="button" className="studio-text-action" disabled={busy} onClick={() => { setStage("upload"); setSections([]); setAnalysis(null); setError(""); setNotice(""); }}>Choose another file</button></div>
-      <div className="sf-manuscript-metrics"><div><strong>{sections.length}</strong><span>Sections prepared</span></div><div><strong>{analysis.headings}</strong><span>Heading candidates</span></div><div><strong>{analysis.formattedRuns}</strong><span>Formatted text runs</span></div></div>
+      <div className="sf-manuscript-metrics"><div><strong>{sections.length}</strong><span>{sectionLabelPlural} prepared</span></div><div><strong>{analysis.headings}</strong><span>Heading candidates</span></div><div><strong>{analysis.formattedRuns}</strong><span>Formatted text runs</span></div></div>
       {analysis.warnings.length > 0 && <div className="sf-manuscript-warnings"><strong>Review notes</strong>{analysis.warnings.map((warning, index) => <p key={index}>• {warning}</p>)}</div>}
-      <div className="sf-manuscript-reconcile-intro"><div><h4>Review chapter structure</h4><p>Rename, split or merge sections. Then choose whether each one becomes a new draft or a draft revision of an existing section.</p></div></div>
+      <div className="sf-manuscript-reconcile-intro"><div><h4>Review {sectionLabelPlural.toLowerCase()} structure</h4><p>Rename, reorder, split or merge {sectionLabelPlural.toLowerCase()}. Then choose whether each becomes a new draft or a draft revision of an existing {sectionLabel.toLowerCase()}.</p></div></div>
       <div className="sf-manuscript-section-list">
         {sections.map((section, index) => {
           const expanded = expandedId === section.id;
@@ -237,13 +251,13 @@ export default function ManuscriptImportAssistant({ storyId, storyTitle, episode
             <div className="sf-manuscript-section-top">
               <label className="sf-manuscript-include"><input type="checkbox" checked={section.include} disabled={section.saved} onChange={event => updateSection(section.id, { include: event.target.checked })}/><span>{String(index + 1).padStart(2, "0")}</span></label>
               <div className="sf-manuscript-section-main"><label>Section title<input value={section.title} disabled={section.saved} onChange={event => updateSection(section.id, { title: event.target.value })}/></label><small>{words.toLocaleString("en-GB")} words · {section.blocks.length} content blocks {section.saved ? "· SAVED" : ""}</small></div>
-              <button type="button" className="studio-text-action" onClick={() => setExpandedId(expanded ? "" : section.id)}>{expanded ? "Hide preview" : "Preview & edit split"}</button>
+              <div className="sf-manuscript-order-controls"><button type="button" className="studio-text-action" disabled={section.saved || index === 0 || sections[index - 1]?.saved} aria-label={"Move " + sectionLabel.toLowerCase() + " up"} onClick={() => moveSection(section.id, -1)}>↑</button><button type="button" className="studio-text-action" disabled={section.saved || index === sections.length - 1 || sections[index + 1]?.saved} aria-label={"Move " + sectionLabel.toLowerCase() + " down"} onClick={() => moveSection(section.id, 1)}>↓</button><button type="button" className="studio-text-action" disabled={section.saved} onClick={() => setExpandedId(expanded ? "" : section.id)}>{expanded ? "Hide preview" : "Preview & edit split"}</button></div>
             </div>
-            <div className="sf-manuscript-destination"><label>Import destination<select value={section.targetEpisodeId || "new"} disabled={section.saved} onChange={event => updateSection(section.id, { targetEpisodeId: event.target.value === "new" ? "" : event.target.value })}><option value="new">Create a new draft section</option>{orderedEpisodes.map(episode => <option key={episode.id} value={episode.id}>{episode.sequence_number}. {episode.title} · {episode.publication_status}</option>)}</select></label>{suggested && !section.targetEpisodeId && <small>Possible title match: {suggested.title}. It will remain untouched unless you select it.</small>}{section.targetEpisodeId && <small>This will create a draft revision. The published version remains unchanged.</small>}</div>
+            <div className="sf-manuscript-destination"><label>Import destination<select value={section.targetEpisodeId || "new"} disabled={section.saved} onChange={event => updateSection(section.id, { targetEpisodeId: event.target.value === "new" ? "" : event.target.value })}><option value="new">Create a new draft {sectionLabel.toLowerCase()}</option>{orderedEpisodes.map(episode => <option key={episode.id} value={episode.id}>{episode.sequence_number}. {episode.title} · {episode.publication_status}</option>)}</select></label>{suggested && !section.targetEpisodeId && <small>Possible title match: {suggested.title}. It will remain untouched unless you select it.</small>}{section.targetEpisodeId && <small>This will create a draft revision. The published version remains unchanged.</small>}</div>
             {duplicateTargets.includes(section.targetEpisodeId) && section.targetEpisodeId && <p className="sf-manuscript-inline-warning">Two manuscript sections cannot be mapped to the same existing section.</p>}
             {expanded && <div className="sf-manuscript-preview"><div className="sf-manuscript-preview-heading"><strong>Content preview</strong><span>{Math.min(section.blocks.length, 80)} of {section.blocks.length} blocks shown</span></div>{section.blocks.slice(0, showAllBlocks ? section.blocks.length : 80).map(blockPreview)}{section.blocks.length > 80 && <button type="button" className="studio-text-action" onClick={() => setShowAllBlocks(value => !value)}>{showAllBlocks ? "Show first 80 blocks" : "Show all " + section.blocks.length + " blocks"}</button>}
               {section.blocks.length > 1 && <div className="sf-manuscript-split-tools"><span>Need to correct a chapter boundary?</span>{section.blocks.slice(1, showAllBlocks ? section.blocks.length : 80).map((block, blockIndex) => <button type="button" key={blockIndex + 1} onClick={() => splitSection(section.id, blockIndex + 1)}>Split before: {(block.text || block.type).slice(0, 42)}{(block.text || "").length > 42 ? "…" : ""}</button>)}</div>}
-              {index > 0 && <button type="button" className="studio-text-action" onClick={() => mergeIntoPrevious(section.id)}>Merge into previous section</button>}
+              {index > 0 && <button type="button" className="studio-text-action" disabled={section.saved || sections[index - 1]?.saved} onClick={() => mergeIntoPrevious(section.id)}>Merge into previous {sectionLabel.toLowerCase()}</button>}
             </div>}
           </article>;
         })}
@@ -251,6 +265,6 @@ export default function ManuscriptImportAssistant({ storyId, storyTitle, episode
       <div className="sf-manuscript-final-check"><strong>Before import</strong><p>{included.length} selected section(s). {included.filter(section => !section.targetEpisodeId).length} will be new drafts; {included.filter(section => !!section.targetEpisodeId).length} will become draft revisions.</p><p>Existing sections are only changed where you explicitly choose them. Published editions remain published and unchanged. No content is published or scheduled.</p></div>
       <div className="studio-form-actions"><button type="button" className="studio-primary" disabled={!canImport} onClick={() => void importSections()}>{busy ? "Importing drafts…" : "Confirm & import drafts ↗"}</button><button type="button" className="studio-text-action" disabled={busy} onClick={() => { setStage("upload"); setSections([]); setAnalysis(null); setNotice(""); setError(""); }}>Cancel import</button></div>
     </div>}
-    {stage === "complete" && <div className="sf-manuscript-complete"><strong>Your manuscript sections are in Creator Studio.</strong><p>They have been saved as drafts. Review each section in the Section Manager before publishing anything.</p><button type="button" className="studio-primary" onClick={() => { setStage("upload"); setSections([]); setAnalysis(null); setNotice(""); setError(""); setFileName(""); }}>Import another manuscript</button></div>}
+    {stage === "complete" && <div className="sf-manuscript-complete"><strong>Your manuscript {sectionLabelPlural.toLowerCase()} are in Creator Studio.</strong><p>They have been saved as drafts. Review each {sectionLabel.toLowerCase()} in the Section Manager before publishing anything.</p><button type="button" className="studio-primary" onClick={() => { setStage("upload"); setSections([]); setAnalysis(null); setNotice(""); setError(""); setFileName(""); }}>Import another manuscript</button></div>}
   </section>;
 }
