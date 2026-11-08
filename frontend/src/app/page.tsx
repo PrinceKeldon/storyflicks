@@ -1,5 +1,6 @@
 import Link from "next/link";
 import PersonalisedShelf from "./personalised-shelf";
+import AccountNavigation from "./account-navigation";
 
 type DiscoverStory = {
   id: string;
