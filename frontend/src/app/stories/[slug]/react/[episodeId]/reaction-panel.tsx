@@ -124,8 +124,10 @@ export default function ReactionPanel({ slug, episodeId }: { slug: string; episo
         } : current.my_review,
       } : current);
       setNotice(kind === "reaction"
-        ? "Your reaction is saved. That’s enough to unlock the next episode."
-        : `Your ${visibility} review is saved. That’s enough to unlock the next episode.`);
+        ? "Reaction saved. Your response is recorded and the next episode is unlocked."
+        : visibility === "public"
+          ? `Review published. Your public review is now visible in the Episode ${data.episode.sequence_number} Review Room.`
+          : "Private review saved. Only you can see it; it will not appear in the public Review Room.");
     } catch (cause) {
       setError(cause instanceof Error ? cause.message : "Something went wrong.");
     } finally {
@@ -154,6 +156,7 @@ export default function ReactionPanel({ slug, episodeId }: { slug: string; episo
         <h1>So, what did you think?</h1>
         <p className="contribution-deck">Every reader takes something different from a story. Tell us what stayed with you.</p>
         <p className="contribution-rule">A reaction OR a review is enough to unlock the next episode. You can also do both, or skip and return later.</p>
+        {notice && <p className="contribution-notice contribution-notice-prominent" role="status">{notice}</p>}
 
         <section className="reaction-section">
           <div className="contribution-section-heading"><div><p className="eyebrow">THE QUICK TAKE</p><h2>Pick the reactions that fit.</h2></div><span>CHOOSE UP TO 8</span></div>
@@ -193,7 +196,6 @@ export default function ReactionPanel({ slug, episodeId }: { slug: string; episo
         </section>
 
         {error && <p className="contribution-error" role="alert">{error}</p>}
-        {notice && <p className="contribution-notice" role="status">{notice}</p>}
 
         {data.has_qualified && <section className="unlock-panel">
           <p className="eyebrow">YOU’VE DONE YOUR PART</p>
