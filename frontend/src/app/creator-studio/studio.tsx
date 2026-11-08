@@ -31,12 +31,19 @@ type Tab = "overview"|"stories"|"episodes"|"community"|"audience"|"insights"|"se
 const tabs: {id:Tab;label:string}[] = [{id:"overview",label:"Overview"},{id:"stories",label:"My Stories"},{id:"episodes",label:"Episode Manager"},{id:"community",label:"Community"},{id:"audience",label:"Audience"},{id:"insights",label:"Insights"},{id:"settings",label:"Settings"}];
 function slugify(s:string){return s.toLowerCase().trim().normalize("NFKD").replace(/[\u0300-\u036f]/g,"").replace(/[^a-z0-9]+/g,"-").replace(/^-|-$/g,"");}
 function parseGenres(value:string){return [...new Set(value.split(",").map(item=>item.trim()).filter(Boolean))].slice(0,5);}
-function normaliseImageContentType(file:File):string{
- const raw=file.type.toLowerCase().split(";")[0].trim();
- const aliases:Record<string,string>={"image/jpg":"image/jpeg","image/pjpeg":"image/jpeg","image/x-jpeg":"image/jpeg","image/x-png":"image/png"};
- const mime=aliases[raw]||raw;
- if(["image/jpeg","image/png","image/webp","image/avif"].includes(mime))return mime;
- throw new Error("Choose a JPEG, PNG, WebP or AVIF image. The selected file reports an unsupported image type.");
+async function detectImageContentType(file:File):Promise<string>{
+ // Do not trust File.type alone: some browsers and exported images report an empty
+ // or non-standard MIME value. Identify the actual format from its file signature.
+ const bytes=new Uint8Array(await file.slice(0,32).arrayBuffer());
+ const starts=(signature:number[])=>signature.every((value,index)=>bytes[index]===value);
+ if(starts([0xff,0xd8,0xff]))return "image/jpeg";
+ if(starts([0x89,0x50,0x4e,0x47,0x0d,0x0a,0x1a,0x0a]))return "image/png";
+ if(bytes.length>=12&&String.fromCharCode(...bytes.slice(0,4))==="RIFF"&&String.fromCharCode(...bytes.slice(8,12))==="WEBP")return "image/webp";
+ if(bytes.length>=12&&String.fromCharCode(...bytes.slice(4,8))==="ftyp"){
+  const brands=String.fromCharCode(...bytes.slice(8,32));
+  if(/avif|avis/.test(brands))return "image/avif";
+ }
+ throw new Error("We couldn't identify this file as a JPEG, PNG, WebP or AVIF image. Please export it as one of those formats and try again.");
 }
 function blocksFrom(value:unknown):Block[]{
  let parsed:unknown=value;
@@ -189,7 +196,7 @@ export default function CreatorStudio(){
   if(assetType==="episode_image"&&!episodeTarget){setError("Select an episode before uploading an image.");return;}
   setAssetBusy(true);setError("");setNotice("");
   try{
-   const contentType=normaliseImageContentType(file);
+   const contentType=await detectImageContentType(file);
    const signed=await request("/creator/stories/"+storyId+"/assets/upload-url",{method:"POST",body:JSON.stringify({asset_type:assetType,content_type:contentType,episode_id:episodeTarget||null})}) as {signed_url:string;path:string};
    const uploaded=await fetch(signed.signed_url,{method:"PUT",headers:{"Content-Type":contentType},body:file});
    if(!uploaded.ok){
@@ -308,8 +315,8 @@ export default function CreatorStudio(){
    </form>}
    {dashboard?.stories.length?<div className="studio-catalogue-grid">{dashboard.stories.map(s=><article className="studio-catalogue-card" key={s.id}><div className="studio-catalogue-top"><span>{s.publication_status}</span><small>{s.role}</small></div><h3>{s.title}</h3><p>{s.completion_status==="completed"?"Completed story":"Ongoing story"} · {s.episode_count} sections</p><div className="studio-catalogue-stats"><span>{s.published_episode_count} published</span><span>{s.draft_episode_count} drafts</span><span>{s.scheduled_episode_count} scheduled</span></div><div className="studio-catalogue-actions"><button className="studio-outline-action" onClick={()=>{setStoryId(s.id);setTab("stories");}}>Manage story ↗</button><button className="studio-text-action" onClick={()=>{setStoryId(s.id);setTab("episodes");}}>Section manager</button></div></article>)}</div>:!newStoryOpen&&<div className="studio-empty"><h3>No stories in your catalogue yet.</h3><p>Create a story to open your first workspace.</p></div>}
    {workspace&&workspace.story.id===storyId&&<section className="studio-story-details-panel">   <div className="studio-bulk-import-panel">
-    <div><strong>Import a complete manuscript</strong><p>Upload one DOCX or TXT containing all your chapters. STORYFLICKS will detect chapter headings and prepare separate drafts for review.</p></div>
-    <label className="studio-import-control">Choose full manuscript<input type="file" accept=".docx,application/vnd.openxmlformats-officedocument.wordprocessingml.document,.txt,text/plain" disabled={!storyId||bulkImportBusy} onChange={e=>{const file=e.target.files?.[0];if(file)void importCompleteManuscript(file);e.target.value="";}}/></label>
+    <div><span className="studio-import-eyebrow">FULL BOOK MANUSCRIPT</span><strong>Upload the complete book manuscript</strong><p>Choose one DOCX or TXT file containing the whole book. STORYFLICKS will identify the chapters, let you review the split and import them as drafts. This is separate from importing an individual section in Chapter Manager.</p></div>
+    <label className="studio-import-control studio-full-manuscript-control">＋ Upload full manuscript<input type="file" accept=".docx,application/vnd.openxmlformats-officedocument.wordprocessingml.document,.txt,text/plain" disabled={!storyId||bulkImportBusy} onChange={e=>{const file=e.target.files?.[0];if(file)void importCompleteManuscript(file);e.target.value="";}}/></label>
    </div>
    {bulkImportOpen&&<section className="studio-bulk-review"><div className="studio-form-title"><span>MANUSCRIPT IMPORT REVIEW</span><small>{bulkSections.length} CHAPTERS DETECTED · NOT YET SAVED</small></div><p>Check the detected chapter titles and order. Existing sections will receive draft revisions; additional sections become new drafts. Published versions remain unchanged until you publish.</p>
     {bulkSections.map((section,index)=>{const existing=[...(workspace?.episodes||[])].sort((a,b)=>a.sequence_number-b.sequence_number)[index];return <label className="studio-bulk-row" key={index}><span>CHAPTER {String(index+1).padStart(2,"0")}</span><input value={section.title} onChange={e=>setBulkSections(items=>items.map((item,i)=>i===index?{...item,title:e.target.value}:item))}/><small>{section.blocks.length} blocks · {existing?"Draft revision: "+existing.title:"New draft section"}{index<bulkSavedCount?" · SAVED":""}</small></label>;})}
