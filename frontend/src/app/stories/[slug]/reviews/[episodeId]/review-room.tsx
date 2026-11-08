@@ -198,7 +198,7 @@ export default function ReviewRoom({ slug, episodeId }: { slug: string; episodeI
           </div>
           <p className="review-spoiler-note">Reader reviews may discuss plot details. Reveal each review before reading.</p>
 
-          {visibleReviews.length === 0 ? <div className="review-feed-empty"><span>✳</span><h3>{data.review_count ? "No reviews in this reaction yet." : "A little quiet in here."}</h3><p>{data.review_count ? "Try another filter, or be the first to write about this reaction." : "Be the first to share a public review of this {(data.story.section_label || "Episode").toLowerCase()}."}</p><Link href={`/stories/${slug}/react/${episodeId}`}>Write the first review <span>↗</span></Link></div> : (
+          {visibleReviews.length === 0 ? <div className="review-feed-empty"><span>✳</span><h3>{data.review_count ? "No reviews in this reaction yet." : "A little quiet in here."}</h3><p>{data.review_count ? "Try another filter, or be the first to write about this reaction." : `Be the first to share a public review of this ${(data.story.section_label || "Episode").toLowerCase()}.`}</p><Link href={`/stories/${slug}/react/${episodeId}`}>Write the first review <span>↗</span></Link></div> : (
             <div className="review-cards">
               {visibleReviews.map((review) => {
                 const author = displayName(review.author);
