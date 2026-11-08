@@ -5,12 +5,12 @@ from urllib.parse import quote
 from fastapi import APIRouter, Depends, HTTPException
 from pydantic import BaseModel, Field
 
-from app.api.deps import get_current_user, supabase
+from app.api.deps import get_current_user, require_active_creator, supabase
 from app.core.config import settings
 from app.core.security import AuthenticatedUser
 from app.services.storage import public_storage_url
 
-router = APIRouter()
+router = APIRouter(dependencies=[Depends(require_active_creator)])
 
 IMAGE_TYPES = {
     "image/jpeg": "jpg",
