@@ -7,7 +7,7 @@ import { getSupabaseBrowserClient } from "@/lib/supabase";
 type Episode = { id: string; sequence_number: number; title: string };
 type Progress = { episode_id: string; progress_percent: number; completed_at: string | null; updated_at: string };
 type StoryCard = {
-  story: { id: string; slug: string; title: string; author_name?: string | null; tagline: string | null; synopsis: string | null; completion_status: string; cover_url: string | null };
+  story: { id: string; slug: string; title: string; author_name?: string | null; tagline: string | null; synopsis: string | null; completion_status: string; cover_url: string | null; section_label?: string | null; section_label_plural?: string | null };
   last_read_episode: Episode | null;
   latest_published_episode: Episode;
   first_published_episode: Episode;
@@ -97,9 +97,9 @@ export default function PersonalisedShelf() {
             <h3>{card.story.title}</h3>
             {card.story.author_name && <p className="catalogue-author-byline">By {card.story.author_name}</p>}
             <p>{card.story.tagline || card.story.synopsis || "An original STORYFLICKS story."}</p>
-            <div className="personalised-progress-meta"><span>{card.completed_episode_count} OF {card.published_episode_count} EPISODES READ</span><span>{Math.round(percent)}%</span></div>
+            <div className="personalised-progress-meta"><span>{card.completed_episode_count} OF {card.published_episode_count} {(card.story.section_label_plural || "Episodes").toUpperCase()} READ</span><span>{Math.round(percent)}%</span></div>
             <div className="personalised-progress-track"><span style={{ width: percent + "%" }} /></div>
-            <div className="personalised-story-footer"><span>EP. {String(target.sequence_number).padStart(2, "0")} · {target.title}</span><Link href={"/stories/" + card.story.slug + "/read/" + target.id}>{card.available_episode ? "Continue reading" : card.last_read_episode ? "Return to episode" : "Start reading"} <span>↗</span></Link></div>
+            <div className="personalised-story-footer"><span>{(card.story.section_label || "Episode").toUpperCase()} {String(target.sequence_number).padStart(2, "0")} · {target.title}</span><Link href={"/stories/" + card.story.slug + "/read/" + target.id}>{card.available_episode ? "Continue reading" : card.last_read_episode ? `Return to ${(card.story.section_label || "Episode").toLowerCase()}` : "Start reading"} <span>↗</span></Link></div>
           </div>
         </article>
       ) : (
