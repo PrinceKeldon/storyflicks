@@ -62,6 +62,15 @@ Authorization: Bearer <Supabase access token>
 
 The API validates the access token with Supabase Auth. Reader/creator RPC calls forward the user's own JWT so PostgreSQL resolves `auth.uid()` correctly. Privileged REST reads use the service-role key only from the backend and apply user/story filters in the route logic. The service-role key must never be sent to the frontend.
 
+## Request and storage safeguards
+
+- API request bodies are capped at 3 MB before FastAPI parses them. Creator episode JSON is capped at 2 MB; individual text blocks, story metadata, author notes, replies, reader reviews and progress metadata have stricter field limits enforced by both the API and database.
+- Episode and review path identifiers are parsed as UUIDs; public story slugs are format-validated.
+- Supabase upstream error payloads are not written to application logs.
+- `story-assets` is currently a **public-read bucket**. Signed upload URLs and creator-role checks protect writes, but an object URL is publicly readable once known. Store only artwork intended for public display in this bucket; do not upload private or confidential files.
+- The API does not yet implement distributed rate limiting. Before opening public traffic, add gateway/Redis-backed per-user and per-IP limits for sign-in-adjacent contribution, report, upload and creator-write endpoints.
+- Set `CORS_ORIGINS` in the deployed API environment to the exact production frontend origin(s), for example `["https://storyflicks.live"]`; keep localhost origins only in local development.
+
 ## API surface
 
 ### Public catalogue
