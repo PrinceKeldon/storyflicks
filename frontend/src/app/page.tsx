@@ -24,7 +24,7 @@ const previewStory: DiscoverStory = {
 const navItems = ["Discover", "My Library", "Creator Studio"];
 
 async function getCatalogue(): Promise<{ stories: DiscoverStory[]; unavailable: boolean }> {
-  const apiUrl = process.env.NEXT_PUBLIC_API_URL?.replace(/\\/$/, "");
+  const apiUrl = process.env.NEXT_PUBLIC_API_URL?.replace(/\/+$/, "");
   if (!apiUrl) return { stories: [previewStory], unavailable: false };
 
   try {
