@@ -16,7 +16,7 @@ type DiscoverStory = {
 const previewStory: DiscoverStory = {
   id: "",
   slug: "the-priest",
-  title: "THE PRIEST",
+  title: "The Priest",
   tagline: "Two lives. One secret. A confession that changes everything.",
   synopsis: "For over twenty years, Father James has kept his priestly life separate from the man he secretly becomes beyond the collar. But when Sophia enters his world, questions of faith, desire and identity begin to blur — and some secrets may be impossible to keep.",
   genres: ["Drama"],
@@ -82,7 +82,7 @@ export default async function DiscoverPage() {
           <div className="featured-copy">
             <div className="feature-kicker"><span className="live-dot" /> {featured.slug === "the-priest" ? "FEATURED STORY" : "DISCOVER THIS STORY"}</div>
             <p className="feature-overline">AN ORIGINAL STORYFLICKS SERIES</p>
-            <h2 id="featured-title">{featured.title === "THE PRIEST" ? <>THE<br /><span>PRIEST</span></> : featured.title}</h2>
+            <h2 id="featured-title">{featured.title}</h2>
             <p className="feature-tagline">{storyDescription(featured)}</p>
             <p className="feature-meta">{featured.genres?.join(" · ").toUpperCase() || "STORYFLICKS ORIGINAL"} <b>·</b> {(featured.completion_status || "ONGOING").toUpperCase()} <b>·</b> EPISODIC</p>
             <div className="feature-actions">
@@ -95,7 +95,7 @@ export default async function DiscoverPage() {
             <div className="art-grain" />
             <div className="art-cross" />
             <div className="art-caption">STORIES THAT STAY<br />WITH YOU</div>
-            <div className="art-title">{featured.title === "THE PRIEST" ? <>THE<br /><strong>PRIEST</strong></> : <strong>{featured.title}</strong>}</div>
+            <div className="art-title"><strong>{featured.title}</strong></div>
             <div className="art-index">SF ORIGINAL&nbsp;&nbsp; / &nbsp;&nbsp;001</div>
           </div>
           <div className="feature-index"><span>01</span><i /> {String(publishedCount).padStart(2, "0")}</div>
