@@ -1407,3 +1407,37 @@ html[data-theme="light"] :is(.story-author-byline,.feature-author-byline,.catalo
  .library-header .account-session-actions{gap:10px}
  .user-settings-account,.studio-header-account{gap:10px}
 }
+
+
+/* Make the story-level full-book import unmistakable and separate from the section editor. */
+.studio-bulk-import-panel{
+  align-items:center;
+  gap:24px;
+  padding:24px;
+  border-color:rgba(67,184,137,.42);
+  background:linear-gradient(115deg,rgba(67,184,137,.09),rgba(255,255,255,.025));
+}
+.studio-bulk-import-panel>div{min-width:0;flex:1}
+.studio-import-eyebrow{display:block;margin-bottom:8px;color:#65c99d;font:10px 'DM Mono',monospace;letter-spacing:1.3px}
+.studio-bulk-import-panel strong{display:block;font-size:18px;line-height:1.35}
+.studio-bulk-import-panel p{max-width:690px;font-size:13px;line-height:1.65}
+.studio-full-manuscript-control{
+  flex:0 0 auto;
+  min-height:46px;
+  padding:12px 18px;
+  border-color:#43b889;
+  border-radius:6px;
+  background:#183126;
+  color:#9ae4c3!important;
+  font:600 11px 'DM Mono',monospace!important;
+  letter-spacing:.4px!important;
+  white-space:nowrap;
+}
+.studio-full-manuscript-control:hover{background:#214633;border-color:#65c99d}
+html[data-theme="light"] .studio-bulk-import-panel{background:#f1f8f3;border-color:#a7cdb7}
+html[data-theme="light"] .studio-import-eyebrow{color:#18734d}
+html[data-theme="light"] .studio-full-manuscript-control{background:#e3f2e9;color:#176c49!important;border-color:#65a985}
+@media(max-width:760px){
+ .studio-bulk-import-panel{align-items:stretch;flex-direction:column;gap:16px;padding:18px}
+ .studio-full-manuscript-control{width:100%;white-space:normal}
+}
