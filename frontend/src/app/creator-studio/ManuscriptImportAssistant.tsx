@@ -92,7 +92,6 @@ export default function ManuscriptImportAssistant({ storyId, storyTitle, episode
   const [error, setError] = useState("");
   const [notice, setNotice] = useState("");
   const [expandedId, setExpandedId] = useState("");
-  const [showAllBlocks, setShowAllBlocks] = useState(false);
   const orderedEpisodes = useMemo(() => [...episodes].sort((a, b) => a.sequence_number - b.sequence_number), [episodes]);
   const included = sections.filter(section => section.include);
   const duplicateTargets = included.filter((section, index) => section.targetEpisodeId && included.findIndex(other => other.targetEpisodeId === section.targetEpisodeId) !== index).map(section => section.targetEpisodeId);
