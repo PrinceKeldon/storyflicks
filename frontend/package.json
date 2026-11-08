@@ -6,7 +6,8 @@
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
-    "lint": "ESLINT_USE_FLAT_CONFIG=false eslint ."
+    "lint": "ESLINT_USE_FLAT_CONFIG=false eslint .",
+    "typecheck": "tsc --noEmit"
   },
   "dependencies": {
     "next": "15.5.29",
