@@ -69,10 +69,6 @@ export default function PersonalisedShelf() {
 
   useEffect(() => {
     void load();
-    const supabase = getSupabaseBrowserClient();
-    if (!supabase) return;
-    const { data: { subscription } } = supabase.auth.onAuthStateChange(() => { void load(); });
-    return () => subscription.unsubscribe();
   }, [load]);
 
   const card = cards[0] || null;
