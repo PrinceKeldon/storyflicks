@@ -150,7 +150,7 @@ async def read_episode(
                         status_code=403,
                         detail={
                             "code": "contribution_required",
-                            "message": "Share a quick reaction or submit a written review for the previous episode to unlock this one.",
+                            "message": "This episode is locked until you complete one contribution on the previous episode.",
                             "required_action": "reaction_or_review",
                             "previous_episode": previous,
                             "locked_episode": {
