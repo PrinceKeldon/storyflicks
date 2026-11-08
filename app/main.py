@@ -3,8 +3,10 @@ from fastapi.middleware.cors import CORSMiddleware
 
 from app.api.routes import creator, creator_assets, creator_dashboard, creator_revisions, episodes, internal, library, notifications, stories
 from app.core.config import settings
+from app.core.middleware import RequestSizeLimitMiddleware
 
 app = FastAPI(title=settings.app_name, version="0.1.0")
+app.add_middleware(RequestSizeLimitMiddleware, max_bytes=3 * 1024 * 1024)
 
 app.add_middleware(
     CORSMiddleware,

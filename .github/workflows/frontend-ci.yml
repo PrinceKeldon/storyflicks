@@ -6,6 +6,7 @@ on:
     paths:
       - "frontend/**"
       - "app/**"
+      - "tests/**"
       - "requirements.txt"
       - "supabase/migrations/**"
       - ".github/workflows/frontend-ci.yml"
@@ -13,6 +14,7 @@ on:
     paths:
       - "frontend/**"
       - "app/**"
+      - "tests/**"
       - "requirements.txt"
       - "supabase/migrations/**"
       - ".github/workflows/frontend-ci.yml"
@@ -83,6 +85,13 @@ jobs:
 
       - name: Compile backend modules
         run: python -m compileall -q app
+
+      - name: Run backend request validation tests
+        run: python -m unittest discover -s tests -v
+        env:
+          SUPABASE_URL: https://example.supabase.co
+          SUPABASE_ANON_KEY: ci-anon-key
+          SUPABASE_SERVICE_ROLE_KEY: ci-service-role-key
 
       - name: Import FastAPI application
         run: python -c "from app.main import app; assert app; print(f'Loaded {len(app.routes)} API routes')"

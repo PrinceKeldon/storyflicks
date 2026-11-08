@@ -1,6 +1,6 @@
 import re
 
-from fastapi import APIRouter, HTTPException, Query
+from fastapi import APIRouter, HTTPException, Path, Query
 
 from app.api.deps import supabase
 from app.services.storage import public_storage_url
@@ -45,7 +45,7 @@ async def list_stories(
 
 
 @router.get("/stories/{slug}")
-async def get_story(slug: str):
+async def get_story(slug: str = Path(pattern=r"^[a-z0-9]+(-[a-z0-9]+)*$", max_length=100)):
     rows = await supabase.admin_get(
         "stories",
         {
