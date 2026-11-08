@@ -113,7 +113,7 @@ async def get_library(
             "stories",
             {
                 "select": (
-                    "id,slug,title,tagline,synopsis,cover_path,"
+                    "id,slug,title,author_name,tagline,synopsis,cover_path,"
                     "publication_status,completion_status"
                 ),
                 "id": in_filter(story_ids),
