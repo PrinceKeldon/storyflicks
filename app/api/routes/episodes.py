@@ -200,7 +200,7 @@ async def submit_reactions(
     return await supabase.user_rpc(
         "submit_episode_reactions",
         {
-            "p_episode_id": episode_id,
+            "p_episode_id": str(episode_id),
             "p_reaction_codes": submission.reaction_codes,
         },
         user.access_token,
