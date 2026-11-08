@@ -61,7 +61,7 @@ async def get_episode_and_story(episode_id: UUID):
     stories = await supabase.admin_get(
         "stories",
         {
-            "select": "id,slug,title,publication_status,first_episode_free",
+            "select": "id,slug,title,publication_status,first_episode_free,section_label,section_label_plural",
             "id": f"eq.{episode['story_id']}",
             "limit": "1",
         },
@@ -153,6 +153,8 @@ async def read_episode(
                             "message": "This episode is locked until you complete one contribution on the previous episode.",
                             "required_action": "reaction_or_review",
                             "previous_episode": previous,
+                            "section_label": story.get("section_label") or "Episode",
+                            "section_label_plural": story.get("section_label_plural") or "Episodes",
                             "locked_episode": {
                                 "id": episode["id"],
                                 "title": episode["title"],
@@ -206,6 +208,8 @@ async def read_episode(
             "id": story["id"],
             "slug": story["slug"],
             "title": story["title"],
+            "section_label": story.get("section_label") or "Episode",
+            "section_label_plural": story.get("section_label_plural") or "Episodes",
         },
         "episode": {
             "id": episode["id"],
