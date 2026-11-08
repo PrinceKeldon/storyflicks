@@ -242,10 +242,24 @@ export default function ReadingRoom({ slug, episodeId }: { slug: string; episode
           <span>END OF EPISODE {String(payload.episode.sequence_number).padStart(2, "0")}</span>
           <h2>Let that one settle.</h2>
           <p>Take a moment to react or write a review. Either one unlocks what comes next.</p>
-          <Link href={`/stories/${payload.story.slug}/react/${payload.episode.id}`} className="primary-button">Share your take <span>→</span></Link>
+          <button type="button" className="primary-button" onClick={() => setShowContribution(true)}>Share your take <span>→</span></button>
         </footer>
       </article>
       <footer className="reader-footer"><span>STORYFLICKS</span><span>Stories worth staying for.</span><span>© 2026</span></footer>
+      {showContribution && <div className="contribution-modal-backdrop" role="presentation">
+        <div className="contribution-modal-dialog" role="dialog" aria-modal="true" aria-label="Share your take">
+          <ReactionPanel
+            slug={slug}
+            episodeId={payload.episode.id}
+            presentation="modal"
+            onClose={() => setShowContribution(false)}
+            onUnlocked={(nextEpisodeId) => {
+              setShowContribution(false);
+              router.replace(`/stories/${slug}/read/${nextEpisodeId}`);
+            }}
+          />
+        </div>
+      </div>}
     </main>
   );
 }
