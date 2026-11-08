@@ -55,10 +55,8 @@ export default async function StoryDetailPage({ params }: { params: Promise<{ sl
     <main className="app-shell detail-shell">
       <header className="detail-top"><Link href="/" className="back-link">← Back to Discover</Link><span className="detail-label">STORYFLICKS ORIGINAL / 001</span></header>
       <section className="story-intro">
-        <div className="story-poster" aria-label={`${story?.title ?? "Story"} title artwork`}>
-          <span className="poster-kicker">{story?.genres?.join(" · ").toUpperCase() || (slug === "the-priest" ? "A STORY ABOUT FAITH, DESIRE & SECRETS" : "A STORYFLICKS ORIGINAL")}</span>
-          <span className="poster-title">{story?.title ?? "THE PRIEST"}</span>
-          <span className="poster-foot">STORYFLICKS ORIGINAL</span>
+        <div className={story?.cover_url ? "story-poster has-cover" : "story-poster"} aria-label={`${story?.title ?? "Story"} book cover artwork`}>
+          {story?.cover_url ? <img className="story-cover-image" src={story.cover_url} alt={`${story.title} book cover`} /> : <><span className="poster-kicker">{story?.genres?.join(" · ").toUpperCase() || (slug === "the-priest" ? "A STORY ABOUT FAITH, DESIRE & SECRETS" : "A STORYFLICKS ORIGINAL")}</span><span className="poster-title">{story?.title ?? "THE PRIEST"}</span><span className="poster-foot">STORYFLICKS ORIGINAL</span></>}
         </div>
         <div className="story-info">
           <p className="eyebrow">{story?.genres?.join(" · ").toUpperCase() || "STORYFLICKS ORIGINAL"} · {(story?.completion_status || "ongoing").toUpperCase()} · EPISODIC</p>
