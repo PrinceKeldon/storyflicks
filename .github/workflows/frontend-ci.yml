@@ -6,6 +6,7 @@ on:
     paths:
       - "frontend/**"
       - "app/**"
+      - "tests/**"
       - "requirements.txt"
       - "supabase/migrations/**"
       - ".github/workflows/frontend-ci.yml"
@@ -13,6 +14,7 @@ on:
     paths:
       - "frontend/**"
       - "app/**"
+      - "tests/**"
       - "requirements.txt"
       - "supabase/migrations/**"
       - ".github/workflows/frontend-ci.yml"
