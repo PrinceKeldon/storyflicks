@@ -4,7 +4,8 @@ import Link from "next/link";
 import AccountNavigation from "@/app/account-navigation";
 import { useCallback, useEffect, useMemo, useState, type FormEvent, type ReactNode } from "react";
 import { getSupabaseBrowserClient } from "@/lib/supabase";
-import { importDocx, type ImportedManuscriptBlock } from "@/lib/docx-import";\nimport ManuscriptImportAssistant from "./ManuscriptImportAssistant";
+import { importDocx, type ImportedManuscriptBlock } from "@/lib/docx-import";
+import ManuscriptImportAssistant from "./ManuscriptImportAssistant";
 
 type StoryCard = { id:string; slug:string; title:string; publication_status:string; completion_status:string|null; role:string; episode_count:number; published_episode_count:number; draft_episode_count:number; scheduled_episode_count:number; total_reads:number; completed_reads:number; reaction_count:number; public_review_count:number; private_feedback_count:number };
 type Dashboard = { overview:{total_stories:number;published_stories:number;draft_stories:number;total_episodes:number;published_episodes:number;draft_episodes:number;total_reads:number;completed_reads:number;total_reactions:number;public_reviews:number;private_feedback:number}; stories:StoryCard[] };
