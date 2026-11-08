@@ -104,9 +104,65 @@ async def read_episode(
     episode, story = await get_episode_and_story(episode_id)
 
     if not await reader_can_access(user.id, episode, story):
+        # Explain the actual contribution prerequisite when the episode is
+        # published but the reader has not yet qualified from an earlier one.
+        if story["publication_status"] == "published" and episode["publication_status"] == "published":
+            previous_episodes = await supabase.admin_get(
+                "episodes",
+                {
+                    "select": "id,title,sequence_number",
+                    "story_id": f"eq.{story['id']}",
+                    "sequence_number": f"lt.{episode['sequence_number']}",
+                    "publication_status": "eq.published",
+                    "order": "sequence_number.desc",
+                },
+            )
+            for previous in previous_episodes:
+                previous_is_accessible = (
+                    previous["sequence_number"] == 1 and story.get("first_episode_free")
+                )
+                if not previous_is_accessible:
+                    previous_entitlements = await supabase.admin_get(
+                        "episode_entitlements",
+                        {
+                            "select": "id",
+                            "user_id": f"eq.{user.id}",
+                            "episode_id": f"eq.{previous['id']}",
+                            "limit": "1",
+                        },
+                    )
+                    previous_is_accessible = bool(previous_entitlements)
+
+                if not previous_is_accessible:
+                    continue
+
+                participation = await supabase.admin_get(
+                    "episode_participations",
+                    {
+                        "select": "id",
+                        "user_id": f"eq.{user.id}",
+                        "episode_id": f"eq.{previous['id']}",
+                        "limit": "1",
+                    },
+                )
+                if not participation:
+                    raise HTTPException(
+                        status_code=403,
+                        detail={
+                            "code": "contribution_required",
+                            "message": "Share a quick reaction or submit a written review for the previous episode to unlock this one.",
+                            "required_action": "reaction_or_review",
+                            "previous_episode": previous,
+                        },
+                    )
+                break
+
         raise HTTPException(
             status_code=403,
-            detail="This episode is not currently available to your account.",
+            detail={
+                "code": "episode_unavailable",
+                "message": "This episode is not currently available to your account. Check the episode guide for its release status.",
+            },
         )
 
     progress_records = await supabase.admin_get(
