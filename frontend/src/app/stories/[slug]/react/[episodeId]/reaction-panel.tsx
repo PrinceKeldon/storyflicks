@@ -146,9 +146,15 @@ export default function ReactionPanel({ slug, episodeId, presentation = "page", 
     setError("");
   }
 
-  if (status === "loading") return <main className="reader-state"><span className="reader-state-mark">SF.</span><p>Gathering your thoughts…</p></main>;
-  if (status === "signed-out") return <main className="reader-state"><span className="reader-state-mark">SF.</span><h1>Sign in to share your take.</h1><Link className="primary-button" href={`/sign-in?next=/stories/${slug}/react/${episodeId}`}>Sign in to continue <span>↗</span></Link></main>;
-  if (status === "error" || !data) return <main className="reader-state"><span className="reader-state-mark">SF.</span><h1>We couldn’t load this page.</h1><p>{error}</p><Link href={`/stories/${slug}`}>Back to {data?.story.title || "the story"}</Link></main>;
+  if (status === "loading") return presentation === "modal"
+    ? <div className="contribution-modal-state">Gathering your thoughts…</div>
+    : <main className="reader-state"><span className="reader-state-mark">SF.</span><p>Gathering your thoughts…</p></main>;
+  if (status === "signed-out") return presentation === "modal"
+    ? <div className="contribution-modal-state"><p>Sign in to share your take.</p><Link className="primary-button" href={`/sign-in?next=/stories/${slug}/react/${episodeId}`}>Sign in to continue <span>↗</span></Link></div>
+    : <main className="reader-state"><span className="reader-state-mark">SF.</span><h1>Sign in to share your take.</h1><Link className="primary-button" href={`/sign-in?next=/stories/${slug}/react/${episodeId}`}>Sign in to continue <span>↗</span></Link></main>;
+  if (status === "error" || !data) return presentation === "modal"
+    ? <div className="contribution-modal-state"><p>We couldn’t load your response form.</p><p>{error}</p><button type="button" className="primary-button" onClick={onClose}>Close</button></div>
+    : <main className="reader-state"><span className="reader-state-mark">SF.</span><h1>We couldn’t load this page.</h1><p>{error}</p><Link href={`/stories/${slug}`}>Back to {data?.story.title || "the story"}</Link></main>;
 
   const contributionContent = (
       <section className="contribution-content">
