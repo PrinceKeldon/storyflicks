@@ -96,7 +96,7 @@ export default function ManuscriptImportAssistant({ storyId, storyTitle, episode
   const orderedEpisodes = useMemo(() => [...episodes].sort((a, b) => a.sequence_number - b.sequence_number), [episodes]);
   const included = sections.filter(section => section.include);
   const duplicateTargets = included.filter((section, index) => section.targetEpisodeId && included.findIndex(other => other.targetEpisodeId === section.targetEpisodeId) !== index).map(section => section.targetEpisodeId);
-  const canImport = included.length > 0 && included.every(section => section.title.trim() && section.blocks.some(block => block.type === "separator" || block.type === "spacer" || block.text.trim())) && duplicateTargets.length === 0 && !busy;
+  const canImport = included.length > 0 && included.every(section => section.title.trim() && wordCount(section.blocks) > 0) && duplicateTargets.length === 0 && !busy;
 
   async function analyseFile(file: File) {
     setError(""); setNotice("");
