@@ -1265,11 +1265,13 @@ html[data-theme="light"] .studio-footer>a:last-child { color: #566357 !important
 .account-sign-out{border:0;background:transparent;padding:0;font:inherit;cursor:pointer}
 .account-sign-out:hover,.account-session-actions .sign-in:hover{color:var(--mint)}
 .library-header-account,.user-settings-account,.studio-header-account{display:flex;align-items:center;gap:18px;min-width:0}
+.library-header-account,.studio-header-account{margin-left:auto}
 .library-header-account .account-session-actions,.user-settings-account .account-session-actions,.studio-header-account .account-session-actions{margin-left:0}
 .user-settings-account{margin-left:auto}
 @media(max-width:700px){
   .account-email{display:none}
   .account-session-actions{gap:10px}
+  .account-session-actions .account-sign-out{display:inline-flex}
   .library-header-account,.user-settings-account,.studio-header-account{gap:10px}
   .library-header-account .join-button,.user-settings-account .join-button,.studio-header-account .join-button{padding:9px 10px;font-size:9px}
   .library-header-account .sign-in,.user-settings-account .sign-in,.studio-header-account .sign-in{display:inline-flex}
