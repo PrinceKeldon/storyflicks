@@ -3,6 +3,12 @@
     "next/core-web-vitals",
     "next/typescript"
   ],
+  "ignorePatterns": [
+    "next-env.d.ts",
+    ".next/**",
+    "out/**",
+    "build/**"
+  ],
   "rules": {
     "@typescript-eslint/no-unused-expressions": "off"
   }
