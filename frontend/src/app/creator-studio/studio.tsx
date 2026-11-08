@@ -106,7 +106,7 @@ export default function CreatorStudio(){
  const loadWorkspace=useCallback(async(id:string)=>{
   if(!id||!token)return;setBusy("workspace");
   try{const data=await request("/creator/stories/"+id+"/workspace") as Workspace;setWorkspace(data);const assetData=await request("/creator/stories/"+id+"/assets") as {story:{cover_url:string|null};assets:CreatorAsset[]};setCoverUrl(assetData.story.cover_url);setAssets(assetData.assets||[]);setStory({title:data.story.title,author_name:typeof data.story.author_name==="string"?data.story.author_name:"",slug:data.story.slug,tagline:data.story.tagline||"",synopsis:data.story.synopsis||"",genres:(data.story.genres||[]).join(", "),first_episode_free:data.story.first_episode_free,section_label:data.story.section_label||"Episode",section_label_plural:data.story.section_label_plural||"Episodes"});
-   setEpisodeId(old=>old&&data.episodes.some(e=>e.id===old)?old:data.episodes[0]?.id||"");
+   const firstEpisode=data.episodes[0];setEpisodeId(old=>old&&data.episodes.some(e=>e.id===old)?old:firstEpisode?.id||"");if(!firstEpisode){setRevisions([]);setRevisionId("");setEpisode({sequence_number:1,title:"",synopsis:""});setBlocks([{type:"paragraph",text:""}]);setScheduleAt("");setPreview(false);}
   }catch(e){setError(message(e,"Could not open story workspace."));}finally{setBusy("");}
  },[request,token]);
 
@@ -119,6 +119,7 @@ export default function CreatorStudio(){
  },[request,token]);
 
  useEffect(()=>{void loadDashboard();},[loadDashboard]);
+ useEffect(()=>{setWorkspace(null);setEpisodeId("");setRevisions([]);setRevisionId("");setEpisode({sequence_number:1,title:"",synopsis:""});setBlocks([{type:"paragraph",text:""}]);setScheduleAt("");setPreview(false);},[storyId]);
  useEffect(()=>{if(status==="ready"&&storyId)void loadWorkspace(storyId);},[status,storyId,loadWorkspace]);
  useEffect(()=>{if(workspace&&episodeId){const e=workspace.episodes.find(x=>x.id===episodeId);if(e){setEpisode({sequence_number:e.sequence_number,title:e.title,synopsis:e.synopsis||""});const b=blocksFrom(e.content);setBlocks(b.length?b:[{type:"paragraph",text:""}]);void loadRevisions(episodeId);}}else setRevisions([]);},[workspace,episodeId,loadRevisions]);
 
