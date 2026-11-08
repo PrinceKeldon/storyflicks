@@ -507,7 +507,8 @@ async def get_creator_analytics(
     }
     for day in timeline_by_day.values():
         period_readers.update(day["active_readers"])
-        for key in period_summary:
+        period_summary["progress_records_updated"] += day["progress_updates"]
+        for key in ("reactions", "public_reviews", "private_feedback"):
             period_summary[key] += day[key]
     period_summary["unique_contributors"] = len(period_readers)
 
