@@ -78,8 +78,17 @@ function blockPreview(block: Block, index: number) {
   if (block.type === "separator") return <div key={index} className="sf-manuscript-preview-break">Scene / section break</div>;
   if (block.type === "spacer") return <div key={index} className="sf-manuscript-preview-space" />;
   const Tag = block.type === "heading" ? "h4" : block.type === "quote" ? "blockquote" : "p";
-  return <Tag key={index} className={"sf-manuscript-preview-block" + (block.indent ? " is-indented" : "")} style={{ textAlign: block.align || "left", marginLeft: block.indentLeft ? block.indentLeft * 4 : undefined, textIndent: block.indentFirstLine ? block.indentFirstLine * 4 : block.indent ? block.indent * 8 : undefined }}>
-    {block.runs?.length ? block.runs.map((run, runIndex) => <span key={runIndex} style={{ fontWeight: run.bold ? 700 : undefined, fontStyle: run.italic ? "italic" : undefined, textDecoration: [run.underline ? "underline" : "", run.strike ? "line-through" : ""].filter(Boolean).join(" ") || undefined }}>{run.text}</span>) : block.text}
+  const legacyIndent = typeof block.indent === "number" ? Math.max(0, Math.min(8, block.indent)) * 0.75 : 0;
+  const style = {
+    marginLeft: typeof block.indentLeft === "number" ? String(block.indentLeft) + "em" : undefined,
+    textIndent: typeof block.indentFirstLine === "number" ? String(block.indentFirstLine) + "em" : typeof block.indentHanging === "number" ? "-" + String(block.indentHanging) + "em" : legacyIndent ? String(legacyIndent) + "em" : undefined,
+    textAlign: block.align || "left",
+    marginTop: typeof block.spacingBefore === "number" ? String(block.spacingBefore) + "pt" : undefined,
+    marginBottom: typeof block.spacingAfter === "number" ? String(block.spacingAfter) + "pt" : undefined,
+    lineHeight: typeof block.lineSpacing === "number" ? block.lineSpacingMode === "auto" ? block.lineSpacing : String(block.lineSpacing) + "pt" : undefined,
+  } as const;
+  return <Tag key={index} className="sf-manuscript-preview-block" style={style}>
+    {block.runs?.length ? block.runs.map((run, runIndex) => <span key={runIndex} style={{ fontWeight: run.bold ? 700 : undefined, fontStyle: run.italic ? "italic" : undefined, textDecoration: [run.underline ? "underline" : "", run.strike ? "line-through" : ""].filter(Boolean).join(" ") || undefined }}>{run.superscript ? <sup>{run.text}</sup> : run.subscript ? <sub>{run.text}</sub> : run.text}</span>) : block.text}
   </Tag>;
 }
 
