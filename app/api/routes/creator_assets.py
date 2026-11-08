@@ -180,14 +180,29 @@ async def complete_creator_asset_upload(
         raise
 
     metadata = object_info.get("metadata") or {}
+    # Storage's object-info response has used both nested metadata fields
+    # and top-level camelCase/snake_case fields across API versions. Accept
+    # those documented response shapes rather than treating a valid upload
+    # as an unknown file type.
     content_type = (
         metadata.get("mimetype")
+        or metadata.get("mimeType")
         or metadata.get("contentType")
+        or metadata.get("content_type")
+        or metadata.get("content-type")
         or object_info.get("mimetype")
+        or object_info.get("mimeType")
+        or object_info.get("contentType")
+        or object_info.get("content_type")
+        or object_info.get("content-type")
     )
     object_size = metadata.get("size")
     if object_size is None:
         object_size = object_info.get("size")
+    if object_size is None:
+        object_size = metadata.get("contentLength") or metadata.get("content_length")
+    if object_size is None:
+        object_size = object_info.get("contentLength") or object_info.get("content_length")
     try:
         object_size = int(object_size)
     except (TypeError, ValueError) as exc:
