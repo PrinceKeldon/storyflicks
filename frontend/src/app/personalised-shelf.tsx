@@ -7,7 +7,7 @@ import { getSupabaseBrowserClient } from "@/lib/supabase";
 type Episode = { id: string; sequence_number: number; title: string };
 type Progress = { episode_id: string; progress_percent: number; completed_at: string | null; updated_at: string };
 type StoryCard = {
-  story: { id: string; slug: string; title: string; tagline: string | null; synopsis: string | null; completion_status: string };
+  story: { id: string; slug: string; title: string; tagline: string | null; synopsis: string | null; completion_status: string; cover_url: string | null };
   last_read_episode: Episode | null;
   latest_published_episode: Episode;
   first_published_episode: Episode;
@@ -89,8 +89,8 @@ export default function PersonalisedShelf() {
         <div className="empty-shelf"><div className="empty-mark">↗</div><div><h3>Your next chapter is waiting.</h3><p>Sign in to keep your progress, or explore stories and find your next read.</p></div><Link href="/sign-in?next=/library" className="outline-button">Sign in <span>↗</span></Link></div>
       ) : card && target ? (
         <article className="personalised-story-card">
-          <Link className="personalised-story-art" href={"/stories/" + card.story.slug} aria-label={"Explore " + card.story.title}>
-            <span>STORYFLICKS ORIGINAL</span><strong>{card.story.title}</strong><i>{card.story.completion_status === "completed" ? "COMPLETE" : "ONGOING"}</i>
+          <Link className={"personalised-story-art" + (card.story.cover_url ? " has-cover" : "")} href={"/stories/" + card.story.slug} aria-label={"Explore " + card.story.title}>
+            {card.story.cover_url ? <img className="personalised-cover-image" src={card.story.cover_url} alt={card.story.title + " book cover"} /> : <><span>STORYFLICKS ORIGINAL</span><strong>{card.story.title}</strong><i>{card.story.completion_status === "completed" ? "COMPLETE" : "ONGOING"}</i></>}
           </Link>
           <div className="personalised-story-copy">
             <p className="eyebrow">{card.story.completion_status === "completed" ? "YOUR COMPLETED STORY" : "YOUR READING JOURNEY"}</p>
