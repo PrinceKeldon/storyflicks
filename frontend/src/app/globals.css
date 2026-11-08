@@ -948,5 +948,64 @@ html[data-theme="light"] .user-settings-footer{border-color:rgba(43,55,44,.17)}
   .reading-room.theme-night .reader-location,
   .reading-room.theme-night .reader-progress-label{color:#f1f3ef}
 }
+/* Guided episode unlock and in-reader contribution window. */
+.reader-locked-state .eyebrow{margin-bottom:14px}
+.reader-locked-state p:not(.eyebrow){max-width:560px}
+.reader-locked-state p strong{color:#f0ede5}
+.reader-locked-state .primary-button{border:0;cursor:pointer;margin:4px 0 16px}
+.reader-locked-state .text-button{color:#c9c8c0}
+.reader-locked-state .text-button:hover{color:#43b889}
+.contribution-modal-backdrop{
+  position:fixed;inset:0;z-index:1000;display:grid;place-items:center;
+  padding:24px;background:rgba(5,7,8,.78);backdrop-filter:blur(9px);
+}
+.contribution-modal-dialog{
+  width:min(960px,100%);max-height:min(92dvh,940px);overflow:hidden;
+  background:#111416;border:1px solid #4a514d;border-radius:6px;
+  box-shadow:0 28px 100px rgba(0,0,0,.58);
+}
+.contribution-modal-panel{display:flex;flex-direction:column;max-height:min(92dvh,940px);min-height:0}
+.contribution-modal-heading{
+  flex:0 0 auto;display:flex;align-items:center;justify-content:space-between;
+  gap:20px;padding:17px 28px;border-bottom:1px solid #353c39;background:#191e1d;
+}
+.contribution-modal-heading .eyebrow{margin:0 0 4px}
+.contribution-modal-heading h2{margin:0;font:500 25px/1.2 'Playfair Display',Georgia,serif;color:#eeeae1}
+.contribution-modal-close{
+  flex:0 0 40px;width:40px;height:40px;border:1px solid #58635c;border-radius:50%;
+  background:#252c29;color:#f2f2ec;font-size:27px;line-height:1;cursor:pointer;
+}
+.contribution-modal-close:hover{border-color:#70d9a8;background:#294337}
+.contribution-modal-scroll{overflow-y:auto;overscroll-behavior:contain;min-height:0}
+.contribution-modal-scroll .contribution-content{
+  width:100%;max-width:none;margin:0;padding:24px 32px 34px;
+}
+.contribution-modal-scroll .contribution-content>.eyebrow,
+.contribution-modal-scroll .contribution-content>h1{display:none}
+.contribution-modal-scroll .contribution-deck{max-width:640px}
+.contribution-modal-scroll .contribution-rule{margin:18px auto 0}
+.contribution-modal-scroll .reaction-section{margin-top:30px}
+.contribution-modal-scroll .contribution-divider{margin:32px 0}
+.contribution-modal-scroll .review-compose{padding:24px}
+.contribution-modal-scroll .reaction-choice{min-height:66px}
+.contribution-modal-scroll .contribution-notice{margin:12px 0}
+.contribution-modal-panel .reader-state{min-height:240px;padding:30px}
+@media(max-width:650px){
+  .contribution-modal-backdrop{padding:0;place-items:end center}
+  .contribution-modal-dialog{width:100%;max-height:94dvh;border-radius:12px 12px 0 0;border-bottom:0}
+  .contribution-modal-panel{max-height:94dvh}
+  .contribution-modal-heading{padding:14px 18px}
+  .contribution-modal-heading h2{font-size:22px}
+  .contribution-modal-scroll .contribution-content{padding:20px 17px 28px}
+  .contribution-modal-scroll .reaction-grid{grid-template-columns:1fr}
+  .contribution-modal-scroll .review-compose{padding:18px}
+  .contribution-modal-scroll .contribution-action-row{align-items:stretch;flex-direction:column}
+  .contribution-modal-scroll .contribution-action-row .primary-button{justify-content:center}
+}
 
-
+.contribution-modal-state{
+  min-height:220px;display:flex;flex-direction:column;align-items:center;justify-content:center;
+  gap:14px;padding:32px;text-align:center;color:#e8e3d9;font-size:14px;
+}
+.contribution-modal-state p{margin:0;color:#d4d7d1;line-height:1.7}
+.contribution-modal-state .primary-button{border:0;cursor:pointer}
