@@ -561,3 +561,14 @@ button{font:inherit}
 .studio-story-details-panel .studio-section-heading h3{font:500 27px 'Playfair Display',Georgia,serif;margin:0}
 .studio-story-details-panel .studio-section-heading h3 span{color:var(--mint)}
 .studio-cover-placeholder{display:flex;align-items:center;justify-content:center;width:64px;height:88px;padding:8px;border:1px dashed #566157;color:#899388;text-align:center;font-size:8px;line-height:1.5}
+
+
+/* Uploaded story artwork is the source of truth on public story surfaces. */
+.feature-art.has-cover{background:#111214}
+.feature-cover-image{position:absolute;inset:0;width:100%;height:100%;object-fit:contain;z-index:1}
+.feature-art.has-cover .art-grain,.feature-art.has-cover .art-cross,.feature-art.has-cover .art-caption,.feature-art.has-cover .art-title,.feature-art.has-cover .art-index{display:none}
+.story-poster.has-cover{background:#111214}
+.story-cover-image{position:absolute;inset:0;width:100%;height:100%;object-fit:contain}
+.search-result-art.has-cover{background:#111214;padding:8px}
+.catalogue-cover-image{position:absolute;inset:0;width:100%;height:100%;object-fit:contain}
+.search-result-art.has-cover:before{display:none}
