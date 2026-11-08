@@ -58,7 +58,7 @@ async def analyse_manuscript_structure(blocks: list[dict[str, Any]], story_title
                     "required": ["start_block", "end_block", "title", "confidence", "reason"],
                 },
             },
-            "warnings": {"type": "array", "items": {"type": "STRING"}},
+            "warnings": {"type": "array", "items": {"type": "string"}},
         },
         "required": ["sections", "warnings"],
     }
