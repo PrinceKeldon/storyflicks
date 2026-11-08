@@ -177,7 +177,7 @@ export default function ReactionPanel({ slug, episodeId, presentation = "page", 
           </div>
           <div className="contribution-action-row">
             <p>{selected.length} selected <span>·</span> A reaction on its own unlocks the next episode.</p>
-            <button className="primary-button" type="button" disabled={busy !== null || selected.length === 0} onClick={() => void submitContribution("reaction")}>{busy === "reaction" ? "Saving…" : "Save my reactions"} <span>→</span></button>
+            <button className="primary-button" type="button" disabled={busy !== null || selected.length === 0} onClick={() => void submitContribution("reaction")}>{busy === "reaction" ? "Submitting…" : presentation === "modal" ? "Submit reaction & continue" : "Save my reactions"} <span>→</span></button>
           </div>
         </section>
 
@@ -197,7 +197,7 @@ export default function ReactionPanel({ slug, episodeId, presentation = "page", 
           </div>
           <div className="contribution-action-row review-submit-row">
             <p>A submitted review — public or private — also unlocks the next episode.</p>
-            <button className="primary-button" type="button" disabled={busy !== null || !body.trim()} onClick={() => void submitContribution("review")}>{busy === "review" ? "Submitting…" : data.my_review ? "Update my review" : "Submit my review"} <span>→</span></button>
+            <button className="primary-button" type="button" disabled={busy !== null || !body.trim()} onClick={() => void submitContribution("review")}>{busy === "review" ? "Submitting…" : presentation === "modal" ? (data.my_review ? "Update review & continue" : "Submit review & continue") : data.my_review ? "Update my review" : "Submit my review"} <span>→</span></button>
           </div>
         </section>
 
