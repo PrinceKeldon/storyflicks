@@ -1029,3 +1029,17 @@ html[data-theme="light"] .user-settings-footer{border-color:rgba(43,55,44,.17)}
 
 /* DOCX-imported intentional blank paragraphs remain distinct from section breaks. */
 .manuscript-spacer{height:0.8em;}
+
+
+/* Shared account navigation */
+.account-email{display:inline-block;max-width:190px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;color:var(--paper);font-size:11px}
+.account-sign-out{border:0;background:transparent;padding:0;font:inherit;cursor:pointer}
+.account-sign-out:hover,.sign-in:hover{color:var(--mint)}
+.library-header-account,.user-settings-account,.studio-header-account{display:flex;align-items:center;gap:20px}
+.library-header-account .account-actions,.user-settings-account .account-actions,.studio-header-account .account-actions{margin-left:0}
+.user-settings-account .account-actions{gap:18px}
+@media(max-width:700px){
+  .account-email{display:none}
+  .account-actions .account-sign-out{display:inline-flex}
+  .library-header-account,.user-settings-account,.studio-header-account{gap:10px}
+}
