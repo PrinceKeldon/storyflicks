@@ -3,10 +3,11 @@
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import ReactionPanel from "../../react/[episodeId]/reaction-panel";
-import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { Fragment, useCallback, useEffect, useMemo, useRef, useState, type ReactNode } from "react";
 import { getSupabaseBrowserClient } from "@/lib/supabase";
 
-type ContentBlock = { type?: string; text?: string; html?: string; content?: string; level?: number; [key: string]: unknown };
+type ContentRun = {text:string;bold?:boolean;italic?:boolean;underline?:boolean;strike?:boolean;superscript?:boolean;subscript?:boolean};
+type ContentBlock = { type?: string; text?: string; html?: string; content?: string; level?: number; indent?: number; indentLeft?:number; indentFirstLine?:number; indentHanging?:number; align?: "left"|"center"|"right"|"justify"; italic?: boolean; bold?: boolean; runs?:ContentRun[]; spacingBefore?:number; spacingAfter?:number; lineSpacing?:number; lineSpacingMode?:"auto"|"exact"|"atLeast"; [key: string]: unknown };
 type EpisodeAccessGate = {
   code: string;
   section_label?: string;
@@ -33,6 +34,24 @@ function extractBlocks(content: unknown): ContentBlock[] {
   }
   if (content && typeof content === "object" && Array.isArray((content as { blocks?: unknown }).blocks)) return (content as { blocks: ContentBlock[] }).blocks;
   return [];
+}
+
+function renderRuns(block: ContentBlock) {
+  if (!Array.isArray(block.runs) || !block.runs.length) {
+    const text = blockText(block);
+    const content = block.bold && block.italic ? <strong><em>{text}</em></strong> : block.bold ? <strong>{text}</strong> : block.italic ? <em>{text}</em> : text;
+    return content;
+  }
+  return block.runs.map((run, index) => {
+    let node: ReactNode = run.text;
+    if (run.superscript) node = <sup>{node}</sup>;
+    if (run.subscript) node = <sub>{node}</sub>;
+    if (run.underline) node = <u>{node}</u>;
+    if (run.strike) node = <s>{node}</s>;
+    if (run.italic) node = <em>{node}</em>;
+    if (run.bold) node = <strong>{node}</strong>;
+    return <Fragment key={index}>{node}</Fragment>;
+  });
 }
 
 function blockText(block: ContentBlock) {
@@ -231,13 +250,23 @@ export default function ReadingRoom({ slug, episodeId }: { slug: string; episode
           {blocks.map((block, index) => {
             const text = blockText(block);
             const kind = String(block.type || "paragraph").toLowerCase();
-            if (!text) return null;
-            if (kind.includes("heading") || kind === "title") return <h2 key={index}>{text}</h2>;
-            if (kind.includes("quote")) return <blockquote key={index}>{text}</blockquote>;
+            if (kind === "spacer") return <div className="manuscript-spacer" aria-hidden="true" key={index} />;
             if (kind.includes("separator") || kind === "divider" || kind === "scene_break") return <div className="manuscript-divider" key={index}>✦</div>;
-            if (kind === "dialogue") return <p className="manuscript-dialogue" key={index}>{text}</p>;
-            if (kind === "emphasis") return <p className="manuscript-emphasis" key={index}>{text}</p>;
-            return <p className="manuscript-paragraph" key={index}>{text}</p>;
+            if (!text) return null;
+            if (kind.includes("heading") || kind === "title") return <h2 key={index}>{renderRuns(block)}</h2>;
+            if (kind.includes("quote")) return <blockquote key={index}>{renderRuns(block)}</blockquote>;
+            const legacyIndent = typeof block.indent === "number" ? Math.max(0, Math.min(8, block.indent)) * 0.75 : 0;
+            const style = {
+              marginLeft: typeof block.indentLeft === "number" ? String(block.indentLeft) + "em" : undefined,
+              textIndent: typeof block.indentFirstLine === "number" ? String(block.indentFirstLine) + "em" : typeof block.indentHanging === "number" ? "-" + String(block.indentHanging) + "em" : legacyIndent ? String(legacyIndent) + "em" : undefined,
+              textAlign: block.align || undefined,
+              marginTop: typeof block.spacingBefore === "number" ? String(block.spacingBefore) + "pt" : undefined,
+              marginBottom: typeof block.spacingAfter === "number" ? String(block.spacingAfter) + "pt" : undefined,
+              lineHeight: typeof block.lineSpacing === "number" ? block.lineSpacingMode === "auto" ? block.lineSpacing : String(block.lineSpacing) + "pt" : undefined,
+            } as const;
+            if (kind === "dialogue") return <p className="manuscript-dialogue" style={style} key={index}>{renderRuns(block)}</p>;
+            if (kind === "emphasis") return <p className="manuscript-emphasis" style={style} key={index}>{renderRuns(block)}</p>;
+            return <p className="manuscript-paragraph" style={style} key={index}>{renderRuns(block)}</p>;
           })}
         </div>
         {payload.episode.assets?.filter((asset) => asset.public_url).map((asset) => <figure className="reading-asset" key={asset.id}><img src={asset.public_url!} alt={asset.alt_text || "Story illustration"} /></figure>)}

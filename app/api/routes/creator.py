@@ -301,10 +301,17 @@ class CreatorEpisodeSubmission(BaseModel):
             for block in blocks:
                 if not isinstance(block, dict):
                     raise ValueError("Each episode content block must be an object.")
-                if block.get("type") not in {"paragraph", "heading", "quote"}:
-                    raise ValueError("Episode content blocks must be paragraphs, headings or quotes.")
+                if block.get("type") not in {"paragraph", "heading", "quote", "separator", "spacer"}:
+                    raise ValueError("Episode content blocks must be paragraphs, headings, quotes, separators or spacers.")
                 if not isinstance(block.get("text"), str) or len(block["text"]) > 100000:
                     raise ValueError("Each content block must contain text of 100,000 characters or fewer.")
+                runs = block.get("runs")
+                if runs is not None:
+                    if not isinstance(runs, list) or len(runs) > 10000:
+                        raise ValueError("Each paragraph can contain at most 10,000 inline runs.")
+                    for run in runs:
+                        if not isinstance(run, dict) or not isinstance(run.get("text"), str) or len(run["text"]) > 100000:
+                            raise ValueError("Inline formatting runs must contain text of 100,000 characters or fewer.")
         return value
 
 
