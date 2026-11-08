@@ -183,11 +183,9 @@ class SupabaseService:
         except ValueError:
             error_body = response.text[:1000]
 
-        logger.error(
-            "Supabase request failed: status=%s body=%s",
-            response.status_code,
-            error_body,
-        )
+        # Do not write upstream error payloads to logs: database errors can
+        # include user-supplied values and other request-specific data.
+        logger.error("Supabase request failed: status=%s", response.status_code)
 
         if response.status_code in (401, 403):
             raise HTTPException(
