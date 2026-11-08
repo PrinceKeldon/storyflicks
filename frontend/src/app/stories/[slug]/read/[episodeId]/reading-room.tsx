@@ -205,10 +205,7 @@ export default function ReadingRoom({ slug, episodeId }: { slug: string; episode
       <p className="eyebrow">ONE MORE STEP</p>
       <h1>One more step to unlock this {accessGate.section_label || "Episode"}.</h1>
       <p>{accessGate.locked_episode ? <>You’re almost at {accessGate.section_label || "Episode"} {String(accessGate.locked_episode.sequence_number).padStart(2, "0")}: <strong>{accessGate.locked_episode.title}</strong>. </> : null}{accessGate.message} Your next step is to share your take on {accessGate.section_label || "Episode"} {String(accessGate.previous_episode.sequence_number).padStart(2, "0")}, <strong>{accessGate.previous_episode.title}</strong>. Either a quick reaction or a written review is enough.</p>
-      <div className="reading-end-actions">
-            <button type="button" className="primary-button" onClick={() => setShowContribution(true)}>Share your take <span>→</span></button>
-            <SupportStoryButton storyId={payload.story.id} slug={slug} compact />
-          </div>
+      <button type="button" className="primary-button" onClick={() => setShowContribution(true)}>Share your take <span>→</span></button>
       <Link className="text-button" href={`/stories/${slug}/read/${accessGate.previous_episode.id}`}>← Return to {accessGate.section_label || "Episode"} {String(accessGate.previous_episode.sequence_number).padStart(2, "0")}</Link>
       {showContribution && <div className="contribution-modal-backdrop" role="presentation">
         <div className="contribution-modal-dialog" role="dialog" aria-modal="true" aria-label="Share your take">
@@ -278,7 +275,10 @@ export default function ReadingRoom({ slug, episodeId }: { slug: string; episode
           <span>END OF {(payload.story.section_label || "Episode").toUpperCase()} {String(payload.episode.sequence_number).padStart(2, "0")}</span>
           <h2>Let that one settle.</h2>
           <p>Take a moment to react or write a review. Either one unlocks what comes next.</p>
-          <button type="button" className="primary-button" onClick={() => setShowContribution(true)}>Share your take <span>→</span></button>
+          <div className="reading-end-actions">
+            <button type="button" className="primary-button" onClick={() => setShowContribution(true)}>Share your take <span>→</span></button>
+            <SupportStoryButton storyId={payload.story.id} slug={slug} compact />
+          </div>
         </footer>
       </article>
       <footer className="reader-footer"><span>STORYFLICKS</span><span>Stories worth staying for.</span><span>© 2026</span></footer>
