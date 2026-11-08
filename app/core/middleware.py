@@ -2,12 +2,8 @@ from collections.abc import Awaitable, Callable
 from typing import Any
 
 
-class _RequestTooLarge(Exception):
-    pass
-
-
 class RequestSizeLimitMiddleware:
-    """Reject oversized API requests before FastAPI parses their JSON bodies."""
+    """Buffer and reject oversized API bodies before FastAPI parses JSON."""
 
     def __init__(self, app: Callable[..., Awaitable[None]], max_bytes: int = 3 * 1024 * 1024):
         self.app = app
@@ -29,30 +25,35 @@ class RequestSizeLimitMiddleware:
                 await self._reject(send)
                 return
 
-        received = 0
-        response_started = False
-
-        async def limited_receive() -> dict[str, Any]:
-            nonlocal received
+        body = bytearray()
+        while True:
             message = await receive()
-            if message.get("type") == "http.request":
-                received += len(message.get("body", b""))
-                if received > self.max_bytes:
-                    raise _RequestTooLarge
-            return message
+            if message.get("type") == "http.disconnect":
+                return
+            if message.get("type") != "http.request":
+                continue
+            body.extend(message.get("body", b""))
+            if len(body) > self.max_bytes:
+                await self._reject(send)
+                return
+            if not message.get("more_body", False):
+                break
 
-        async def tracked_send(message: dict[str, Any]) -> None:
-            nonlocal response_started
-            if message.get("type") == "http.response.start":
-                response_started = True
-            await send(message)
+        body_bytes = bytes(body)
+        replayed = False
 
-        try:
-            await self.app(scope, limited_receive, tracked_send)
-        except _RequestTooLarge:
-            if response_started:
-                raise
-            await self._reject(send)
+        async def replay_receive() -> dict[str, Any]:
+            nonlocal replayed
+            if not replayed:
+                replayed = True
+                return {
+                    "type": "http.request",
+                    "body": body_bytes,
+                    "more_body": False,
+                }
+            return await receive()
+
+        await self.app(scope, replay_receive, send)
 
     async def _reject(self, send: Callable[..., Awaitable[None]]) -> None:
         body = b'{"detail":"Request body exceeds the 3 MB limit."}'
