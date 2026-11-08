@@ -18,4 +18,3 @@ async def get_creator_access(
         "creator_status": creator_status or "none",
         "can_access_creator_studio": is_approved_creator,
     }
-}
