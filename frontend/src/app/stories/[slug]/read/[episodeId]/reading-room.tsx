@@ -9,13 +9,15 @@ import { getSupabaseBrowserClient } from "@/lib/supabase";
 type ContentBlock = { type?: string; text?: string; html?: string; content?: string; level?: number; [key: string]: unknown };
 type EpisodeAccessGate = {
   code: string;
+  section_label?: string;
+  section_label_plural?: string;
   message: string;
   required_action?: string;
   previous_episode?: { id: string; title: string; sequence_number: number };
   locked_episode?: { id: string; title: string; sequence_number: number };
 };
 type EpisodePayload = {
-  story: { id: string; slug: string; title: string };
+  story: { id: string; slug: string; title: string; section_label?: string; section_label_plural?: string };
   episode: { id: string; sequence_number: number; title: string; synopsis?: string | null; content: unknown; assets?: { id: string; asset_type: string; public_url?: string | null; alt_text?: string | null; position: number }[] };
   reading_progress?: { progress_percent?: number; last_position?: { scrollY?: number } | null } | null;
 };
@@ -182,9 +184,9 @@ export default function ReadingRoom({ slug, episodeId }: { slug: string; episode
       <span className="reader-state-mark">SF.</span>
       <p className="eyebrow">ONE MORE STEP</p>
       <h1>One more step to unlock this episode.</h1>
-      <p>{accessGate.locked_episode ? <>You’re almost at Episode {String(accessGate.locked_episode.sequence_number).padStart(2, "0")}: <strong>{accessGate.locked_episode.title}</strong>. </> : null}{accessGate.message} Your next step is to share your take on Episode {String(accessGate.previous_episode.sequence_number).padStart(2, "0")}, <strong>{accessGate.previous_episode.title}</strong>. Either a quick reaction or a written review is enough.</p>
+      <p>{accessGate.locked_episode ? <>You’re almost at {accessGate.section_label || "Episode"} {String(accessGate.locked_episode.sequence_number).padStart(2, "0")}: <strong>{accessGate.locked_episode.title}</strong>. </> : null}{accessGate.message} Your next step is to share your take on {accessGate.section_label || "Episode"} {String(accessGate.previous_episode.sequence_number).padStart(2, "0")}, <strong>{accessGate.previous_episode.title}</strong>. Either a quick reaction or a written review is enough.</p>
       <button type="button" className="primary-button" onClick={() => setShowContribution(true)}>Share your take <span>→</span></button>
-      <Link className="text-button" href={`/stories/${slug}/read/${accessGate.previous_episode.id}`}>← Return to Episode {String(accessGate.previous_episode.sequence_number).padStart(2, "0")}</Link>
+      <Link className="text-button" href={`/stories/${slug}/read/${accessGate.previous_episode.id}`}>← Return to {accessGate.section_label || "Episode"} {String(accessGate.previous_episode.sequence_number).padStart(2, "0")}</Link>
       {showContribution && <div className="contribution-modal-backdrop" role="presentation">
         <div className="contribution-modal-dialog" role="dialog" aria-modal="true" aria-label="Share your take">
           <ReactionPanel
@@ -208,7 +210,7 @@ export default function ReadingRoom({ slug, episodeId }: { slug: string; episode
       <div className="reader-progress-track"><span style={{ width: `${progress}%` }} /></div>
       <header className="reader-toolbar">
         <Link className="reader-brand" href="/">STORY<span>FLICKS</span><i>.</i></Link>
-        <div className="reader-location"><Link href={`/stories/${slug}`}>{payload.story.title}</Link><span>/</span><span>EPISODE {String(payload.episode.sequence_number).padStart(2, "0")}</span></div>
+        <div className="reader-location"><Link href={`/stories/${slug}`}>{payload.story.title}</Link><span>/</span><span>{(payload.story.section_label || "Episode").toUpperCase()} {String(payload.episode.sequence_number).padStart(2, "0")}</span></div>
         <div className="reader-tools">
           <span className="reader-progress-label">{progress}%</span>
           <button className="reader-tool-button" onClick={() => setShowSettings((value) => !value)} aria-expanded={showSettings}>Aa <span>Reading settings</span></button>
@@ -221,7 +223,7 @@ export default function ReadingRoom({ slug, episodeId }: { slug: string; episode
         <div><span>READING WIDTH</span><div className="setting-options"><button className={width === "comfortable" ? "selected" : ""} onClick={() => setWidth("comfortable")}>Comfortable</button><button className={width === "wide" ? "selected" : ""} onClick={() => setWidth("wide")}>Wide</button></div></div>
       </section>}
       <article className={`reading-page reading-width-${width}`}>
-        <div className="reading-kicker">{payload.story.title} <span>·</span> EPISODE {String(payload.episode.sequence_number).padStart(2, "0")}</div>
+        <div className="reading-kicker">{payload.story.title} <span>·</span> {(payload.story.section_label || "Episode").toUpperCase()} {String(payload.episode.sequence_number).padStart(2, "0")}</div>
         <h1>{payload.episode.title}</h1>
         {payload.episode.synopsis && <p className="reading-deck">{payload.episode.synopsis}</p>}
         <div className="reading-rule"><span>✦</span></div>
@@ -240,7 +242,7 @@ export default function ReadingRoom({ slug, episodeId }: { slug: string; episode
         </div>
         {payload.episode.assets?.filter((asset) => asset.public_url).map((asset) => <figure className="reading-asset" key={asset.id}><img src={asset.public_url!} alt={asset.alt_text || "Story illustration"} /></figure>)}
         <footer className="reading-end">
-          <span>END OF EPISODE {String(payload.episode.sequence_number).padStart(2, "0")}</span>
+          <span>END OF {(payload.story.section_label || "Episode").toUpperCase()} {String(payload.episode.sequence_number).padStart(2, "0")}</span>
           <h2>Let that one settle.</h2>
           <p>Take a moment to react or write a review. Either one unlocks what comes next.</p>
           <button type="button" className="primary-button" onClick={() => setShowContribution(true)}>Share your take <span>→</span></button>
