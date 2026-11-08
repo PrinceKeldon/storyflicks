@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import AccountNavigation from "@/app/account-navigation";
 import { useEffect, useState } from "react";
 import { getSupabaseBrowserClient } from "@/lib/supabase";
 
@@ -80,7 +81,7 @@ export default function UserSettings() {
           <Link href="/library">My Library</Link>
           <Link href="/creator-studio">Creator Studio</Link>
         </nav>
-        <Link className="user-settings-back" href="/">Back to Discover ↗</Link>
+        <div className="user-settings-account"><AccountNavigation /></div>
       </header>
       <section className="user-settings-content">
         <p className="eyebrow">YOUR ACCOUNT</p>
