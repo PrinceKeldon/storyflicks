@@ -554,3 +554,10 @@ button{font:inherit}
 .personalised-story-footer a{font:10px 'DM Sans',sans-serif;color:var(--paper);white-space:nowrap}
 .personalised-story-footer a span{color:var(--mint);padding-left:6px}
 @media(max-width:620px){.personalised-story-card{grid-template-columns:1fr;gap:15px;padding:12px}.personalised-story-art{min-height:155px}.personalised-story-copy{padding:4px 3px 6px}.personalised-story-copy h3{font-size:22px}.personalised-story-footer{align-items:flex-start;flex-direction:column}}
+
+.studio-catalogue-actions{display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin-top:18px}
+.studio-catalogue-actions .studio-outline-action{flex:1}
+.studio-story-details-panel{margin-top:34px;padding-top:30px;border-top:1px solid #303735}
+.studio-story-details-panel .studio-section-heading h3{font:500 27px 'Playfair Display',Georgia,serif;margin:0}
+.studio-story-details-panel .studio-section-heading h3 span{color:var(--mint)}
+.studio-cover-placeholder{display:flex;align-items:center;justify-content:center;width:64px;height:88px;padding:8px;border:1px dashed #566157;color:#899388;text-align:center;font-size:8px;line-height:1.5}
