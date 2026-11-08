@@ -213,7 +213,7 @@ export default function ReactionPanel({ slug, episodeId, presentation = "page", 
             <p><strong>{unlock.title}</strong> is now in your library{unlock.publication_status !== "published" ? " and will be ready when it is published" : ""}.</p>
             {unlock.publication_status === "published" && <Link className="primary-button" href={`/stories/${slug}/read/${unlock.id}`}>Read next {sectionLabel.toLowerCase()} <span>↗</span></Link>}
             {unlock.publication_status !== "published" && <p className="unlock-waiting">We’ll keep your access ready. Come back when the {sectionLabel.toLowerCase()} is released.</p>}
-          </> : data.next_episode ? <p>Your contribution is saved. If the next {sectionLabel.toLowerCase()} has not opened yet, your access will be ready when it is published.</p> : <p>Your response is recorded. There isn’t another episode available just yet.</p>}
+          </> : data.next_episode ? <p>Your contribution is saved. If the next {sectionLabel.toLowerCase()} has not opened yet, your access will be ready when it is published.</p> : <p>Your response is recorded. There isn’t another {sectionLabelPlural.toLowerCase()} available just yet.</p>}
         </section>}
 
         {presentation === "page" && <div className="contribution-bottom-links"><Link href={`/stories/${slug}`}>Skip for now · Back to {data.story.title}</Link><Link href={`/stories/${slug}/reviews/${episodeId}`}>Reader discussion ↗</Link><Link href={`/stories/${slug}#episodes`}>{sectionLabelPlural} guide ↗</Link></div>}
