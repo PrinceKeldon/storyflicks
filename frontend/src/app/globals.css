@@ -615,3 +615,244 @@ button{font:inherit}
 .search-result-art.has-cover>small{
   display:none!important;
 }
+
+
+/* STORYFLICKS visual refinement: clearer hierarchy, stronger contrast and accessible controls.
+   The existing STORYFLICKS wordmark and display typography are intentionally untouched. */
+:root {
+  --mint: #50c99a;
+  --amber: #e4a96e;
+  --line: rgba(232,227,217,.17);
+}
+body { font-size: 16px; }
+:where(p, li, label, input, textarea, select, button, a) { text-rendering: optimizeLegibility; }
+:where(button, a, input, textarea, select) { -webkit-tap-highlight-color: transparent; }
+:where(button, a, input, textarea, select):focus-visible {
+  outline: 2px solid var(--mint);
+  outline-offset: 3px;
+}
+:where(.app-shell,.detail-shell,.auth-shell,.contribution-shell,.review-room-shell,.library-shell,.studio-shell,.search-page) {
+  font-size: 15px;
+}
+:where(.app-shell,.detail-shell,.auth-shell,.contribution-shell,.review-room-shell,.library-shell,.studio-shell,.search-page)
+:where(p, label, input, textarea, select, button, a, small, li) {
+  font-size: max(12px, 1em);
+}
+:where(.app-shell,.detail-shell,.auth-shell,.contribution-shell,.review-room-shell,.library-shell,.studio-shell,.search-page)
+:where(.eyebrow,.feature-overline,.feature-kicker,.feature-meta,.art-caption,.art-index,.detail-label,.guide-count,.episode-status,.story-facts,.library-story-meta,.library-card-footer>span,.studio-story-name small,.studio-story-count,.studio-story-status,.studio-catalogue-top,.studio-catalogue-stats,.studio-form-title,.studio-block-tools>span,.studio-revision-row span,.studio-revision-row small,.studio-revision-row strong,.studio-publication-controls>div:first-child small,.studio-workspace-status small,.studio-workspace-status span,.studio-insight-row small,.studio-activity-legend,.studio-activity-day small,.studio-episode-analytics-title>span,.studio-episode-analytics-row small) {
+  font-size: max(10px, 1em);
+}
+.welcome-note,.story-synopsis,.auth-intro,.contribution-deck,.review-room-deck,.studio-hero>div:first-child>p:last-child,.studio-intro,.search-intro,
+.library-story-tagline,.library-contribution-copy>p:not(.eyebrow),.studio-info-panel p,.studio-note-body {
+  font-size: 14px;
+  line-height: 1.75;
+}
+.nav-link,.studio-header nav a,.account-actions,.studio-tabs button,.library-tabs button,
+.genre-chip,.subtle-link,.text-button,.episode-copy p,.studio-form label,.studio-preference-list label {
+  font-size: 13px;
+}
+.primary-button,.join-button,.outline-button,.studio-primary,.studio-outline-action,.studio-text-action {
+  font-size: 13px;
+  font-weight: 650;
+}
+.icon-button { min-width: 40px; min-height: 40px; display: inline-grid; place-items: center; }
+.featured { background: linear-gradient(115deg,#202725 0%,#1b1e20 60%,#29251f 100%); }
+.feature-kicker,.eyebrow,.section-heading h2 span,.studio-section-heading h2 span { color: #58d4a4; }
+.primary-button,.join-button,.studio-primary {
+  box-shadow: 0 5px 18px rgba(67,184,137,.13);
+}
+.primary-button:hover,.join-button:hover,.studio-primary:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 9px 24px rgba(67,184,137,.22);
+}
+:where(.empty-shelf,.library-empty-shelf,.library-empty-large,.studio-empty,.studio-info-panel,.studio-metric,.studio-catalogue-card,.studio-community-card,.review-compose,.studio-form,.studio-episode-sidebar,.studio-revision-panel) {
+  transition: border-color .18s ease, background .18s ease, box-shadow .18s ease;
+}
+:where(.library-story-card,.library-contribution-card,.studio-catalogue-card,.studio-community-card,.studio-metric,.studio-info-panel):hover {
+  border-color: rgba(80,201,154,.5);
+  box-shadow: 0 10px 28px rgba(0,0,0,.14);
+}
+:where(.studio-form input:not([type=checkbox]),.studio-form textarea,.studio-form select,.review-compose input,.review-compose textarea,.search-page-form input) {
+  min-height: 44px;
+  font-size: 14px;
+}
+:where(.studio-form textarea,.review-compose textarea) { line-height: 1.75; }
+:where(.studio-tabs button,.library-tabs button,.studio-community-tabs button,.auth-switch button) { min-height: 46px; }
+:where(.studio-outline-action,.outline-button,.story-save-button,.visibility-options button,.setting-options button) { min-height: 42px; }
+.feature-meta,.art-caption,.art-index { color: #a9ada5; }
+.subtle-link,.text-button,.sign-in,.back-link,.detail-label,.guide-count,
+.episode-copy p,.episode-status,.auth-intro,.auth-privacy,.library-empty-shelf p,
+.library-story-meta,.library-card-footer>span,.library-empty-large p,.library-footer>span,
+.studio-intro,.studio-metric small,.studio-catalogue-card>p,.studio-empty p,
+.studio-save-hint,.studio-info-panel p,.studio-footnote,.studio-loading,
+.studio-footer>span,.search-intro,.search-result-count {
+  color: #b2b7af;
+}
+.library-story-tagline,.library-contribution-copy>p:not(.eyebrow),.studio-note-body,
+.studio-reply-composer,.studio-published-reply p { color: #c8cec5; }
+:where(.studio-story-row,.studio-episode-choice,.studio-revision-row,.studio-community-card) {
+  transition: background .18s ease,border-color .18s ease;
+}
+
+/* Theme switch */
+.theme-switch {
+  position: fixed;
+  right: 22px;
+  bottom: 22px;
+  z-index: 100;
+  display: inline-flex;
+  align-items: center;
+  gap: 9px;
+  min-height: 46px;
+  padding: 0 16px;
+  border: 1px solid rgba(80,201,154,.55);
+  border-radius: 999px;
+  background: #202725;
+  color: #f4f1e9;
+  box-shadow: 0 8px 28px rgba(0,0,0,.28);
+  font: 600 12px 'DM Sans',Arial,sans-serif;
+  cursor: pointer;
+}
+.theme-switch:hover { border-color: var(--mint); transform: translateY(-2px); }
+.theme-switch-icon { font-size: 17px; line-height: 1; }
+.theme-switch:focus-visible { outline: 3px solid var(--amber); outline-offset: 3px; }
+
+/* A complete light interface, while preserving the reading-room's own Paper/Sepia/Night controls. */
+html[data-theme="light"] { color-scheme: light; background: #f4f2ed; }
+html[data-theme="light"] body { background: #f4f2ed; color: #262b27; }
+html[data-theme="light"] {
+  --ink: #f4f2ed;
+  --slate: #e9e6df;
+  --paper: #272d29;
+  --muted: #626b63;
+  --mint: #218b65;
+  --amber: #a96832;
+  --line: rgba(38,45,40,.16);
+}
+html[data-theme="light"] :is(.app-shell,.detail-shell,.auth-shell,.library-shell,.studio-shell,.search-page) {
+  color: #272d29;
+}
+html[data-theme="light"] :is(.topbar,.detail-top,.auth-header,.library-header,.studio-header,.library-footer,.studio-footer,.footer) {
+  border-color: rgba(38,45,40,.16);
+}
+html[data-theme="light"] :is(.nav-link,.sign-in,.subtle-link,.text-button,.back-link,.detail-label,.guide-count,.studio-header nav a,.studio-tabs button,.library-tabs button,.studio-footer>a:last-child,.library-footer>a:last-child) {
+  color: #5d675f;
+}
+html[data-theme="light"] :is(.nav-link.active,.studio-header nav a.active,.studio-tabs button.active,.library-tabs button.active) { color: #202923; }
+html[data-theme="light"] :is(.featured,.library-story-card,.library-empty-shelf,.library-empty-large,.library-contribution-card,.library-reaction-row,.studio-metric,.studio-catalogue-card,.studio-empty,.studio-form,.studio-workspace-select,.studio-episode-sidebar,.studio-content-block,.studio-revision-panel,.studio-info-panel,.studio-community-card,.studio-analytics-toolbar,.studio-activity-chart,.studio-episode-analytics-row,.review-compose,.studio-preference-list,.studio-hero-mark) {
+  background: #fffefa;
+  border-color: #d8d8cf;
+  color: #28302a;
+}
+html[data-theme="light"] .featured {
+  background: linear-gradient(115deg,#e9f2eb 0%,#f5f0e7 58%,#f1e5d8 100%);
+}
+html[data-theme="light"] :is(.featured h2,.section-heading h2,.browse-row h2,.story-info h1,.episode-copy h3,.studio-section-heading h2,.studio-hero h1,.library-shelf-heading h2,.studio-catalogue-card h3,.studio-empty h3,.studio-community-card h3,.studio-metric strong,.studio-insight-row>span>strong,.studio-episode-analytics-row>div:not(:first-child)>strong,.search-page>h1,.search-results-heading h2,.auth-panel h1,.library-state h1) {
+  color: #242b26;
+}
+html[data-theme="light"] :is(.welcome-note,.feature-tagline,.story-synopsis,.story-facts,.episode-copy p,.episode-status,.library-story-tagline,.library-story-meta,.library-card-footer>span,.library-empty-shelf p,.library-empty-large p,.library-contribution-copy>p:not(.eyebrow),.library-contribution-copy small,.library-reaction-row small,.studio-hero>div:first-child>p:last-child,.studio-intro,.studio-metric>span,.studio-metric small,.studio-catalogue-card>p,.studio-catalogue-stats,.studio-empty p,.studio-form-title,.studio-form label,.studio-workspace-select label,.studio-workspace-status small,.studio-workspace-status span,.studio-block-heading small,.studio-block-tools>span,.studio-save-hint,.studio-revision-row span,.studio-revision-row small,.studio-info-panel p,.studio-footnote,.studio-footer>span,.studio-community-card-head>small,.studio-note-body,.studio-review-author,.studio-report-meta span,.studio-report-meta small,.studio-activity-legend,.studio-episode-analytics-title>span,.studio-episode-analytics-row>div:not(:first-child)>small,.search-intro,.search-result-count,.auth-intro,.auth-privacy) {
+  color: #59645c;
+}
+html[data-theme="light"] :is(.studio-story-row,.studio-episode-choice,.studio-revision-row) {
+  color: #29332c;
+  border-color: #d9ded7;
+}
+html[data-theme="light"] :is(.studio-story-row:hover,.studio-story-row.selected,.studio-episode-choice.active,.studio-episode-choice:hover,.studio-revision-row.active) {
+  background: #eaf4ed;
+}
+html[data-theme="light"] :is(.studio-form input:not([type=checkbox]),.studio-form textarea,.studio-form select,.studio-schedule-row input,.studio-workspace-select select,.studio-block-tools select,.studio-note-composer>label select,.studio-report-toolbar select,.studio-analytics-toolbar select,.studio-reply-composer textarea,.search-page-form input,.auth-form input,.review-compose input,.review-compose textarea) {
+  background: #fff;
+  color: #252d27;
+  border-color: #c7d0c8;
+}
+html[data-theme="light"] :is(.studio-form input::placeholder,.studio-form textarea::placeholder,.search-page-form input::placeholder,.auth-form input::placeholder,.review-compose input::placeholder,.review-compose textarea::placeholder) {
+  color: #737e75;
+}
+html[data-theme="light"] :is(.studio-form input:focus,.studio-form textarea:focus,.studio-form select:focus,.search-page-form input:focus,.auth-form input:focus,.review-compose input:focus,.review-compose textarea:focus) {
+  border-color: #218b65;
+  box-shadow: 0 0 0 3px rgba(33,139,101,.12);
+}
+html[data-theme="light"] :is(.studio-outline-action,.outline-button,.story-save-button,.visibility-options button,.setting-options button,.genre-chip) {
+  color: #34463a;
+  border-color: #aebbb0;
+}
+html[data-theme="light"] :is(.studio-primary,.primary-button,.join-button) {
+  background: #218b65;
+  border-color: #218b65;
+  color: #fff;
+}
+html[data-theme="light"] :is(.studio-text-action,.library-card-footer a,.library-contribution-card>a,.library-reaction-row>a,.library-empty-large>a,.studio-editor-actions button) {
+  color: #18724f;
+}
+html[data-theme="light"] :is(.studio-preference-list,.studio-community-tabs,.studio-community-card-foot,.studio-report-meta,.studio-story-list,.studio-insights-list) {
+  border-color: #d9ded7;
+}
+html[data-theme="light"] .studio-note-body { color: #36443a; }
+html[data-theme="light"] .studio-published-reply { background: #e8f3eb; }
+html[data-theme="light"] .studio-published-reply p { color: #34463a; }
+html[data-theme="light"] .studio-activity-bar { background: #dfe7df; }
+html[data-theme="light"] .studio-episode-analytics-title>strong,
+html[data-theme="light"] .studio-episode-analytics-row>div:not(:first-child)>strong { color: #29332c; }
+html[data-theme="light"] :is(.auth-switch button,.studio-community-tabs button) { color: #58645a; }
+html[data-theme="light"] .auth-switch button.active { color: #1f6e4e; }
+html[data-theme="light"] .theme-switch {
+  background: #fffefa;
+  color: #29332c;
+  border-color: #aab9ac;
+  box-shadow: 0 8px 28px rgba(35,48,39,.16);
+}
+html[data-theme="light"] .theme-switch:hover { background: #edf5ef; }
+html[data-theme="light"] .studio-state,
+html[data-theme="light"] .library-state,
+html[data-theme="light"] .reader-state,
+html[data-theme="light"] .contribution-shell,
+html[data-theme="light"] .review-room-shell {
+  background: #f4f2ed;
+  color: #272d29;
+}
+html[data-theme="light"] :is(.studio-state h1,.library-state h1,.reader-state h1,.contribution-content>h1,.review-room-content>h1) { color: #242b26; }
+html[data-theme="light"] :is(.studio-state>p:not(.eyebrow),.library-state>p:not(.eyebrow),.reader-state p:not(.eyebrow),.contribution-deck,.review-room-deck,.contribution-action-row p,.review-compose-intro,.review-room-stats>div span) { color: #5b665d; }
+html[data-theme="light"] :is(.contribution-header,.review-room-header) { border-color: #d7dcd5; }
+html[data-theme="light"] :is(.contribution-header a,.review-room-header a,.contribution-bottom-links a,.review-back-link) { color: #4d5d51; }
+html[data-theme="light"] :is(.reaction-choice,.review-compose,.unlock-panel) {
+  background: #fffefa;
+  color: #29332c;
+  border-color: #d6ded6;
+}
+html[data-theme="light"] .reaction-choice.is-selected { background: #eaf5ed; border-color: #218b65; }
+html[data-theme="light"] :is(.reaction-copy strong,.review-compose h2,.review-visibility strong,.unlock-panel h2) { color: #29332c; }
+html[data-theme="light"] :is(.reaction-copy small,.review-visibility p,.unlock-panel>p:not(.eyebrow)) { color: #5b665d; }
+html[data-theme="light"] .review-compose label { color: #465449; }
+html[data-theme="light"] .review-visibility { border-color: #d7ded7; }
+html[data-theme="light"] .visibility-options button { color: #4d5c50; border-color: #bac7bb; }
+html[data-theme="light"] .visibility-options button.selected { color: #18724f; background: #eaf5ed; }
+html[data-theme="light"] .contribution-divider { color: #6c786e; }
+html[data-theme="light"] .contribution-divider:before,
+html[data-theme="light"] .contribution-divider:after { background: #d6ddd6; }
+html[data-theme="light"] .unlock-panel { background: #edf6ef; border-color: #9fc8ad; }
+html[data-theme="light"] .reader-state-mark { color: #218b65; }
+html[data-theme="light"] .auth-form label { color: #526054; }
+html[data-theme="light"] .auth-error { color: #a83d32; }
+html[data-theme="light"] .auth-message { color: #18724f; }
+html[data-theme="light"] .studio-notice,.studio-alert { color: inherit; }
+html[data-theme="light"] .studio-notice { background: #edf6ef; border-color: #a6cbb1; color: #246442; }
+html[data-theme="light"] .studio-alert { background: #fff0ed; border-color: #e0b4aa; color: #963f34; }
+html[data-theme="light"] .library-story-art.has-cover { background: #e9e7df; }
+html[data-theme="light"] .library-story-art:not(.has-cover) { background: radial-gradient(ellipse at 50% 42%,#e4d2b9,#c9c4b7 60%,#aeb5ad); }
+html[data-theme="light"] .library-story-art strong { color: #29332c; text-shadow: none; }
+html[data-theme="light"] .studio-live-preview { background: #fffefa; border-color: #d6d2c7; }
+html[data-theme="light"] .studio-live-preview .eyebrow { color: #6a756b; }
+html[data-theme="light"] .studio-cover-manager,
+html[data-theme="light"] .studio-episode-assets { background: #f2f5f0; border-color: #d6ded6; }
+html[data-theme="light"] .studio-asset-strip figure { background: #fff; border-color: #d6ded6; }
+html[data-theme="light"] .studio-asset-strip figcaption { color: #4d5b50; }
+html[data-theme="light"] .studio-hero-mark { background: radial-gradient(ellipse at center,#e5f0e7,#fffefa 72%); }
+html[data-theme="light"] .studio-hero-mark small { color: #526457; }
+html[data-theme="light"] .studio-hero-mark span { color: #218b65; }
+html[data-theme="light"] .studio-hero-mark:before,
+html[data-theme="light"] .studio-hero-mark:after { background: #a5b9a8; }
+html[data-theme="light"] .reading-room { color-scheme: light; }
+html[data-theme="light"] .reader-state { color-scheme: light; }
+@media(max-width:650px) {
+  .theme-switch { right: 14px; bottom: 14px; min-height: 44px; padding: 0 13px; }
+}
