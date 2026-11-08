@@ -53,7 +53,6 @@ async def create_support_checkout(
         "success_url": f"{base_url}/support/success?session_id={{CHECKOUT_SESSION_ID}}",
         "cancel_url": f"{base_url}/stories/{story['slug']}?support=cancelled",
         "client_reference_id": user.id,
-        "customer_email": user.email or "",
         "line_items[0][quantity]": "1",
         "line_items[0][price_data][currency]": "eur",
         "line_items[0][price_data][unit_amount]": str(submission.amount_cents),
