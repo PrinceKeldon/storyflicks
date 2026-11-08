@@ -259,8 +259,11 @@ export default function CreatorStudio(){
    }
    const revised=Math.min(bulkSections.length,existingEpisodes.length);
    const added=Math.max(0,bulkSections.length-existingEpisodes.length);
+   const summary:string[]=[];
+   if(revised)summary.push(revised+" existing "+(revised===1?"section updated as a draft revision":"sections updated as draft revisions"));
+   if(added)summary.push(added+" new "+(added===1?"section saved as a draft":"sections saved as drafts"));
    setBulkImportOpen(false);setBulkSections([]);setBulkSavedCount(0);
-   setNotice("Manuscript imported: "+revised+" existing "+(revised===1?"section received a draft revision":"sections received draft revisions")+(added?" and "+added+" new "+(added===1?"section was":"sections were")+" saved as drafts.":" .")+" Published versions remain unchanged until you publish the revisions.");
+   setNotice("Manuscript imported: "+summary.join(" and ")+". Published versions remain unchanged until you publish the revisions.");
    await loadWorkspace(bulkStoryId);await loadDashboard();
   }catch(e){setBulkSavedCount(savedCount);setError(message(e,"Import paused after "+savedCount+" of "+bulkSections.length+" sections. Completed sections are marked; retry to continue with the remaining sections."));}
   finally{setBulkImportBusy(false);}
