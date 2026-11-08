@@ -86,7 +86,7 @@ export default function CreatorStudio(){
  const [story,setStory]=useState({title:"",author_name:"",slug:"",tagline:"",synopsis:"",genres:"",first_episode_free:true,section_label:"Episode",section_label_plural:"Episodes"});
  const [episode,setEpisode]=useState({sequence_number:1,title:"",synopsis:""});
  const [blocks,setBlocks]=useState<Block[]>([{type:"paragraph",text:""}]),[scheduleAt,setScheduleAt]=useState("");
- const [bulkImportOpen,setBulkImportOpen]=useState(false),[bulkSections,setBulkSections]=useState<{title:string;blocks:Block[]}[]>([]),[bulkImportBusy,setBulkImportBusy]=useState(false),[bulkSavedCount,setBulkSavedCount]=useState(0),[bulkFirstSequence,setBulkFirstSequence]=useState(1),[bulkStoryId,setBulkStoryId]=useState("");
+ const [bulkImportOpen,setBulkImportOpen]=useState(false),[bulkSections,setBulkSections]=useState<{title:string;blocks:Block[]}[]>([]),[bulkImportBusy,setBulkImportBusy]=useState(false),[bulkSavedCount,setBulkSavedCount]=useState(0),[bulkStoryId,setBulkStoryId]=useState("");
 
  const request=useCallback(async(path:string,init:RequestInit={})=>{
   const client=getSupabaseBrowserClient();
@@ -232,7 +232,7 @@ export default function CreatorStudio(){
     const content=imported.slice(start+1,end);
     return {title,blocks:content.length?content:[{type:"paragraph" as const,text:""}]};
    });
-   setBulkSections(sections);setBulkSavedCount(0);setBulkStoryId(storyId);setBulkFirstSequence(Math.max(0,...(workspace?.episodes||[]).map(item=>item.sequence_number))+1);setBulkImportOpen(true);
+   setBulkSections(sections);setBulkSavedCount(0);setBulkStoryId(storyId);setBulkImportOpen(true);
    setNotice(sections.length+" chapters detected. Review the chapter titles and contents before importing them as drafts.");
   }catch(e){setError(message(e,"The complete manuscript could not be read."));}
  }
@@ -241,17 +241,28 @@ export default function CreatorStudio(){
   if(storyId!==bulkStoryId){setError("This manuscript review belongs to a different story. Return to that story workspace to continue importing; no chapters were added to the currently selected story.");return;}
   setBulkImportBusy(true);setError("");
   let savedCount=bulkSavedCount;
+  const existingEpisodes=[...(workspace?.episodes||[])].sort((a,b)=>a.sequence_number-b.sequence_number);
+  const nextSequence=Math.max(0,...existingEpisodes.map(item=>item.sequence_number))+1;
   try{
    for(let index=bulkSavedCount;index<bulkSections.length;index++){
     const section=bulkSections[index];
-    await request("/creator/stories/"+bulkStoryId+"/episodes",{method:"POST",body:JSON.stringify({
-     season_id:null,sequence_number:bulkFirstSequence+index,title:section.title,synopsis:null,
+    const existingEpisode=existingEpisodes[index];
+    const sequenceNumber=existingEpisode?.sequence_number??(nextSequence+index-existingEpisodes.length);
+    const path=existingEpisode
+     ?"/creator/stories/"+bulkStoryId+"/episodes/"+existingEpisode.id
+     :"/creator/stories/"+bulkStoryId+"/episodes";
+    await request(path,{method:existingEpisode?"PUT":"POST",body:JSON.stringify({
+     season_id:null,sequence_number:sequenceNumber,title:section.title,synopsis:null,
      content:{blocks:section.blocks.filter(block=>block.type==="separator"||block.type==="spacer"||block.text.trim())}
     })});
     savedCount=index+1;setBulkSavedCount(savedCount);
    }
-   setBulkImportOpen(false);setBulkSections([]);setBulkSavedCount(0);setNotice(bulkSections.length+" manuscript chapters saved as drafts. Nothing has been published.");await loadWorkspace(bulkStoryId);await loadDashboard();
-  }catch(e){setBulkSavedCount(savedCount);setError(message(e,"Import paused after "+savedCount+" of "+bulkSections.length+" chapters. Completed chapters are marked; retry to continue with the remaining chapters."));}
+   const revised=Math.min(bulkSections.length,existingEpisodes.length);
+   const added=Math.max(0,bulkSections.length-existingEpisodes.length);
+   setBulkImportOpen(false);setBulkSections([]);setBulkSavedCount(0);
+   setNotice("Manuscript imported: "+revised+" existing "+(revised===1?"section received a draft revision":"sections received draft revisions")+(added?" and "+added+" new "+(added===1?"section was":"sections were")+" saved as drafts.":" .")+" Published versions remain unchanged until you publish the revisions.");
+   await loadWorkspace(bulkStoryId);await loadDashboard();
+  }catch(e){setBulkSavedCount(savedCount);setError(message(e,"Import paused after "+savedCount+" of "+bulkSections.length+" sections. Completed sections are marked; retry to continue with the remaining sections."));}
   finally{setBulkImportBusy(false);}
  }
  async function createStory(ev:FormEvent<HTMLFormElement>){ev.preventDefault();setBusy("create");setError("");try{const data=await request("/creator/stories",{method:"POST",body:JSON.stringify({...newStory,genres:parseGenres(newStory.genres)})}) as {story_id:string};setNewStoryOpen(false);setStoryId(data.story_id);setTab("episodes");setNotice("Story workspace created. Add your first section when ready.");setNewStory({title:"",author_name:"",slug:"",tagline:"",synopsis:"",genres:"",first_episode_free:true,section_label:"Episode",section_label_plural:"Episodes"});await loadDashboard();setStoryId(data.story_id);}catch(e){setError(message(e,"Could not create story."));}finally{setBusy("");}}
@@ -295,8 +306,8 @@ export default function CreatorStudio(){
     <div><strong>Import a complete manuscript</strong><p>Upload one DOCX or TXT containing all your chapters. STORYFLICKS will detect chapter headings and prepare separate drafts for review.</p></div>
     <label className="studio-import-control">Choose full manuscript<input type="file" accept=".docx,application/vnd.openxmlformats-officedocument.wordprocessingml.document,.txt,text/plain" disabled={!storyId||bulkImportBusy} onChange={e=>{const file=e.target.files?.[0];if(file)void importCompleteManuscript(file);e.target.value="";}}/></label>
    </div>
-   {bulkImportOpen&&<section className="studio-bulk-review"><div className="studio-form-title"><span>MANUSCRIPT IMPORT REVIEW</span><small>{bulkSections.length} CHAPTERS DETECTED · NOT YET SAVED</small></div><p>Check the detected chapter titles and order. The original manuscript remains unchanged.</p>
-    {bulkSections.map((section,index)=><label className="studio-bulk-row" key={index}><span>CHAPTER {String(index+1).padStart(2,"0")}</span><input value={section.title} onChange={e=>setBulkSections(items=>items.map((item,i)=>i===index?{...item,title:e.target.value}:item))}/><small>{section.blocks.length} manuscript blocks{index<bulkSavedCount?" · SAVED":""}</small></label>)}
+   {bulkImportOpen&&<section className="studio-bulk-review"><div className="studio-form-title"><span>MANUSCRIPT IMPORT REVIEW</span><small>{bulkSections.length} CHAPTERS DETECTED · NOT YET SAVED</small></div><p>Check the detected chapter titles and order. Existing sections will receive draft revisions; additional sections become new drafts. Published versions remain unchanged until you publish.</p>
+    {bulkSections.map((section,index)=>{const existing=[...(workspace?.episodes||[])].sort((a,b)=>a.sequence_number-b.sequence_number)[index];return <label className="studio-bulk-row" key={index}><span>CHAPTER {String(index+1).padStart(2,"0")}</span><input value={section.title} onChange={e=>setBulkSections(items=>items.map((item,i)=>i===index?{...item,title:e.target.value}:item))}/><small>{section.blocks.length} blocks · {existing?"Draft revision: "+existing.title:"New draft section"}{index<bulkSavedCount?" · SAVED":""}</small></label>;})}
     <div className="studio-form-actions"><button type="button" className="studio-primary" disabled={bulkImportBusy||bulkSections.some(item=>!item.title.trim())} onClick={()=>void saveCompleteManuscript()}>{bulkImportBusy?"Saving chapters…":bulkSavedCount?"Continue importing remaining chapters ↗":"Save all chapters as drafts ↗"}</button><button type="button" className="studio-text-action" disabled={bulkImportBusy} onClick={()=>{setBulkImportOpen(false);setBulkSections([]);}}>Cancel</button></div>
    </section>}
 <div className="studio-section-heading"><div><p className="eyebrow">STORY-LEVEL SETTINGS</p><h3>{workspace.story.title}<span>.</span></h3><p className="studio-intro">Manage the story’s identity, description, artwork and publication status independently of its sections.</p></div><button className="studio-text-action" onClick={()=>setTab("episodes")}>Go to Episode Manager ↗</button></div>
