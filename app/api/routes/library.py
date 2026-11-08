@@ -6,6 +6,7 @@ from pydantic import BaseModel
 
 from app.api.deps import get_current_user, supabase
 from app.core.security import AuthenticatedUser
+from app.services.storage import public_storage_url
 
 router = APIRouter()
 
@@ -132,7 +133,13 @@ async def get_library(
             },
         )
 
-    story_map = {item["id"]: item for item in stories}
+    story_map = {
+        item["id"]: {
+            **item,
+            "cover_url": public_storage_url(item.get("cover_path")),
+        }
+        for item in stories
+    }
 
     episodes_by_story = defaultdict(list)
     for episode in published_episodes:
