@@ -6,6 +6,8 @@ type DiscoverStory = {
   slug: string;
   title: string;
   author_name?: string | null;
+  section_label?: string | null;
+  section_label_plural?: string | null;
   tagline: string | null;
   synopsis: string | null;
   genres: string[];
@@ -22,6 +24,8 @@ const previewStory: DiscoverStory = {
   synopsis: "For over twenty years, Father James has kept his priestly life separate from the man he secretly becomes beyond the collar. But when Sophia enters his world, questions of faith, desire and identity begin to blur — and some secrets may be impossible to keep.",
   genres: ["Drama"],
   completion_status: "ongoing",
+  section_label: "Episode",
+  section_label_plural: "Episodes",
 };
 
 const navItems = ["Discover", "My Library", "Creator Studio"];
@@ -89,7 +93,7 @@ export default async function DiscoverPage() {
             <p className="feature-meta">{featured.genres?.join(" · ").toUpperCase() || "STORYFLICKS ORIGINAL"} <b>·</b> {(featured.completion_status || "ONGOING").toUpperCase()} <b>·</b> EPISODIC</p>
             <div className="feature-actions">
               <Link className="primary-button" href={"/stories/" + featured.slug}>Explore the story <span>↗</span></Link>
-              <Link className="text-button" href={"/stories/" + featured.slug + "#episodes"}>View episode guide <span>→</span></Link>
+              <Link className="text-button" href={"/stories/" + featured.slug + "#episodes"}>View {(featured.section_label_plural || "Episodes").toLowerCase()} guide <span>→</span></Link>
             </div>
           </div>
           <div className={featured.cover_url ? "feature-art has-cover" : "feature-art"} role="img" aria-label={featured.title + " book cover artwork"}>
