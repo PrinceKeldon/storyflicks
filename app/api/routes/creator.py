@@ -269,6 +269,14 @@ class CreatorStorySubmission(BaseModel):
     section_label: str = Field(default="Episode", min_length=1, max_length=32)
     section_label_plural: str = Field(default="Episodes", min_length=1, max_length=40)
 
+    @field_validator("section_label", "section_label_plural")
+    @classmethod
+    def validate_section_label(cls, value: str) -> str:
+        normalized = value.strip()
+        if not normalized or not all(character.isalnum() or character in " &\'-" for character in normalized):
+            raise ValueError("Section labels may contain letters, numbers, spaces, ampersands, apostrophes and hyphens only.")
+        return normalized
+
 
 class CreatorEpisodeSubmission(BaseModel):
     season_id: UUID | None = None
