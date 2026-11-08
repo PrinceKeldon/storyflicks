@@ -1,7 +1,7 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
-from app.api.routes import creator, creator_assets, creator_dashboard, creator_revisions, episodes, internal, library, notifications, stories
+from app.api.routes import account, creator, creator_assets, creator_dashboard, creator_revisions, episodes, internal, library, notifications, stories, support
 from app.core.config import settings
 from app.core.middleware import RequestSizeLimitMiddleware
 
@@ -16,6 +16,8 @@ app.add_middleware(
     allow_headers=["Authorization", "Content-Type"],
 )
 
+app.include_router(account.router, prefix=settings.api_v1_prefix, tags=["Account"])
+app.include_router(support.router, prefix=settings.api_v1_prefix, tags=["Reader Support"])
 app.include_router(stories.router, prefix=settings.api_v1_prefix, tags=["Stories"])
 app.include_router(episodes.router, prefix=settings.api_v1_prefix, tags=["Episodes"])
 app.include_router(library.router, prefix=settings.api_v1_prefix, tags=["Library"])
