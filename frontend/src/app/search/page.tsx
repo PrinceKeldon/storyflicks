@@ -4,6 +4,7 @@ type SearchStory = {
   id: string;
   slug: string;
   title: string;
+  author_name?: string | null;
   tagline: string | null;
   synopsis: string | null;
   genres: string[];
@@ -107,6 +108,7 @@ export default async function SearchPage({
                 <div className="search-result-copy">
                   <p className="eyebrow">{item.genres?.join(" · ") || "STORYFLICKS ORIGINAL"} <span>·</span> {item.completion_status || "EPISODIC"}</p>
                   <h3>{item.title}</h3>
+                  {item.author_name && <p className="catalogue-author-byline">By {item.author_name}</p>}
                   <p>{item.tagline || item.synopsis || "Discover this STORYFLICKS original."}</p>
                   <span className="text-button">Explore story <span>↗</span></span>
                 </div>
