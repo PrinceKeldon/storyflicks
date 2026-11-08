@@ -1012,3 +1012,20 @@ html[data-theme="light"] .user-settings-footer{border-color:rgba(43,55,44,.17)}
 .contribution-modal-state .primary-button{border:0;cursor:pointer}
 
 .story-author-byline,.feature-author-byline,.catalogue-author-byline{margin:8px 0 0;color:#e8e3d9;font-size:13px;line-height:1.5;letter-spacing:.015em}.feature-author-byline{font-size:14px;margin:10px 0 0}.catalogue-author-byline{font-size:12px;margin:5px 0 0}
+
+
+/* Manuscript fidelity: author-defined paragraph formatting takes precedence. */
+.manuscript p{line-height:1.6;text-indent:0;margin:0 0 .45em;white-space:pre-wrap;text-align:left}
+.manuscript .manuscript-paragraph{font:inherit}
+.manuscript .manuscript-dialogue{margin:.12em 0;line-height:1.6}
+.manuscript .manuscript-emphasis{text-indent:0;text-align:center;font-style:italic;margin:1.1em 0}
+.manuscript p strong{font-weight:700}
+.manuscript p em{font-style:italic}
+
+
+.studio-inline-format{display:flex;align-items:center;gap:10px;margin:9px 0 0;font:9px 'DM Mono',monospace;letter-spacing:.7px;color:#a5ada3}
+.studio-inline-format select{padding:7px 9px;border:1px solid #414b43;background:#111514;color:#e8e3d9;font:10px 'DM Sans',sans-serif}
+.studio-live-preview p{line-height:1.6;margin:.0 0 .45em;text-indent:0}
+
+/* DOCX-imported intentional blank paragraphs remain distinct from section breaks. */
+.manuscript-spacer{height:0.8em;}
