@@ -115,7 +115,7 @@ async def analyse_manuscript_structure(blocks: list[dict[str, Any]], story_title
             not isinstance(start, int) or isinstance(start, bool)
             or not isinstance(end, int) or isinstance(end, bool)
             or start < 0 or end < start or end >= len(blocks)
-            or start <= previous_end
+            or start != previous_end + 1
             or not isinstance(title, str) or not title.strip()
             or not isinstance(confidence, (int, float))
         ):
@@ -129,8 +129,8 @@ async def analyse_manuscript_structure(blocks: list[dict[str, Any]], story_title
         })
         previous_end = end
 
-    if not validated:
-        raise HTTPException(status_code=502, detail="Gemini could not produce usable chapter boundaries. Your existing analysis is unchanged.")
+    if not validated or validated[0]["start_block"] != 0 or validated[-1]["end_block"] != len(blocks) - 1:
+        raise HTTPException(status_code=502, detail="Gemini did not return complete, continuous chapter boundaries. Your existing analysis is unchanged.")
 
     warnings = [str(item)[:500] for item in result.get("warnings", []) if isinstance(item, str)][:20]
     return {"sections": validated, "warnings": warnings, "model": GEMINI_MODEL}
