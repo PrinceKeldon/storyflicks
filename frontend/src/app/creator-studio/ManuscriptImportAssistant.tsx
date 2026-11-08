@@ -108,19 +108,38 @@ export default function ManuscriptImportAssistant({ storyId, storyTitle, episode
       let blocks: Block[];
       if (/\.docx$/i.test(file.name)) blocks = await importDocx(file);
       else {
-        const raw = await file.text();
-        blocks = raw.split(/\r?\n\s*\r?\n/).map(source => {
-          const leading = source.match(/^[\t ]+/)?.[0] || "";
-          const indent = Math.min(8, Math.floor([...leading].reduce((sum, char) => sum + (char === "\t" ? 4 : 1), 0) / 2));
-          return { type: "paragraph" as const, text: source.replace(/^[\t ]+/, "").replace(/[\t ]+$/, ""), ...(indent ? { indent } : {}) };
-        }).filter(block => block.text.trim());
+        const raw = (await file.text()).replace(/\r\n?/g, "\n");
+        const lines = raw.split("\n");
+        blocks = [];
+        let paragraphLines: string[] = [];
+        let paragraphIndent = 0;
+        const flushParagraph = () => {
+          if (!paragraphLines.length) return;
+          blocks.push({ type: "paragraph" as const, text: paragraphLines.join("\n").replace(/[\t ]+$/, ""), ...(paragraphIndent ? { indent: paragraphIndent } : {}) });
+          paragraphLines = [];
+          paragraphIndent = 0;
+        };
+        for (const line of lines) {
+          if (!line.trim()) {
+            flushParagraph();
+            blocks.push({ type: "spacer" as const, text: "" });
+          } else {
+            if (!paragraphLines.length) {
+              const leading = line.match(/^[\t ]+/)?.[0] || "";
+              paragraphIndent = Math.min(8, Math.floor([...leading].reduce((sum, char) => sum + (char === "\t" ? 4 : 1), 0) / 2));
+            }
+            paragraphLines.push(line.replace(/^[\t ]+/, ""));
+          }
+        }
+        flushParagraph();
       }
-      if (!blocks.length) throw new Error("No readable paragraphs were found in this file.");
+      if (!blocks.length || wordCount(blocks) === 0) throw new Error("No readable paragraphs were found in this file.");
       const detected = detectSections(blocks);
       const headings = blocks.filter(isChapterBoundary).length;
       const formattedRuns = blocks.reduce((sum, block) => sum + (block.runs?.filter(run => run.bold || run.italic || run.underline || run.strike).length || 0), 0);
       const warnings: string[] = [];
       if (!headings) warnings.push("No clear chapter headings were detected. The manuscript is kept as one section until you split it manually.");
+      else if (headings === 1) warnings.push("Only one chapter heading was detected. Check whether additional chapter headings need to be added by splitting sections manually.");
       if (detected.some(section => wordCount(section.blocks) < 40)) warnings.push("One or more detected sections are very short. Check whether a subheading was mistaken for a chapter boundary.");
       if (blocks.filter(block => block.type === "spacer").length > blocks.length * 0.2) warnings.push("The document contains many blank paragraphs. Review spacing before importing.");
       setSections(detected);
@@ -158,10 +177,6 @@ export default function ManuscriptImportAssistant({ storyId, storyTitle, episode
       return next;
     });
   }
-  function addSection() {
-    setSections(current => [...current, { id: makeId(), title: "New chapter", blocks: [{ type: "paragraph", text: "" }], targetEpisodeId: "", include: true, saved: false }]);
-  }
-
   async function importSections() {
     if (!canImport) return;
     setBusy(true); setError(""); setNotice("");
