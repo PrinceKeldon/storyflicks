@@ -22,7 +22,7 @@ type Reaction = { code: string; statement: string; emoji: string; category: stri
 type AuthorNote = { id: string; title: string | null; body: string; is_pinned: boolean; published_at: string | null; author: { username: string | null; display_name: string | null } | null };
 type AvailableEpisode = { id: string; title: string; sequence_number: number };
 type Payload = {
-  story: { id: string; slug: string; title: string };
+  story: { id: string; slug: string; title: string; section_label?: string; section_label_plural?: string };
   episode: { id: string; title: string; sequence_number: number };
   reaction_summary: Reaction[];
   reviews: Review[];
@@ -156,11 +156,11 @@ export default function ReviewRoom({ slug, episodeId }: { slug: string; episodeI
         <Link className="reader-exit" href={`/stories/${slug}`}>Exit</Link>
       </header>
       <section className="review-room-content">
-        <Link className="review-back-link" href={`/stories/${slug}`}>← {data.story.title} · EPISODE GUIDE</Link>
-        <p className="eyebrow">THE READER CONVERSATION · EPISODE {String(data.episode.sequence_number).padStart(2, "0")}</p>
+        <Link className="review-back-link" href={`/stories/${slug}`}>← {data.story.title} · {(data.story.section_label_plural || "Episodes").toUpperCase()} GUIDE</Link>
+        <p className="eyebrow">THE READER CONVERSATION · {(data.story.section_label || "Episode").toUpperCase()} {String(data.episode.sequence_number).padStart(2, "0")}</p>
         <h1>Inside the story<span>.</span></h1>
         <p className="review-room-deck"><strong>{data.episode.title}</strong> — every reader brings a different perspective. Here’s what stayed with them.</p>
-        {data.available_episodes.length > 1 && <div className="review-episode-filter"><label htmlFor="review-episode">EPISODE</label><select id="review-episode" value={episodeId} onChange={(event) => router.push(`/stories/${slug}/reviews/${event.target.value}`)}>{data.available_episodes.map((episode) => <option value={episode.id} key={episode.id}>{String(episode.sequence_number).padStart(2, "0")} · {episode.title}</option>)}</select></div>}
+        {data.available_episodes.length > 1 && <div className="review-episode-filter"><label htmlFor="review-episode">{(data.story.section_label || "Episode").toUpperCase()}</label><select id="review-episode" value={episodeId} onChange={(event) => router.push(`/stories/${slug}/reviews/${event.target.value}`)}>{data.available_episodes.map((episode) => <option value={episode.id} key={episode.id}>{String(episode.sequence_number).padStart(2, "0")} · {episode.title}</option>)}</select></div>}
 
         <div className="review-room-stats">
           <div><strong>{data.review_count}</strong><span>PUBLIC REVIEWS</span></div>
@@ -198,7 +198,7 @@ export default function ReviewRoom({ slug, episodeId }: { slug: string; episodeI
           </div>
           <p className="review-spoiler-note">Reader reviews may discuss plot details. Reveal each review before reading.</p>
 
-          {visibleReviews.length === 0 ? <div className="review-feed-empty"><span>✳</span><h3>{data.review_count ? "No reviews in this reaction yet." : "A little quiet in here."}</h3><p>{data.review_count ? "Try another filter, or be the first to write about this reaction." : "Be the first to share a public review of this episode."}</p><Link href={`/stories/${slug}/react/${episodeId}`}>Write the first review <span>↗</span></Link></div> : (
+          {visibleReviews.length === 0 ? <div className="review-feed-empty"><span>✳</span><h3>{data.review_count ? "No reviews in this reaction yet." : "A little quiet in here."}</h3><p>{data.review_count ? "Try another filter, or be the first to write about this reaction." : "Be the first to share a public review of this {(data.story.section_label || "Episode").toLowerCase()}."}</p><Link href={`/stories/${slug}/react/${episodeId}`}>Write the first review <span>↗</span></Link></div> : (
             <div className="review-cards">
               {visibleReviews.map((review) => {
                 const author = displayName(review.author);
