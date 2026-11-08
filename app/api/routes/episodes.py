@@ -153,6 +153,11 @@ async def read_episode(
                             "message": "Share a quick reaction or submit a written review for the previous episode to unlock this one.",
                             "required_action": "reaction_or_review",
                             "previous_episode": previous,
+                            "locked_episode": {
+                                "id": episode["id"],
+                                "title": episode["title"],
+                                "sequence_number": episode["sequence_number"],
+                            },
                         },
                     )
                 break
