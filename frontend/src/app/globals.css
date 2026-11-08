@@ -754,3 +754,61 @@ html[data-theme="light"] .reading-room {
     transition: background-color .2s ease, color .2s ease, border-color .2s ease;
   }
 }
+
+
+/* Account settings and theme preference */
+.user-settings-shell{max-width:1440px;min-height:100vh;margin:0 auto;padding:0 76px;display:flex;flex-direction:column}
+.user-settings-header{height:88px;display:flex;align-items:center;gap:54px;border-bottom:1px solid var(--line)}
+.user-settings-header nav{display:flex;align-items:center;gap:28px}
+.user-settings-header nav a,.user-settings-back{font-size:12px;color:#a7aaa2}
+.user-settings-header nav a:hover,.user-settings-back:hover{color:var(--mint)}
+.user-settings-back{margin-left:auto}
+.user-settings-content{width:min(760px,100%);margin:76px auto 90px}
+.user-settings-content>h1{font:500 54px/1.05 'Playfair Display',Georgia,serif;letter-spacing:-1px;margin:0;color:var(--paper)}
+.user-settings-content>h1 span{color:var(--mint)}
+.user-settings-intro{max-width:590px;color:#a7aaa2;font-size:15px;line-height:1.8;margin:18px 0 38px}
+.user-settings-panel{padding:30px;border:1px solid var(--line);background:#191c1e}
+.user-settings-panel-heading{display:flex;align-items:center;justify-content:space-between;gap:20px}
+.user-settings-panel-heading .eyebrow{margin:0 0 9px}
+.user-settings-panel-heading h2{font:500 27px 'Playfair Display',Georgia,serif;margin:0;color:var(--paper)}
+.user-settings-status{font:10px 'DM Mono',monospace;letter-spacing:1px;color:var(--mint)}
+.user-settings-description{color:#a7aaa2;font-size:13px;line-height:1.7;margin:18px 0 23px}
+.theme-choice-grid{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+.theme-choice{display:grid;grid-template-columns:88px 1fr 22px;align-items:center;gap:15px;text-align:left;padding:13px;border:1px solid rgba(232,227,217,.2);background:#202328;color:var(--paper);cursor:pointer}
+.theme-choice:hover{border-color:rgba(67,184,137,.65)}
+.theme-choice.selected{border-color:var(--mint);box-shadow:inset 0 0 0 1px var(--mint)}
+.theme-preview{height:62px;padding:10px;display:flex;flex-direction:column;gap:6px;justify-content:center}
+.theme-preview i,.theme-preview b{display:block;height:6px;width:70%;border-radius:2px}
+.theme-preview i:first-child{width:46%}
+.theme-preview-dark{background:#111214}.theme-preview-dark i{background:#858b83}.theme-preview-dark b{width:38%;background:#43b889}
+.theme-preview-light{background:#f4f1e9}.theme-preview-light i{background:#8b9589}.theme-preview-light b{width:38%;background:#23845f}
+.theme-choice-copy{display:flex;flex-direction:column;gap:5px}
+.theme-choice-copy strong{font-size:14px;font-weight:600}
+.theme-choice-copy small{font-size:11px;line-height:1.4;color:#a7aaa2}
+.theme-choice-indicator{color:var(--mint);font-size:17px;text-align:center}
+.user-settings-feedback,.user-settings-signin{font-size:12px;line-height:1.7;color:#a7aaa2;margin:18px 0 0}
+.user-settings-signin a{color:var(--mint);text-decoration:underline;text-underline-offset:3px}
+.user-settings-footer{margin-top:auto;border-top:1px solid var(--line);padding:25px 0 34px;display:flex;align-items:center;justify-content:space-between}
+.user-settings-footer .wordmark{font-size:14px}
+.user-settings-footer>span{font:9px 'DM Mono',monospace;letter-spacing:.6px;color:#777b76}
+html[data-theme="light"] .user-settings-shell{color:#283129}
+html[data-theme="light"] .user-settings-content>h1,html[data-theme="light"] .user-settings-panel-heading h2{color:#242923}
+html[data-theme="light"] .user-settings-intro,html[data-theme="light"] .user-settings-description,html[data-theme="light"] .user-settings-feedback,html[data-theme="light"] .user-settings-signin{color:#59645a}
+html[data-theme="light"] .user-settings-panel{background:#fffdf8;border-color:rgba(43,55,44,.18)}
+html[data-theme="light"] .theme-choice{background:#fffefa;color:#283129;border-color:rgba(43,55,44,.2)}
+html[data-theme="light"] .theme-choice-copy small{color:#687468}
+html[data-theme="light"] .user-settings-header{border-color:rgba(43,55,44,.17)}
+html[data-theme="light"] .user-settings-header nav a,html[data-theme="light"] .user-settings-back{color:#59645a}
+html[data-theme="light"] .user-settings-footer{border-color:rgba(43,55,44,.17)}
+@media(max-width:760px){
+ .user-settings-shell{padding:0 22px}
+ .user-settings-header{height:72px;gap:18px}
+ .user-settings-header nav{gap:14px}
+ .user-settings-header nav a{font-size:11px}
+ .user-settings-header nav a:nth-child(2),.user-settings-header nav a:nth-child(3){display:none}
+ .user-settings-back{font-size:11px}
+ .user-settings-content{margin:52px auto 65px}
+ .user-settings-content>h1{font-size:44px}
+ .user-settings-panel{padding:22px}
+ .theme-choice-grid{grid-template-columns:1fr}
+}
