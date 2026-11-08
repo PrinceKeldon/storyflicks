@@ -554,3 +554,13 @@ button{font:inherit}
 .personalised-story-footer a{font:10px 'DM Sans',sans-serif;color:var(--paper);white-space:nowrap}
 .personalised-story-footer a span{color:var(--mint);padding-left:6px}
 @media(max-width:620px){.personalised-story-card{grid-template-columns:1fr;gap:15px;padding:12px}.personalised-story-art{min-height:155px}.personalised-story-copy{padding:4px 3px 6px}.personalised-story-copy h3{font-size:22px}.personalised-story-footer{align-items:flex-start;flex-direction:column}}
+
+/* Uploaded story artwork is the source of truth on public story surfaces. */
+.feature-art.has-cover{background:#111214}
+.feature-cover-image{position:absolute;inset:0;width:100%;height:100%;object-fit:contain;z-index:1}
+.feature-art.has-cover .art-grain,.feature-art.has-cover .art-cross,.feature-art.has-cover .art-caption,.feature-art.has-cover .art-title,.feature-art.has-cover .art-index{display:none}
+.story-poster.has-cover{background:#111214}
+.story-cover-image{position:absolute;inset:0;width:100%;height:100%;object-fit:contain}
+.search-result-art.has-cover{background:#111214;padding:8px}
+.catalogue-cover-image{position:absolute;inset:0;width:100%;height:100%;object-fit:contain}
+.search-result-art.has-cover:before{display:none}
