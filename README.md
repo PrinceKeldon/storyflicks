@@ -150,6 +150,8 @@ The repository contains the FastAPI backend and a reproducible Supabase schema b
 
 - `supabase/migrations/20261107000100_initial_schema.sql` contains the exported public schema, database functions, grants/revokes, the auth-user profile trigger, the `story-assets` bucket definition, and the initial reaction catalogue.
 - `supabase/migrations/20261107151826_restrict_creator_workspace_to_editor_roles.sql` restricts the Creator Studio workspace RPC to active creators assigned as owner, author or editor. Both migrations are recorded in the linked development project's migration history.
+- `supabase/migrations/20261107153336_add_story_genres_and_search.sql`, `supabase/migrations/20261107153503_allow_story_updated_publication_event.sql` and `supabase/migrations/20261107153832_revoke_legacy_save_creator_story.sql` add catalogue search metadata and correct publication-history / legacy RPC permissions.
+- `supabase/migrations/20261108000718_add_content_size_constraints.sql` applies database-enforced limits for creator content, reader reviews, progress metadata and report details. This migration is applied to the linked development project.
 - The initial schema baseline was also checked with `supabase db push --dry-run --linked` before the follow-up permission migration.
 - `supabase/schema.sql` is the accompanying schema snapshot. The archived creator-publication migration is retained for historical reference and is not an active migration.
 
