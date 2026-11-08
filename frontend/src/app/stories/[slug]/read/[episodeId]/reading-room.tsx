@@ -190,8 +190,10 @@ export default function ReadingRoom({ slug, episodeId }: { slug: string; episode
             if (!text) return null;
             if (kind.includes("heading") || kind === "title") return <h2 key={index}>{text}</h2>;
             if (kind.includes("quote")) return <blockquote key={index}>{text}</blockquote>;
-            if (kind.includes("separator") || kind === "divider") return <div className="manuscript-divider" key={index}>✦</div>;
-            return <p key={index}>{text}</p>;
+            if (kind.includes("separator") || kind === "divider" || kind === "scene_break") return <div className="manuscript-divider" key={index}>✦</div>;
+            if (kind === "dialogue") return <p className="manuscript-dialogue" key={index}>{text}</p>;
+            if (kind === "emphasis") return <p className="manuscript-emphasis" key={index}>{text}</p>;
+            return <p className="manuscript-paragraph" key={index}>{text}</p>;
           })}
         </div>
         {payload.episode.assets?.filter((asset) => asset.public_url).map((asset) => <figure className="reading-asset" key={asset.id}><img src={asset.public_url!} alt={asset.alt_text || "Story illustration"} /></figure>)}

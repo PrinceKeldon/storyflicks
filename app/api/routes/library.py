@@ -351,7 +351,7 @@ async def get_reader_preferences(
     rows = await supabase.admin_get(
         "reader_preferences",
         {
-            "select": "theme,text_size,reading_width,updated_at",
+            "select": "theme:reading_theme,text_size,reading_width,updated_at",
             "user_id": f"eq.{user.id}",
         },
     )
