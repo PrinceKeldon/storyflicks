@@ -1,7 +1,7 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
-from app.api.routes import account, creator, creator_assets, creator_dashboard, creator_revisions, episodes, internal, library, notifications, stories, support
+from app.api.routes import account, creator, creator_assets, creator_dashboard, creator_revisions, episodes, internal, library, manuscript, notifications, stories, support
 from app.core.config import settings
 from app.core.middleware import RequestSizeLimitMiddleware
 
@@ -26,6 +26,7 @@ app.include_router(creator.router, prefix=settings.api_v1_prefix, tags=["Creator
 app.include_router(creator_assets.router, prefix=settings.api_v1_prefix, tags=["Creator Assets"])
 app.include_router(creator_revisions.router, prefix=settings.api_v1_prefix, tags=["Creator Revisions"])
 app.include_router(creator_dashboard.router, prefix=settings.api_v1_prefix, tags=["Creator Dashboard"])
+app.include_router(manuscript.router, prefix=settings.api_v1_prefix, tags=["Manuscript AI"])
 app.include_router(internal.router, prefix=settings.api_v1_prefix, tags=["Internal Jobs"])
 
 
