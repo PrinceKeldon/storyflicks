@@ -7,7 +7,7 @@ import { getSupabaseBrowserClient } from "@/lib/supabase";
 type Episode = { id: string; sequence_number: number; title: string };
 type Progress = { episode_id: string; progress_percent: number; completed_at: string | null; updated_at: string };
 type StoryCard = {
-  story: { id: string; slug: string; title: string; tagline: string | null; synopsis: string | null; completion_status: string; cover_url: string | null };
+  story: { id: string; slug: string; title: string; author_name?: string | null; tagline: string | null; synopsis: string | null; completion_status: string; cover_url: string | null };
   last_read_episode: Episode | null;
   latest_published_episode: Episode;
   first_published_episode: Episode;
@@ -95,6 +95,7 @@ export default function PersonalisedShelf() {
           <div className="personalised-story-copy">
             <p className="eyebrow">{card.story.completion_status === "completed" ? "YOUR COMPLETED STORY" : "YOUR READING JOURNEY"}</p>
             <h3>{card.story.title}</h3>
+            {card.story.author_name && <p className="catalogue-author-byline">By {card.story.author_name}</p>}
             <p>{card.story.tagline || card.story.synopsis || "An original STORYFLICKS story."}</p>
             <div className="personalised-progress-meta"><span>{card.completed_episode_count} OF {card.published_episode_count} EPISODES READ</span><span>{Math.round(percent)}%</span></div>
             <div className="personalised-progress-track"><span style={{ width: percent + "%" }} /></div>
