@@ -36,9 +36,7 @@ class RequestSizeLimitMiddlewareTests(unittest.IsolatedAsyncioTestCase):
             messages.append(message)
 
         async def app(scope, receive, send):
-            await receive()
-            await receive()
-            await send({"type": "http.response.start", "status": 200, "headers": []})
+            self.fail("Application must not run for an oversized streamed body.")
 
         middleware = RequestSizeLimitMiddleware(app, max_bytes=10)
         await middleware({"type": "http", "headers": []}, receive, send)
