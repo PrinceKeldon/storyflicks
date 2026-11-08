@@ -190,10 +190,14 @@ export default function ManuscriptImportAssistant({ storyId, storyTitle, section
         if (!Number.isInteger(item.start_block) || !Number.isInteger(item.end_block) || item.start_block !== expectedStart || item.end_block < item.start_block || item.end_block >= sourceBlocks.length || !item.title?.trim()) {
           throw new Error("Gemini returned incomplete or overlapping chapter boundaries. Your current analysis has been kept.");
         }
+        const sectionBlocks = sourceBlocks.slice(item.start_block, item.end_block + 1);
+        if (sectionBlocks[0] && (sectionBlocks[0].type === "heading" || /^(chapter|episode|part|section|book)\s+/i.test(sectionBlocks[0].text.trim()))) {
+          sectionBlocks.shift();
+        }
         suggested.push({
           id: makeId(),
           title: item.title.trim(),
-          blocks: sourceBlocks.slice(item.start_block, item.end_block + 1).filter((block, blockIndex) => !(blockIndex === 0 && (block.type === "heading" || /^(chapter|episode|part|section|book)\s+/i.test(block.text.trim()))),
+          blocks: sectionBlocks,
           targetEpisodeId: "",
           include: true,
           saved: false,
