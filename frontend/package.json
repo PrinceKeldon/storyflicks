@@ -2,11 +2,15 @@
   "name": "storyflicks-web",
   "version": "0.1.0",
   "private": true,
+  "engines": {
+    "node": ">=22.0.0"
+  },
   "scripts": {
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
-    "lint": "ESLINT_USE_FLAT_CONFIG=false eslint ."
+    "lint": "ESLINT_USE_FLAT_CONFIG=false eslint .",
+    "typecheck": "tsc --noEmit"
   },
   "dependencies": {
     "next": "15.5.29",
