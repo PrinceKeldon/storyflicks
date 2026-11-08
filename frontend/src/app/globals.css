@@ -1519,3 +1519,26 @@ html[data-theme="light"] .sf-manuscript-warnings p{color:#71614c}
 .sf-manuscript-order-controls button{min-width:30px}
 .sf-manuscript-order-controls button:disabled{opacity:.35;cursor:not-allowed}
 @media(max-width:700px){.sf-manuscript-order-controls{grid-column:2;justify-content:flex-start}}
+
+
+.sf-manuscript-ai-panel {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 14px;
+  margin: 18px 0;
+  padding: 16px;
+  border: 1px solid var(--studio-border, rgba(128,128,128,.28));
+  border-radius: 12px;
+  background: var(--studio-panel, rgba(128,128,128,.06));
+}
+.sf-manuscript-ai-panel > div { flex: 1 1 420px; min-width: 0; }
+.sf-manuscript-ai-panel strong { display: block; margin-bottom: 5px; }
+.sf-manuscript-ai-panel p { margin: 0; color: var(--studio-muted, #777); font-size: .9rem; line-height: 1.55; }
+.sf-manuscript-ai-panel small { flex-basis: 100%; color: var(--studio-muted, #777); font-size: .78rem; }
+.sf-manuscript-ai-panel button { flex: 0 0 auto; }
+@media (max-width: 640px) {
+  .sf-manuscript-ai-panel { align-items: stretch; }
+  .sf-manuscript-ai-panel button { width: 100%; }
+}
