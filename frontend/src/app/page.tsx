@@ -1,12 +1,55 @@
 import Link from "next/link";
 
-const shelves = [
-  { eyebrow: "THE STORY EVERYONE IS TALKING ABOUT", title: "THE PRIEST", description: "Two lives. One secret. A confession that changes everything.", meta: "Episodic drama · Ongoing", action: "Explore the story" },
-];
+type DiscoverStory = {
+  id: string;
+  slug: string;
+  title: string;
+  tagline: string | null;
+  synopsis: string | null;
+  genres: string[];
+  completion_status: string | null;
+  published_at?: string | null;
+};
+
+const previewStory: DiscoverStory = {
+  id: "",
+  slug: "the-priest",
+  title: "THE PRIEST",
+  tagline: "Two lives. One secret. A confession that changes everything.",
+  synopsis: "For over twenty years, Father James has kept his priestly life separate from the man he secretly becomes beyond the collar. But when Sophia enters his world, questions of faith, desire and identity begin to blur — and some secrets may be impossible to keep.",
+  genres: ["Drama"],
+  completion_status: "ongoing",
+};
 
 const navItems = ["Discover", "My Library", "Creator Studio"];
 
-export default function DiscoverPage() {
+async function getCatalogue(): Promise<{ stories: DiscoverStory[]; unavailable: boolean }> {
+  const apiUrl = process.env.NEXT_PUBLIC_API_URL?.replace(/\/+$/, "");
+  if (!apiUrl) return { stories: [previewStory], unavailable: false };
+
+  try {
+    const response = await fetch(apiUrl + "/stories", { next: { revalidate: 60 } });
+    if (!response.ok) throw new Error("Catalogue request failed.");
+    const data = await response.json();
+    return {
+      stories: Array.isArray(data.items) ? data.items : [],
+      unavailable: false,
+    };
+  } catch {
+    return { stories: [], unavailable: true };
+  }
+}
+
+function storyDescription(story: DiscoverStory) {
+  return story.tagline || story.synopsis || "Discover this STORYFLICKS original.";
+}
+
+export default async function DiscoverPage() {
+  const { stories, unavailable } = await getCatalogue();
+  const featured = stories.find((story) => story.slug === "the-priest") ?? stories[0] ?? null;
+  const moreStories = stories.filter((story) => story.slug !== featured?.slug);
+  const publishedCount = stories.length;
+
   return (
     <main className="app-shell">
       <header className="topbar">
@@ -32,27 +75,35 @@ export default function DiscoverPage() {
         <p className="welcome-note">A good story pulls you in.<br />A great one keeps you coming back.</p>
       </section>
 
-      <section className="featured" aria-labelledby="featured-title">
-        <div className="featured-copy">
-          <div className="feature-kicker"><span className="live-dot" /> FEATURED STORY</div>
-          <p className="feature-overline">AN ORIGINAL STORYFLICKS SERIES</p>
-          <h2 id="featured-title">THE<br /><span>PRIEST</span></h2>
-          <p className="feature-tagline">{shelves[0].description}</p>
-          <p className="feature-meta">DRAMA <b>·</b> ONGOING <b>·</b> EPISODIC</p>
-          <div className="feature-actions">
-            <Link className="primary-button" href="/stories/the-priest">Explore the story <span>↗</span></Link>
-            <Link className="text-button" href="/stories/the-priest">View episode guide <span>→</span></Link>
+      {featured ? (
+        <section className="featured" aria-labelledby="featured-title">
+          <div className="featured-copy">
+            <div className="feature-kicker"><span className="live-dot" /> {featured.slug === "the-priest" ? "FEATURED STORY" : "DISCOVER THIS STORY"}</div>
+            <p className="feature-overline">AN ORIGINAL STORYFLICKS SERIES</p>
+            <h2 id="featured-title">{featured.title === "THE PRIEST" ? <>THE<br /><span>PRIEST</span></> : featured.title}</h2>
+            <p className="feature-tagline">{storyDescription(featured)}</p>
+            <p className="feature-meta">{featured.genres?.join(" · ").toUpperCase() || "STORYFLICKS ORIGINAL"} <b>·</b> {(featured.completion_status || "ONGOING").toUpperCase()} <b>·</b> EPISODIC</p>
+            <div className="feature-actions">
+              <Link className="primary-button" href={"/stories/" + featured.slug}>Explore the story <span>↗</span></Link>
+              <Link className="text-button" href={"/stories/" + featured.slug + "#episodes"}>View episode guide <span>→</span></Link>
+            </div>
           </div>
-        </div>
-        <div className="feature-art" role="img" aria-label="Typographic artwork for THE PRIEST">
-          <div className="art-grain" />
-          <div className="art-cross" />
-          <div className="art-caption">A STORY ABOUT<br />FAITH, DESIRE &amp; SECRETS</div>
-          <div className="art-title">THE<br /><strong>PRIEST</strong></div>
-          <div className="art-index">SF ORIGINAL&nbsp;&nbsp; / &nbsp;&nbsp;001</div>
-        </div>
-        <div className="feature-index"><span>01</span><i /> 01</div>
-      </section>
+          <div className="feature-art" role="img" aria-label={"Typographic artwork for " + featured.title}>
+            <div className="art-grain" />
+            <div className="art-cross" />
+            <div className="art-caption">STORIES THAT STAY<br />WITH YOU</div>
+            <div className="art-title">{featured.title === "THE PRIEST" ? <>THE<br /><strong>PRIEST</strong></> : <strong>{featured.title}</strong>}</div>
+            <div className="art-index">SF ORIGINAL&nbsp;&nbsp; / &nbsp;&nbsp;001</div>
+          </div>
+          <div className="feature-index"><span>01</span><i /> {String(publishedCount).padStart(2, "0")}</div>
+        </section>
+      ) : (
+        <section className="empty-shelf" role="status">
+          <div className="empty-mark">↗</div>
+          <div><h3>{unavailable ? "The catalogue is taking a moment." : "The next story is on its way."}</h3><p>{unavailable ? "We couldn't load the catalogue. Please try again shortly." : "New stories will appear here as soon as they are published."}</p></div>
+          <Link href="/search" className="outline-button">Browse catalogue <span>↗</span></Link>
+        </section>
+      )}
 
       <section className="shelf-section">
         <div className="section-heading">
@@ -65,6 +116,31 @@ export default function DiscoverPage() {
           <Link href="/library" className="outline-button">Open My Library <span>↗</span></Link>
         </div>
       </section>
+
+      {moreStories.length > 0 && (
+        <section className="shelf-section catalogue-section">
+          <div className="section-heading">
+            <div><p className="eyebrow">MORE TO GET INTO</p><h2>Explore the catalogue<span>.</span></h2></div>
+            <Link href="/search" className="subtle-link">All stories <span>→</span></Link>
+          </div>
+          <div className="search-results">
+            {moreStories.slice(0, 6).map((story) => (
+              <Link key={story.id || story.slug} className="search-result-card" href={"/stories/" + story.slug}>
+                <div className="search-result-art" role="img" aria-label={story.title + " title artwork"}>
+                  <span>{story.title}</span>
+                  <small>STORYFLICKS ORIGINAL</small>
+                </div>
+                <div className="search-result-copy">
+                  <p className="eyebrow">{story.genres?.join(" · ") || "STORYFLICKS ORIGINAL"} <span>·</span> {(story.completion_status || "EPISODIC").toUpperCase()}</p>
+                  <h3>{story.title}</h3>
+                  <p>{storyDescription(story)}</p>
+                  <span className="text-button">Explore story <span>↗</span></span>
+                </div>
+              </Link>
+            ))}
+          </div>
+        </section>
+      )}
 
       <section className="browse-row">
         <div><p className="eyebrow">FIND YOUR KIND OF STORY</p><h2>What are you in the mood for?</h2></div>
