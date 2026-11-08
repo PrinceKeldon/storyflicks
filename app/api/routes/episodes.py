@@ -494,7 +494,7 @@ async def get_review_room(
     participation_rows = await supabase.admin_get(
         "episode_participations",
         {
-            "select": "id,qualifying_contribution,created_at",
+            "select": "id,qualifying_contribution,first_contributed_at",
             "episode_id": f"eq.{episode_id}",
             "user_id": f"eq.{user.id}",
             "limit": "1",
