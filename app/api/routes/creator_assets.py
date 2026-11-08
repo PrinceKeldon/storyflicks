@@ -196,9 +196,27 @@ async def complete_creator_asset_upload(
             "Storage could not verify the uploaded image size.",
         ) from exc
 
-    expected_extension = IMAGE_TYPES.get(content_type)
+    # Storage providers may normalise JPEG's MIME type differently from browsers.
+    # Treat the common JPEG aliases as the same format, while still requiring the
+    # stored object MIME type to agree with the extension selected at upload time.
+    normalised_content_type = (content_type or "").split(";", 1)[0].strip().lower()
+    mime_aliases = {
+        "image/jpg": "jpg",
+        "image/jpeg": "jpg",
+        "image/pjpeg": "jpg",
+        "image/x-jpeg": "jpg",
+        "image/png": "png",
+        "image/x-png": "png",
+        "image/webp": "webp",
+        "image/avif": "avif",
+    }
+    expected_extension = mime_aliases.get(normalised_content_type)
     if expected_extension is None or extension.lower() != expected_extension:
-        raise HTTPException(422, "The uploaded image format does not match its file type.")
+        raise HTTPException(
+            422,
+            "Storage reported an unsupported image type "
+            f"({normalised_content_type or 'unknown'}); expected a matching JPEG, PNG, WebP or AVIF file.",
+        )
     if object_size <= 0 or object_size > 10 * 1024 * 1024:
         raise HTTPException(422, "Images must be between 1 byte and 10 MB.")
 
