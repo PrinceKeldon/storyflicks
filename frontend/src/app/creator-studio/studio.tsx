@@ -79,6 +79,7 @@ export default function CreatorStudio(){
  const [story,setStory]=useState({title:"",author_name:"",slug:"",tagline:"",synopsis:"",genres:"",first_episode_free:true,section_label:"Episode",section_label_plural:"Episodes"});
  const [episode,setEpisode]=useState({sequence_number:1,title:"",synopsis:""});
  const [blocks,setBlocks]=useState<Block[]>([{type:"paragraph",text:""}]),[scheduleAt,setScheduleAt]=useState("");
+ const [bulkImportOpen,setBulkImportOpen]=useState(false),[bulkSections,setBulkSections]=useState<{title:string;blocks:Block[]}[]>([]),[bulkImportBusy,setBulkImportBusy]=useState(false);
 
  const request=useCallback(async(path:string,init:RequestInit={})=>{
   const client=getSupabaseBrowserClient();
@@ -198,6 +199,49 @@ export default function CreatorStudio(){
    setBlocks(next);setNotice(next.length+" manuscript blocks imported with available formatting. Review the preview before saving.");
   }catch(e){setError(message(e,"The manuscript file could not be read."));}
  }
+ async function importCompleteManuscript(file:File){
+  setError("");setNotice("");setBulkSections([]);
+  try{
+   let imported:Block[];
+   if(file.name.toLowerCase().endsWith(".docx")) imported=await importDocx(file);
+   else {const raw=await file.text();imported=raw.split(/\\r?\\n\\s*\\r?\\n/).map(source=>({type:"paragraph" as const,text:source.trim()})).filter(block=>block.text);}
+   const headingPattern=/^(?:(?:chapter|episode|part|section)\\s+(?:\\d+|[ivxlcdm]+|one|two|three|four|five|six|seven|eight|nine|ten)(?:\\s*[:.\\-–—]?\\s*.*)?|\\d{1,3}[.)]\\s+.+)$/i;
+   const starts:number[]=[];
+   imported.forEach((block,index)=>{const text=block.text.trim();if((block.type==="heading"||headingPattern.test(text))&&text.length<180)starts.push(index);});
+   const unique=starts.filter((value,index)=>index===0||value!==starts[index-1]);
+   if(unique.length<2){
+    setError("I couldn't confidently identify multiple chapters in this file. Please ensure each chapter starts with a heading such as “Chapter 1” or “Chapter One”, then try again. Your manuscript has not been saved.");
+    return;
+   }
+   const sections=unique.map((start,index)=>{
+    const heading=imported[start].text.trim();
+    const match=heading.match(/^(?:(?:chapter|episode|part|section)\\s+(?:\\d+|[ivxlcdm]+|one|two|three|four|five|six|seven|eight|nine|ten))\\s*[:.\\-–—]?\\s*(.*)$/i);
+    const numbered=heading.match(/^\\d{1,3}[.)]\\s+(.+)$/);
+    const title=(match?.[1]||numbered?.[1]||heading).trim()||heading;
+    const end=unique[index+1]??imported.length;
+    const content=imported.slice(start+1,end);
+    return {title,blocks:content.length?content:[{type:"paragraph" as const,text:""}]};
+   });
+   setBulkSections(sections);setBulkImportOpen(true);
+   setNotice(sections.length+" chapters detected. Review the chapter titles and contents before importing them as drafts.");
+  }catch(e){setError(message(e,"The complete manuscript could not be read."));}
+ }
+ async function saveCompleteManuscript(){
+  if(!storyId||!bulkSections.length)return;
+  setBulkImportBusy(true);setError("");
+  try{
+   const firstSequence=Math.max(0,...(workspace?.episodes||[]).map(item=>item.sequence_number))+1;
+   for(let index=0;index<bulkSections.length;index++){
+    const section=bulkSections[index];
+    await request("/creator/stories/"+storyId+"/episodes",{method:"POST",body:JSON.stringify({
+     season_id:null,sequence_number:firstSequence+index,title:section.title,synopsis:null,
+     content:{blocks:section.blocks.filter(block=>block.type==="separator"||block.type==="spacer"||block.text.trim())}
+    })});
+   }
+   setBulkImportOpen(false);setBulkSections([]);setNotice(bulkSections.length+" manuscript chapters saved as drafts. Nothing has been published.");await loadWorkspace(storyId);await loadDashboard();
+  }catch(e){setError(message(e,"The manuscript import stopped before all chapters were saved. Please check the chapter list before retrying."));}
+  finally{setBulkImportBusy(false);}
+ }
  async function createStory(ev:FormEvent<HTMLFormElement>){ev.preventDefault();setBusy("create");setError("");try{const data=await request("/creator/stories",{method:"POST",body:JSON.stringify({...newStory,genres:parseGenres(newStory.genres)})}) as {story_id:string};setNewStoryOpen(false);setStoryId(data.story_id);setTab("episodes");setNotice("Story workspace created. Add your first section when ready.");setNewStory({title:"",author_name:"",slug:"",tagline:"",synopsis:"",genres:"",first_episode_free:true,section_label:"Episode",section_label_plural:"Episodes"});await loadDashboard();setStoryId(data.story_id);}catch(e){setError(message(e,"Could not create story."));}finally{setBusy("");}}
  async function saveStory(ev:FormEvent<HTMLFormElement>){ev.preventDefault();if(!workspace)return;setBusy("save-story");setError("");try{await request("/creator/stories/"+storyId,{method:"PUT",body:JSON.stringify({...story,genres:parseGenres(story.genres)})});setNotice("Story details saved.");await loadWorkspace(storyId);await loadDashboard();}catch(e){setError(message(e,"Could not save story details."));}finally{setBusy("");}}
  async function saveEpisode(ev:FormEvent<HTMLFormElement>){ev.preventDefault();if(!workspace)return;if(!blocks.some(b=>b.text.trim())){setError("Add at least one text block before saving.");return;}setBusy("save-episode");setError("");
@@ -242,6 +286,14 @@ export default function CreatorStudio(){
    </section>}
   </section>}
   {tab==="episodes"&&<section className="studio-content"><div className="studio-section-heading"><div><p className="eyebrow">BUILD THE STORY, ONE {sectionLabel.toUpperCase()} AT A TIME</p><h2>{sectionLabelPlural} manager<span>.</span></h2><p className="studio-intro">Create drafts, review revisions and control publication.</p></div><button className="studio-primary" disabled={!workspace} onClick={addEpisode}>＋ New {sectionLabel.toLowerCase()}</button></div>
+   <div className="studio-bulk-import-panel">
+    <div><strong>Import a complete manuscript</strong><p>Upload one DOCX or TXT containing all your chapters. STORYFLICKS will detect chapter headings and prepare separate drafts for review.</p></div>
+    <label className="studio-import-control">Choose full manuscript<input type="file" accept=".docx,application/vnd.openxmlformats-officedocument.wordprocessingml.document,.txt,text/plain" disabled={!storyId||bulkImportBusy} onChange={e=>{const file=e.target.files?.[0];if(file)void importCompleteManuscript(file);e.target.value="";}}/></label>
+   </div>
+   {bulkImportOpen&&<section className="studio-bulk-review"><div className="studio-form-title"><span>MANUSCRIPT IMPORT REVIEW</span><small>{bulkSections.length} CHAPTERS DETECTED · NOT YET SAVED</small></div><p>Check the detected chapter titles and order. The original manuscript remains unchanged.</p>
+    {bulkSections.map((section,index)=><label className="studio-bulk-row" key={index}><span>CHAPTER {String(index+1).padStart(2,"0")}</span><input value={section.title} onChange={e=>setBulkSections(items=>items.map((item,i)=>i===index?{...item,title:e.target.value}:item))}/><small>{section.blocks.length} manuscript blocks</small></label>)}
+    <div className="studio-form-actions"><button type="button" className="studio-primary" disabled={bulkImportBusy||bulkSections.some(item=>!item.title.trim())} onClick={()=>void saveCompleteManuscript()}>{bulkImportBusy?"Saving chapters…":"Save all chapters as drafts ↗"}</button><button type="button" className="studio-text-action" disabled={bulkImportBusy} onClick={()=>{setBulkImportOpen(false);setBulkSections([]);}}>Cancel</button></div>
+   </section>}
    <div className="studio-workspace-select"><label>STORY WORKSPACE<select value={storyId} onChange={e=>{setStoryId(e.target.value);setEpisodeId("");}}>{dashboard?.stories.map(s=><option value={s.id} key={s.id}>{s.title}</option>)}</select></label>{workspace&&<div className="studio-workspace-status"><span>{workspace.story.publication_status}</span><small>{workspace.episode_summary.published} published · {workspace.episode_summary.draft} drafts · {workspace.episode_summary.scheduled} scheduled</small></div>}</div>
    {!dashboard?.stories.length?<div className="studio-empty"><h3>Create a story first.</h3><button className="studio-primary" onClick={()=>{setNewStoryOpen(true);setTab("stories");}}>Create story ↗</button></div>:busy==="workspace"||!workspace?<div className="studio-loading">Loading story workspace…</div>:<>
     
