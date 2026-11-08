@@ -30,6 +30,13 @@ type Tab = "overview"|"stories"|"episodes"|"community"|"audience"|"insights"|"se
 const tabs: {id:Tab;label:string}[] = [{id:"overview",label:"Overview"},{id:"stories",label:"My Stories"},{id:"episodes",label:"Episode Manager"},{id:"community",label:"Community"},{id:"audience",label:"Audience"},{id:"insights",label:"Insights"},{id:"settings",label:"Settings"}];
 function slugify(s:string){return s.toLowerCase().trim().normalize("NFKD").replace(/[\u0300-\u036f]/g,"").replace(/[^a-z0-9]+/g,"-").replace(/^-|-$/g,"");}
 function parseGenres(value:string){return [...new Set(value.split(",").map(item=>item.trim()).filter(Boolean))].slice(0,5);}
+function normaliseImageContentType(file:File):string{
+ const raw=file.type.toLowerCase().split(";")[0].trim();
+ const aliases:Record<string,string>={"image/jpg":"image/jpeg","image/pjpeg":"image/jpeg","image/x-jpeg":"image/jpeg","image/x-png":"image/png"};
+ const mime=aliases[raw]||raw;
+ if(["image/jpeg","image/png","image/webp","image/avif"].includes(mime))return mime;
+ throw new Error("Choose a JPEG, PNG, WebP or AVIF image. The selected file reports an unsupported image type.");
+}
 function blocksFrom(value:unknown):Block[]{
  let parsed:unknown=value;
  if(typeof value==="string"){
@@ -176,14 +183,18 @@ export default function CreatorStudio(){
 
  async function uploadAsset(file:File,assetType:"cover"|"episode_image",episodeTarget?:string){
   if(!workspace)return;
-  if(!file.type.startsWith("image/")){setError("Choose an image file.");return;}
-  if(file.size>10*1024*1024){setError("Images must be 10 MB or smaller.");return;}
+  if(file.size<=0||file.size>10*1024*1024){setError("Images must be larger than 0 bytes and 10 MB or smaller.");return;}
   if(assetType==="episode_image"&&!episodeTarget){setError("Select an episode before uploading an image.");return;}
   setAssetBusy(true);setError("");setNotice("");
   try{
-   const signed=await request("/creator/stories/"+storyId+"/assets/upload-url",{method:"POST",body:JSON.stringify({asset_type:assetType,content_type:file.type,episode_id:episodeTarget||null})}) as {signed_url:string;path:string};
-   const uploaded=await fetch(signed.signed_url,{method:"PUT",headers:{"Content-Type":file.type},body:file});
-   if(!uploaded.ok)throw new Error("The image could not be uploaded to storage.");
+   const contentType=normaliseImageContentType(file);
+   const signed=await request("/creator/stories/"+storyId+"/assets/upload-url",{method:"POST",body:JSON.stringify({asset_type:assetType,content_type:contentType,episode_id:episodeTarget||null})}) as {signed_url:string;path:string};
+   const uploaded=await fetch(signed.signed_url,{method:"PUT",headers:{"Content-Type":contentType},body:file});
+   if(!uploaded.ok){
+    const storageError=await uploaded.json().catch(()=>null) as {message?:string;error?:string}|null;
+    const detail=storageError?.message||storageError?.error;
+    throw new Error(detail?("Storage rejected the image: "+detail):("Storage rejected the image upload (HTTP "+uploaded.status+")."));
+   }
    await request("/creator/stories/"+storyId+"/assets/complete",{method:"POST",body:JSON.stringify({asset_type:assetType,storage_path:signed.path,episode_id:episodeTarget||null,alt_text:assetType==="episode_image"?file.name:null,position:assets.filter(a=>a.episode_id===episodeTarget).length})});
    const data=await request("/creator/stories/"+storyId+"/assets") as {story:{cover_url:string|null};assets:CreatorAsset[]};setCoverUrl(data.story.cover_url);setAssets(data.assets||[]);setNotice(assetType==="cover"?"Story cover uploaded.":"Episode image uploaded.");
   }catch(e){setError(message(e,"Image upload failed."));}finally{setAssetBusy(false);}
