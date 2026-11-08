@@ -5,6 +5,7 @@ type DiscoverStory = {
   id: string;
   slug: string;
   title: string;
+  author_name?: string | null;
   tagline: string | null;
   synopsis: string | null;
   genres: string[];
@@ -83,6 +84,7 @@ export default async function DiscoverPage() {
             <div className="feature-kicker"><span className="live-dot" /> {featured.slug === "the-priest" ? "FEATURED STORY" : "DISCOVER THIS STORY"}</div>
             <p className="feature-overline">AN ORIGINAL STORYFLICKS SERIES</p>
             <h2 id="featured-title">{featured.title}</h2>
+            {featured.author_name && <p className="feature-author-byline">By {featured.author_name}</p>}
             <p className="feature-tagline">{storyDescription(featured)}</p>
             <p className="feature-meta">{featured.genres?.join(" · ").toUpperCase() || "STORYFLICKS ORIGINAL"} <b>·</b> {(featured.completion_status || "ONGOING").toUpperCase()} <b>·</b> EPISODIC</p>
             <div className="feature-actions">
@@ -125,6 +127,7 @@ export default async function DiscoverPage() {
                 <div className="search-result-copy">
                   <p className="eyebrow">{story.genres?.join(" · ") || "STORYFLICKS ORIGINAL"} <span>·</span> {(story.completion_status || "EPISODIC").toUpperCase()}</p>
                   <h3>{story.title}</h3>
+                  {story.author_name && <p className="catalogue-author-byline">By {story.author_name}</p>}
                   <p>{storyDescription(story)}</p>
                   <span className="text-button">Explore story <span>↗</span></span>
                 </div>

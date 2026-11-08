@@ -260,6 +260,7 @@ async def publish_author_reply(
 
 class CreatorStorySubmission(BaseModel):
     title: str = Field(min_length=1, max_length=160)
+    author_name: str | None = Field(default=None, max_length=160)
     slug: str = Field(min_length=1, max_length=100, pattern=r"^[a-z0-9]+(-[a-z0-9]+)*$")
     tagline: str | None = Field(default=None, max_length=240)
     synopsis: str | None = Field(default=None, max_length=10000)
@@ -303,10 +304,11 @@ async def create_creator_story(
     user: AuthenticatedUser = Depends(get_current_user),
 ):
     return await supabase.user_rpc(
-        "save_creator_story_v2",
+        "save_creator_story_v3",
         {
             "p_story_id": None,
             "p_title": submission.title,
+            "p_author_name": submission.author_name,
             "p_slug": submission.slug,
             "p_tagline": submission.tagline,
             "p_synopsis": submission.synopsis,
@@ -324,10 +326,11 @@ async def update_creator_story(
     user: AuthenticatedUser = Depends(get_current_user),
 ):
     return await supabase.user_rpc(
-        "save_creator_story_v2",
+        "save_creator_story_v3",
         {
             "p_story_id": str(story_id),
             "p_title": submission.title,
+            "p_author_name": submission.author_name,
             "p_slug": submission.slug,
             "p_tagline": submission.tagline,
             "p_synopsis": submission.synopsis,

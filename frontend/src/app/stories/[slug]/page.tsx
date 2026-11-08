@@ -14,6 +14,7 @@ type StoryResponse = {
     id: string;
     slug: string;
     title: string;
+    author_name?: string | null;
     tagline?: string | null;
     synopsis?: string | null;
     genres?: string[];
@@ -61,6 +62,7 @@ export default async function StoryDetailPage({ params }: { params: Promise<{ sl
         <div className="story-info">
           <p className="eyebrow">{story?.genres?.join(" · ").toUpperCase() || "STORYFLICKS ORIGINAL"} · {(story?.completion_status || "ongoing").toUpperCase()} · EPISODIC</p>
           <h1>{story?.title ?? (slug === "the-priest" ? "The Priest" : "Story")}</h1>
+          {story?.author_name && <p className="story-author-byline">By {story.author_name}</p>}
           <p className="story-tagline">{story?.tagline ?? (slug === "the-priest" ? "Two lives. One secret. A confession that changes everything." : "A new STORYFLICKS original.")}</p>
           <p className="story-synopsis">{story?.synopsis ?? (slug === "the-priest" ? "For over twenty years, Father James has kept his priestly life separate from the man he secretly becomes beyond the collar. But when Sophia enters his world, questions of faith, desire and identity begin to blur — and some secrets may be impossible to keep." : "Story details are coming soon.")}</p>
           <div className="story-facts"><span>{episodes.length} PUBLISHED EPISODES</span><span>{(story?.completion_status || "ongoing").toUpperCase()}</span><span>{story?.first_episode_free === false ? "ACCESS REQUIRED" : "FIRST EPISODE FREE"}</span></div>
