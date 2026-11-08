@@ -2,10 +2,10 @@ from uuid import UUID
 
 from fastapi import APIRouter, Depends, HTTPException
 
-from app.api.deps import get_current_user, supabase
+from app.api.deps import get_current_user, require_active_creator, supabase
 from app.core.security import AuthenticatedUser
 
-router = APIRouter()
+router = APIRouter(dependencies=[Depends(require_active_creator)])
 
 
 @router.get("/creator/episodes/{episode_id}/revisions")
