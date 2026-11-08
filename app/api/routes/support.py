@@ -2,6 +2,7 @@ import hashlib
 import hmac
 import json
 import time
+from datetime import datetime, timezone
 from typing import Any
 from urllib.parse import urlencode
 from uuid import UUID
@@ -28,8 +29,8 @@ async def create_support_checkout(
     submission: SupportCheckoutRequest,
     user: AuthenticatedUser = Depends(get_current_user),
 ):
-    if not settings.stripe_secret_key:
-        raise HTTPException(503, "Reader support payments are not configured yet.")
+    if not settings.stripe_secret_key or not settings.stripe_secret_key.startswith("sk_test_"):
+        raise HTTPException(503, "Reader support sandbox payments are not configured yet.")
 
     if submission.amount_cents not in ALLOWED_AMOUNTS and submission.amount_cents % 100 != 0:
         raise HTTPException(422, "Choose a whole-euro contribution amount.")
@@ -164,7 +165,7 @@ async def stripe_support_webhook(
             {
                 "status": "paid",
                 "stripe_payment_intent_id": session.get("payment_intent"),
-                "paid_at": "now()",
+                "paid_at": datetime.now(timezone.utc).isoformat(),
             },
         )
     elif event_type == "checkout.session.expired":
