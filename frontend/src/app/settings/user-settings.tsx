@@ -3,6 +3,8 @@
 import Link from "next/link";
 import { useEffect, useState } from "react";
 import { getSupabaseBrowserClient } from "@/lib/supabase";
+import CreatorStudioNavLink from "../creator-studio-nav-link";
+import AccountNavigation from "../account-navigation";
 
 type Theme = "dark" | "light";
 type Status = "loading" | "signed-in" | "signed-out" | "error";
@@ -78,9 +80,9 @@ export default function UserSettings() {
         <nav aria-label="Main navigation">
           <Link href="/">Discover</Link>
           <Link href="/library">My Library</Link>
-          <Link href="/creator-studio">Creator Studio</Link>
+          <CreatorStudioNavLink />
         </nav>
-        <Link className="user-settings-back" href="/">Back to Discover ↗</Link>
+        <div className="user-settings-account"><Link className="user-settings-back" href="/">Back to Discover ↗</Link><AccountNavigation /></div>
       </header>
       <section className="user-settings-content">
         <p className="eyebrow">YOUR ACCOUNT</p>
