@@ -79,7 +79,7 @@ export default function CreatorStudio(){
  const [story,setStory]=useState({title:"",author_name:"",slug:"",tagline:"",synopsis:"",genres:"",first_episode_free:true,section_label:"Episode",section_label_plural:"Episodes"});
  const [episode,setEpisode]=useState({sequence_number:1,title:"",synopsis:""});
  const [blocks,setBlocks]=useState<Block[]>([{type:"paragraph",text:""}]),[scheduleAt,setScheduleAt]=useState("");
- const [bulkImportOpen,setBulkImportOpen]=useState(false),[bulkSections,setBulkSections]=useState<{title:string;blocks:Block[]}[]>([]),[bulkImportBusy,setBulkImportBusy]=useState(false),[bulkSavedCount,setBulkSavedCount]=useState(0),[bulkFirstSequence,setBulkFirstSequence]=useState(1);
+ const [bulkImportOpen,setBulkImportOpen]=useState(false),[bulkSections,setBulkSections]=useState<{title:string;blocks:Block[]}[]>([]),[bulkImportBusy,setBulkImportBusy]=useState(false),[bulkSavedCount,setBulkSavedCount]=useState(0),[bulkFirstSequence,setBulkFirstSequence]=useState(1),[bulkStoryId,setBulkStoryId]=useState("");
 
  const request=useCallback(async(path:string,init:RequestInit={})=>{
   const client=getSupabaseBrowserClient();
@@ -221,24 +221,25 @@ export default function CreatorStudio(){
     const content=imported.slice(start+1,end);
     return {title,blocks:content.length?content:[{type:"paragraph" as const,text:""}]};
    });
-   setBulkSections(sections);setBulkSavedCount(0);setBulkFirstSequence(Math.max(0,...(workspace?.episodes||[]).map(item=>item.sequence_number))+1);setBulkImportOpen(true);
+   setBulkSections(sections);setBulkSavedCount(0);setBulkStoryId(storyId);setBulkFirstSequence(Math.max(0,...(workspace?.episodes||[]).map(item=>item.sequence_number))+1);setBulkImportOpen(true);
    setNotice(sections.length+" chapters detected. Review the chapter titles and contents before importing them as drafts.");
   }catch(e){setError(message(e,"The complete manuscript could not be read."));}
  }
  async function saveCompleteManuscript(){
-  if(!storyId||!bulkSections.length)return;
+  if(!bulkStoryId||!bulkSections.length)return;
+  if(storyId!==bulkStoryId){setError("This manuscript review belongs to a different story. Return to that story workspace to continue importing; no chapters were added to the currently selected story.");return;}
   setBulkImportBusy(true);setError("");
   let savedCount=bulkSavedCount;
   try{
    for(let index=bulkSavedCount;index<bulkSections.length;index++){
     const section=bulkSections[index];
-    await request("/creator/stories/"+storyId+"/episodes",{method:"POST",body:JSON.stringify({
+    await request("/creator/stories/"+bulkStoryId+"/episodes",{method:"POST",body:JSON.stringify({
      season_id:null,sequence_number:bulkFirstSequence+index,title:section.title,synopsis:null,
      content:{blocks:section.blocks.filter(block=>block.type==="separator"||block.type==="spacer"||block.text.trim())}
     })});
     savedCount=index+1;setBulkSavedCount(savedCount);
    }
-   setBulkImportOpen(false);setBulkSections([]);setBulkSavedCount(0);setNotice(bulkSections.length+" manuscript chapters saved as drafts. Nothing has been published.");await loadWorkspace(storyId);await loadDashboard();
+   setBulkImportOpen(false);setBulkSections([]);setBulkSavedCount(0);setNotice(bulkSections.length+" manuscript chapters saved as drafts. Nothing has been published.");await loadWorkspace(bulkStoryId);await loadDashboard();
   }catch(e){setBulkSavedCount(savedCount);setError(message(e,"Import paused after "+savedCount+" of "+bulkSections.length+" chapters. Completed chapters are marked; retry to continue with the remaining chapters."));}
   finally{setBulkImportBusy(false);}
  }
