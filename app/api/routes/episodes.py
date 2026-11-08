@@ -230,7 +230,7 @@ async def submit_review(
     return await supabase.user_rpc(
         "submit_episode_review",
         {
-            "p_episode_id": episode_id,
+            "p_episode_id": str(episode_id),
             "p_headline": submission.headline,
             "p_body": submission.body,
             "p_visibility": submission.visibility,
@@ -256,7 +256,7 @@ async def vote_review_helpful(
         raise HTTPException(status_code=403, detail="You cannot vote on a discussion for an episode you cannot access.")
     return await supabase.user_rpc(
         "vote_review_helpful",
-        {"p_review_id": review_id},
+        {"p_review_id": str(review_id)},
         user.access_token,
     )
 
@@ -277,7 +277,7 @@ async def remove_review_helpful_vote(
         raise HTTPException(status_code=403, detail="You cannot change a vote on a discussion for an episode you cannot access.")
     return await supabase.user_rpc(
         "remove_review_helpful_vote",
-        {"p_review_id": review_id},
+        {"p_review_id": str(review_id)},
         user.access_token,
     )
 
