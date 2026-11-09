@@ -158,10 +158,10 @@ end $$;
 
 create or replace function public.creator_delete_draft_revision(p_revision_id uuid)
 returns jsonb language plpgsql security definer set search_path = '' as $$
-declare v_user uuid := auth.uid(); v_revision public.episode_revisions%rowtype; v_story_id uuid;
+declare v_user uuid := auth.uid(); v_revision public.episode_revisions%rowtype;
 begin
   if v_user is null then raise exception 'Authentication required'; end if;
-  select er.*,e.story_id into v_revision,v_story_id from public.episode_revisions er
+  select er.* into v_revision from public.episode_revisions er
   join public.episodes e on e.id=er.episode_id
   join public.story_creators sc on sc.story_id=e.story_id
   where er.id=p_revision_id and sc.creator_id=v_user and sc.role in ('owner','author','editor')
