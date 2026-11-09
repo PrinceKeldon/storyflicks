@@ -34,15 +34,14 @@ async def list_creator_trash(user: AuthenticatedUser = Depends(get_current_user)
     if not story_ids:
         return {"stories": [], "episodes": [], "materials": []}
     story_filter = f"in.({','.join(story_ids)})"
-    stories, episodes, materials = await asyncio.gather(
+    all_stories, episodes, materials = await asyncio.gather(
         supabase.admin_get(
             "stories",
             {
                 "id": story_filter,
-                "deleted_at": "not.is.null",
                 "select": "id,title,slug,publication_status,deleted_at,deleted_from_status",
-                "order": "deleted_at.desc",
-                "limit": "200",
+                "order": "title.asc",
+                "limit": "500",
             },
         ),
         supabase.admin_get(
@@ -66,7 +65,8 @@ async def list_creator_trash(user: AuthenticatedUser = Depends(get_current_user)
             },
         ),
     )
-    story_map = {row["id"]: row["title"] for row in stories}
+    stories = [row for row in all_stories if row.get("deleted_at")]
+    story_map = {row["id"]: row["title"] for row in all_stories}
     return {
         "stories": stories,
         "episodes": [
