@@ -55,7 +55,7 @@ function isChapterBoundary(block: Block) {
 
   // Many manuscripts use Normal/Body paragraph styles for chapter titles.
   // Recognise typographic signals without treating every bold phrase as a chapter.
-  const hasLetters = /\\p{L}/u.test(value);
+  const hasLetters = /\p{L}/u.test(value);
   const allCaps = hasLetters && value === value.toLocaleUpperCase() && !/[.!?;]$/.test(value);
   const centered = block.align === "center";
   const shortStandaloneNumber = /^(?:\\d{1,3}|[ivxlcdm]{1,8})[.)]?$/.test(value) && (centered || block.bold);
