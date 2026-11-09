@@ -15,7 +15,7 @@ router = APIRouter()
 
 class ManuscriptBlock(BaseModel):
     type: str = Field(pattern=r"^(paragraph|heading|quote|separator|spacer)$")
-    text: str = Field(max_length=5000)
+    text: str = Field(max_length=100000)
 
 
 class ManuscriptAnalysisSubmission(BaseModel):
