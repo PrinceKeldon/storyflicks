@@ -28,6 +28,7 @@ type Props = {
   request: (path: string, init?: RequestInit) => Promise<unknown>;
   onImported: () => Promise<void>;
 };
+type ChatMessage = { role: "user" | "model"; text: string };
 type Stage = "upload" | "review" | "complete";
 
 const MAX_FILE_BYTES = 30 * 1024 * 1024;
@@ -101,6 +102,9 @@ export default function ManuscriptImportAssistant({ storyId, storyTitle, section
   const [sourceBlocks, setSourceBlocks] = useState<Block[]>([]);
   const [aiBusy, setAiBusy] = useState(false);
   const [aiModel, setAiModel] = useState("");
+  const [chatMessages, setChatMessages] = useState<ChatMessage[]>([]);
+  const [chatInput, setChatInput] = useState("");
+  const [chatBusy, setChatBusy] = useState(false);
   const [analysis, setAnalysis] = useState<{ paragraphs: number; words: number; headings: number; formattedRuns: number; warnings: string[] } | null>(null);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState("");
@@ -176,6 +180,7 @@ export default function ManuscriptImportAssistant({ storyId, storyTitle, section
         method: "POST",
         body: JSON.stringify({
           story_title: storyTitle,
+          author_instructions: chatMessages.filter(item => item.role === "user").map(item => item.text).join("\\n").slice(-4000),
           blocks: sourceBlocks.map(block => ({ type: block.type, text: block.text })),
         }),
       }) as {
@@ -217,6 +222,37 @@ export default function ManuscriptImportAssistant({ storyId, storyTitle, section
       setError(caught instanceof Error ? caught.message : "Gemini could not analyse this manuscript. Your existing analysis is unchanged.");
     } finally {
       setAiBusy(false);
+    }
+  }
+
+  async function sendGeminiMessage(event: React.FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+    const message = chatInput.trim();
+    if (!message || chatBusy || !sourceBlocks.length) return;
+    setChatInput("");
+    setError("");
+    setChatBusy(true);
+    const nextHistory = [...chatMessages, { role: "user" as const, text: message }];
+    setChatMessages(nextHistory);
+    try {
+      const result = await request("/creator/stories/" + storyId + "/manuscript/chat", {
+        method: "POST",
+        body: JSON.stringify({
+          story_title: storyTitle,
+          message,
+          blocks: sourceBlocks.map(block => ({ type: block.type, text: block.text })),
+          history: chatMessages.slice(-10),
+        }),
+      }) as { reply?: string; model?: string };
+      if (!result.reply?.trim()) throw new Error("Gemini returned an empty reply. Please try again.");
+      setChatMessages(current => [...current, { role: "model", text: result.reply!.trim() }].slice(-20));
+      setAiModel(result.model || "Gemini");
+    } catch (caught) {
+      setError(caught instanceof Error ? caught.message : "Gemini could not reply. Please try again.");
+      setChatMessages(current => current.filter((item, index) => !(index === current.length - 1 && item.role === "user" && item.text === message)));
+      setChatInput(message);
+    } finally {
+      setChatBusy(false);
     }
   }
 
@@ -313,6 +349,21 @@ export default function ManuscriptImportAssistant({ storyId, storyTitle, section
         <button type="button" className="studio-primary" disabled={aiBusy || busy || sections.some(section => section.saved)} onClick={() => void runGeminiAnalysis()}>{aiBusy ? "Gemini is analysing…" : "✦ Analyse with Gemini"}</button>
         {aiModel && <small>Last analysis: {aiModel}. Review all suggestions before importing.</small>}
       </div>
+      <section className="sf-manuscript-chat" aria-labelledby="sf-manuscript-chat-title">
+        <div className="sf-manuscript-chat-head">
+          <div><span className="studio-import-eyebrow">YOUR EDITORIAL PARTNER</span><h4 id="sf-manuscript-chat-title">Talk to Gemini</h4><p>Give Gemini instructions about how you want this manuscript organised. Ask questions about chapter boundaries, titles, pacing or formatting.</p></div>
+          <span className="sf-manuscript-chat-status">{chatBusy ? "RESPONDING…" : "MANUSCRIPT CONTEXT ON"}</span>
+        </div>
+        <div className="sf-manuscript-chat-log" aria-live="polite">
+          {chatMessages.length === 0 && <p className="sf-manuscript-chat-welcome">For example: “Keep the prologue separate”, “Do not split short scenes into chapters”, or “Use the original chapter headings wherever possible”.</p>}
+          {chatMessages.map((item, index) => <article className={"sf-manuscript-chat-message " + item.role} key={index}><span>{item.role === "user" ? "YOU" : "GEMINI"}</span><p>{item.text}</p></article>)}
+        </div>
+        <form className="sf-manuscript-chat-form" onSubmit={sendGeminiMessage}>
+          <label className="sf-manuscript-chat-label" htmlFor="sf-manuscript-chat-input">Your instruction or question</label>
+          <textarea id="sf-manuscript-chat-input" rows={3} maxLength={2000} value={chatInput} onChange={event => setChatInput(event.target.value)} placeholder="Tell Gemini how you want your manuscript structured…" disabled={chatBusy || busy}/>
+          <div><small>Your instructions are included in the next chapter analysis. Gemini cannot save or publish your story.</small><button type="submit" className="studio-primary" disabled={chatBusy || busy || !chatInput.trim()}>{chatBusy ? "Gemini is replying…" : "Send to Gemini ↗"}</button></div>
+        </form>
+      </section>
       <div className="sf-manuscript-reconcile-intro"><div><h4>Review {sectionLabelPlural.toLowerCase()} structure</h4><p>Rename, reorder, split or merge {sectionLabelPlural.toLowerCase()}. Then choose whether each becomes a new draft or a draft revision of an existing {sectionLabel.toLowerCase()}.</p></div></div>
       <div className="sf-manuscript-section-list">
         {sections.map((section, index) => {
