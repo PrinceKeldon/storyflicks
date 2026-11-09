@@ -13,7 +13,7 @@ from app.api.routes.episodes import (
     ReadingProgressSubmission,
     ReviewSubmission,
 )
-from app.api.routes.manuscript import ManuscriptAnalysisSubmission, ManuscriptChatSubmission
+from app.api.routes.manuscript import ManuscriptAnalysisSubmission, ManuscriptChatSubmission, ManuscriptBlock
 
 
 class CreatorRequestValidationTests(unittest.TestCase):
@@ -57,6 +57,7 @@ class CreatorRequestValidationTests(unittest.TestCase):
 
     def test_manuscript_analysis_and_chat_requests_are_bounded(self):
         block = {"type": "paragraph", "text": "A manuscript paragraph."}
+        self.assertEqual(len(ManuscriptBlock(type="paragraph", text="x" * 6000).text), 6000)
         analysis = ManuscriptAnalysisSubmission(
             story_title="A Story",
             blocks=[block],
