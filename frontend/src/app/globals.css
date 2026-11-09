@@ -1709,3 +1709,28 @@ html[data-theme="light"] .studio-shell :is(.sf-manuscript-assistant-head p,
 .studio-shell .studio-full-manuscript-control,
 .studio-shell .studio-import-eyebrow { font-size: 14px !important; }
 html[data-theme="light"] .studio-state>p:not(.eyebrow) { color: #3f4d42 !important; }
+
+
+/* Catch the remaining compact utility labels and preview captions. */
+.studio-shell :is(.studio-block-heading button, .studio-editor-actions button,
+  .studio-bulk-review .studio-form-title span, .studio-bulk-row>span,
+  .studio-revision-row i, .studio-cover-placeholder,
+  .studio-live-preview .eyebrow, .studio-asset-strip figcaption,
+  .sf-manuscript-preview-heading strong, .sf-manuscript-inline-warning,
+  .sf-manuscript-warnings strong, .sf-manuscript-warnings p,
+  .sf-manuscript-split-tools button, .sf-manuscript-final-check strong) {
+  font-size: 13px !important;
+  line-height: 1.55;
+}
+.studio-shell :is(.studio-bulk-row>span, .studio-revision-row i,
+  .studio-cover-placeholder, .studio-asset-strip figcaption,
+  .sf-manuscript-inline-warning, .sf-manuscript-warnings p,
+  .sf-manuscript-split-tools button) {
+  color: #c4cdc3;
+}
+html[data-theme="light"] .studio-shell :is(.studio-bulk-row>span,
+  .studio-revision-row i, .studio-cover-placeholder,
+  .studio-asset-strip figcaption, .sf-manuscript-inline-warning,
+  .sf-manuscript-warnings p, .sf-manuscript-split-tools button) {
+  color: #46564a !important;
+}
