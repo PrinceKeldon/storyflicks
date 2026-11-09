@@ -232,7 +232,9 @@ export default function ManuscriptImportAssistant({ storyId, storyTitle, section
     setChatInput("");
     setError("");
     setChatBusy(true);
-    const nextHistory = [...chatMessages, { role: "user" as const, text: message }];
+    const nextHistory = [...chatMessages, { role: "user" as const, text: message }].slice(-20);
+    const history = chatMessages.slice(-10);
+    if (history[0]?.role === "model") history.shift();
     setChatMessages(nextHistory);
     try {
       const result = await request("/creator/stories/" + storyId + "/manuscript/chat", {
@@ -241,12 +243,11 @@ export default function ManuscriptImportAssistant({ storyId, storyTitle, section
           story_title: storyTitle,
           message,
           blocks: sourceBlocks.map(block => ({ type: block.type, text: block.text })),
-          history: chatMessages.slice(-10),
+          history,
         }),
       }) as { reply?: string; model?: string };
       if (!result.reply?.trim()) throw new Error("Gemini returned an empty reply. Please try again.");
       setChatMessages(current => [...current, { role: "model", text: result.reply!.trim() }].slice(-20));
-      setAiModel(result.model || "Gemini");
     } catch (caught) {
       setError(caught instanceof Error ? caught.message : "Gemini could not reply. Please try again.");
       setChatMessages(current => current.filter((item, index) => !(index === current.length - 1 && item.role === "user" && item.text === message)));
