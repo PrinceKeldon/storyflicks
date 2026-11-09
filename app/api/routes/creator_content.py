@@ -165,21 +165,9 @@ async def delete_creator_material(
 
 @router.post("/creator/trash/materials/{material_id}/restore")
 async def restore_creator_material(
-    story_id: UUID,
     material_id: UUID,
     user: AuthenticatedUser = Depends(get_current_user),
 ):
-    rows = await supabase.admin_get(
-        "story_material_sections",
-        {
-            "id": f"eq.{material_id}",
-            "story_id": f"eq.{story_id}",
-            "select": "id",
-            "limit": "1",
-        },
-    )
-    if not rows:
-        raise HTTPException(404, "Manuscript section not found in this story.")
     return await supabase.user_rpc(
         "creator_restore_material", {"p_material_id": str(material_id)}, user.access_token
     )
