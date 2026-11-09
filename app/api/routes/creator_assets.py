@@ -78,6 +78,7 @@ async def create_creator_asset_upload_url(
             {
                 "id": f"eq.{submission.episode_id}",
                 "story_id": f"eq.{story_id}",
+                "deleted_at": "is.null",
                 "select": "id",
                 "limit": "1",
             },
@@ -144,6 +145,7 @@ async def complete_creator_asset_upload(
             {
                 "id": f"eq.{submission.episode_id}",
                 "story_id": f"eq.{story_id}",
+                "deleted_at": "is.null",
                 "select": "id",
                 "limit": "1",
             },
