@@ -69,6 +69,14 @@ async def hide_material(story_id:UUID,material_id:UUID,user:AuthenticatedUser=De
  await supabase.admin_patch("story_material_sections",{"id":f"eq.{material_id}","story_id":f"eq.{story_id}"},{"is_visible":False,"publication_status":"draft"})
  return {"id":str(material_id),"hidden":True}
 
+@router.post("/creator/stories/{story_id}/materials/{material_id}/restore")
+async def restore_material(story_id:UUID,material_id:UUID,user:AuthenticatedUser=Depends(get_current_user)):
+ await editor_access(story_id,user)
+ found=await supabase.admin_get("story_material_sections",{"select":"id","id":f"eq.{material_id}","story_id":f"eq.{story_id}","limit":"1"})
+ if not found: raise HTTPException(404,"Story material section not found.")
+ await supabase.admin_patch("story_material_sections",{"id":f"eq.{material_id}","story_id":f"eq.{story_id}"},{"is_visible":True,"publication_status":"draft","updated_at":datetime.now(timezone.utc).isoformat()})
+ return {"id":str(material_id),"restored":True,"publication_status":"draft","is_visible":True}
+
 @router.get("/stories/{slug}/materials/{material_id}")
 async def read_material(slug:str,material_id:UUID):
  stories=await supabase.admin_get("stories",{"select":"id,slug,title,publication_status","slug":f"eq.{slug}","publication_status":"eq.published","limit":"1"})
