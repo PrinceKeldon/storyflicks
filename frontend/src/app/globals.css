@@ -1542,3 +1542,30 @@ html[data-theme="light"] .sf-manuscript-warnings p{color:#71614c}
   .sf-manuscript-ai-panel { align-items: stretch; }
   .sf-manuscript-ai-panel button { width: 100%; }
 }
+
+
+/* In-story Gemini conversation for guided manuscript preparation. */
+.sf-manuscript-chat{display:grid;gap:14px;margin:22px 0;padding:20px;border:1px solid rgba(189,134,108,.35);border-radius:12px;background:rgba(189,134,108,.045)}
+.sf-manuscript-chat-head{display:flex;align-items:flex-start;justify-content:space-between;gap:18px}
+.sf-manuscript-chat-head h4{margin:5px 0;font-size:18px}
+.sf-manuscript-chat-head p{max-width:700px;margin:0;color:#a7aaa4;font-size:13px;line-height:1.55}
+.sf-manuscript-chat-status{flex-shrink:0;padding:7px 9px;border:1px solid rgba(112,177,143,.35);border-radius:4px;color:#8bc6a4;font:10px 'DM Mono',monospace;letter-spacing:.08em}
+.sf-manuscript-chat-log{display:grid;gap:10px;max-height:340px;overflow:auto;padding:12px;border:1px solid rgba(225,220,205,.13);border-radius:8px;background:rgba(0,0,0,.12)}
+.sf-manuscript-chat-welcome{margin:0;color:#a7aaa4;font-size:13px;line-height:1.6}
+.sf-manuscript-chat-message{max-width:92%;padding:11px 13px;border-radius:8px;background:rgba(255,255,255,.055)}
+.sf-manuscript-chat-message.user{justify-self:end;background:rgba(189,134,108,.12)}
+.sf-manuscript-chat-message>span{display:block;margin-bottom:5px;color:#bd987e;font:10px 'DM Mono',monospace;letter-spacing:.1em}
+.sf-manuscript-chat-message p{margin:0;color:#e5e2d9;font-size:13px;line-height:1.6;white-space:pre-wrap;overflow-wrap:anywhere}
+.sf-manuscript-chat-form{display:grid;gap:9px}
+.sf-manuscript-chat-label{font-size:12px;font-weight:600}
+.sf-manuscript-chat-form textarea{width:100%;resize:vertical;min-height:78px;padding:12px;border:1px solid rgba(225,220,205,.23);border-radius:7px;background:#191b1b;color:#f1eee5;font:inherit;font-size:13px;line-height:1.5}
+.sf-manuscript-chat-form>div{display:flex;align-items:center;justify-content:space-between;gap:14px}
+.sf-manuscript-chat-form small{max-width:580px;color:#a7aaa4;font-size:11px;line-height:1.5}
+html[data-theme="light"] .sf-manuscript-chat{background:#fbf5ef;border-color:#d8b6a2}
+html[data-theme="light"] .sf-manuscript-chat-head p,html[data-theme="light"] .sf-manuscript-chat-welcome,html[data-theme="light"] .sf-manuscript-chat-form small{color:#596458}
+html[data-theme="light"] .sf-manuscript-chat-log{background:#fffefa;border-color:#d8d4c8}
+html[data-theme="light"] .sf-manuscript-chat-message{background:#f1eee6}
+html[data-theme="light"] .sf-manuscript-chat-message.user{background:#f5e9df}
+html[data-theme="light"] .sf-manuscript-chat-message p{color:#303b31}
+html[data-theme="light"] .sf-manuscript-chat-form textarea{background:#fffefa;color:#283129;border-color:#aebbad}
+@media(max-width:700px){.sf-manuscript-chat{padding:15px}.sf-manuscript-chat-head{flex-direction:column}.sf-manuscript-chat-form>div{align-items:stretch;flex-direction:column}.sf-manuscript-chat-form>div button{width:100%}.sf-manuscript-chat-message{max-width:100%}}
