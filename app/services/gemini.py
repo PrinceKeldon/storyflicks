@@ -165,8 +165,8 @@ async def chat_about_manuscript(
         "explain how the author can apply changes in the import review. You cannot save, publish, "
         "or modify the story. If the author gives instructions for the next structure analysis, "
         "acknowledge them and explain that their chat instructions will guide the next analysis. "
-        f"Story: {story_title[:160]}\\n"
-        "Manuscript blocks (numbered, source order):\\n"
+        f"Story: {story_title[:160]}\n"
+        "Manuscript blocks (numbered, source order):\n"
         + json.dumps(manuscript_context, ensure_ascii=False, separators=(",", ":"))
     )
     contents = []
