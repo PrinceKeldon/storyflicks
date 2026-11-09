@@ -58,10 +58,10 @@ function isChapterBoundary(block: Block) {
   const hasLetters = /\p{L}/u.test(value);
   const allCaps = hasLetters && value === value.toLocaleUpperCase() && !/[.!?;]$/.test(value);
   const centered = block.align === "center";
-  const shortStandaloneNumber = /^(?:\\d{1,3}|[ivxlcdm]{1,8})[.)]?$/.test(value) && (centered || block.bold);
+  const shortStandaloneNumber = /^(?:\d{1,3}|[ivxlcdm]{1,8})[.)]?$/.test(value) && (centered || block.bold);
   const titleLike = value.length <= 110 && !/[.!?;]$/.test(value) && (
     (centered && (block.bold || allCaps || value.length <= 75)) ||
-    (allCaps && value.length <= 85 && value.split(/\\s+/).length <= 10)
+    (allCaps && value.length <= 85 && value.split(/\s+/).length <= 10)
   );
   return shortStandaloneNumber || titleLike;
 }
