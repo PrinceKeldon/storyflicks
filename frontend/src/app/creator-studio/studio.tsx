@@ -105,7 +105,24 @@ export default function CreatorStudio(){
   setToken(current=>current===accessToken?current:accessToken);
   const res=await fetch(api+path,{...init,headers:{Authorization:"Bearer "+accessToken,...(init.body?{"Content-Type":"application/json"}:{}),...init.headers},cache:"no-store"});
   const body=await res.json().catch(()=>({}));
-  if(!res.ok)throw new Error(typeof body.detail==="string"?body.detail:"Request failed ("+res.status+").");
+  if(!res.ok){
+   const detail=body?.detail;
+   if(typeof detail==="string")throw new Error(detail);
+   if(Array.isArray(detail)){
+    const issues=detail.map((item:unknown)=>{
+     if(!item||typeof item!=="object")return String(item);
+     const issue=item as {loc?:unknown[];msg?:string};
+     const location=Array.isArray(issue.loc)?issue.loc.filter(part=>part!=="body").join("."):"";
+     return (location?location+": ":"")+(issue.msg||"Invalid value");
+    });
+    throw new Error("The server rejected this request ("+res.status+"): "+issues.join("; "));
+   }
+   if(detail&&typeof detail==="object"){
+    const object=detail as {message?:string;msg?:string};
+    throw new Error(object.message||object.msg||JSON.stringify(detail));
+   }
+   throw new Error("Request failed ("+res.status+").");
+  }
   return body;
  },[api]);
 
