@@ -52,12 +52,26 @@ class ManuscriptChatMessage(BaseModel):
     role: str = Field(pattern=r"^(user|model)$")
     text: str = Field(min_length=1, max_length=2000)
 
+    @field_validator("text")
+    @classmethod
+    def validate_history_text(cls, value: str) -> str:
+        if not value.strip():
+            raise ValueError("Chat history messages cannot be blank.")
+        return value.strip()
+
 
 class ManuscriptChatSubmission(BaseModel):
     story_title: str = Field(min_length=1, max_length=160)
     message: str = Field(min_length=1, max_length=2000)
     blocks: list[ManuscriptBlock] = Field(default_factory=list, max_length=2000)
     history: list[ManuscriptChatMessage] = Field(default_factory=list, max_length=10)
+
+    @field_validator("message")
+    @classmethod
+    def validate_message(cls, value: str) -> str:
+        if not value.strip():
+            raise ValueError("Write a message for Gemini first.")
+        return value.strip()
 
     @field_validator("blocks")
     @classmethod
