@@ -32,6 +32,9 @@ type ChatMessage = { role: "user" | "model"; text: string };
 type Stage = "upload" | "review" | "complete";
 
 const MAX_FILE_BYTES = 30 * 1024 * 1024;
+const MAX_EPISODE_JSON_BYTES = 2 * 1024 * 1024;
+const MAX_EPISODE_BLOCKS = 2000;
+const MAX_BLOCK_TEXT = 100000;
 const chapterPattern = /^(?:(?:chapter|episode|part|section|book)\s+(?:\d{1,3}|[ivxlcdm]+|one|two|three|four|five|six|seven|eight|nine|ten|eleven|twelve|thirteen|fourteen|fifteen|sixteen|seventeen|eighteen|nineteen|twenty)(?:\s*[:.\-–—]?\s*.*)?|\d{1,3}[.)]\s+.+|(?:prologue|epilogue|foreword|preface|introduction|afterword|acknowledgements|acknowledgments))$/i;
 
 function makeId() {
@@ -47,7 +50,20 @@ function normaliseTitle(value: string) {
 }
 function isChapterBoundary(block: Block) {
   const value = block.text.trim();
-  return value.length > 0 && value.length < 150 && (block.type === "heading" || chapterPattern.test(value) || /^[ivxlcdm]{1,8}[.)]?$/i.test(value));
+  if (!value || value.length >= 150) return false;
+  if (block.type === "heading" || chapterPattern.test(value)) return true;
+
+  // Many manuscripts use Normal/Body paragraph styles for chapter titles.
+  // Recognise typographic signals without treating every bold phrase as a chapter.
+  const hasLetters = /\\p{L}/u.test(value);
+  const allCaps = hasLetters && value === value.toLocaleUpperCase() && !/[.!?;]$/.test(value);
+  const centered = block.align === "center";
+  const shortStandaloneNumber = /^(?:\\d{1,3}|[ivxlcdm]{1,8})[.)]?$/.test(value) && (centered || block.bold);
+  const titleLike = value.length <= 110 && !/[.!?;]$/.test(value) && (
+    (centered && (block.bold || allCaps || value.length <= 75)) ||
+    (allCaps && value.length <= 85 && value.split(/\\s+/).length <= 10)
+  );
+  return shortStandaloneNumber || titleLike;
 }
 function titleFromHeading(value: string) {
   const trimmed = value.trim();
@@ -297,6 +313,28 @@ export default function ManuscriptImportAssistant({ storyId, storyTitle, section
   }
   async function importSections() {
     if (!canImport) return;
+    const pending = sections.filter(section => section.include && !section.saved);
+    for (const section of pending) {
+      if (section.title.trim().length > 200) {
+        setError('“' + section.title.slice(0, 60) + '” has a title longer than STORYFLICKS allows (200 characters). Shorten it before importing.');
+        return;
+      }
+      if (section.blocks.length > MAX_EPISODE_BLOCKS) {
+        setError('“' + section.title + '” contains ' + section.blocks.length.toLocaleString('en-GB') + ' blocks. One episode can contain at most ' + MAX_EPISODE_BLOCKS.toLocaleString('en-GB') + '. Split this section into smaller chapters before importing.');
+        return;
+      }
+      const invalidBlock = section.blocks.find(block => block.text.length > MAX_BLOCK_TEXT || (block.runs || []).length > 10000 || (block.runs || []).some(run => run.text.length > MAX_BLOCK_TEXT));
+      if (invalidBlock) {
+        setError('“' + section.title + '” contains a paragraph or formatting run that exceeds the episode content limit. Split this section at a paragraph boundary before importing.');
+        return;
+      }
+      const payload = { blocks: section.blocks.filter(block => block.type === "separator" || block.type === "spacer" || block.text.trim()) };
+      const bytes = new TextEncoder().encode(JSON.stringify(payload)).length;
+      if (bytes > MAX_EPISODE_JSON_BYTES) {
+        setError('“' + section.title + '” is ' + (bytes / (1024 * 1024)).toFixed(2) + ' MB. One episode is limited to 2 MB of content. Split this section into smaller chapters before importing.');
+        return;
+      }
+    }
     setBusy(true); setError(""); setNotice("");
     const savedIds = new Set(sections.filter(section => section.saved).map(section => section.id));
     try {
