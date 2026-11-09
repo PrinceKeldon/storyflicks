@@ -68,7 +68,7 @@ export default function CreatorTrash({ request, onChanged }: Props) {
         ? `/creator/stories/${item.id}/restore`
         : type === "episode"
           ? `/creator/episodes/${item.id}/restore`
-          : `/creator/stories/${item.story_id}/materials/${item.id}/restore`;
+          : `/creator/trash/materials/${item.id}/restore`;
       await request(path, { method: "POST" });
       setNotice(`“${item.title}” restored. Published content is not automatically republished.`);
       await load();
