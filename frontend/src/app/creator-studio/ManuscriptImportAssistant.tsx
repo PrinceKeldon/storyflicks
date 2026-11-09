@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useRef, useState } from "react";
+import { useMemo, useRef, useState, type FormEvent } from "react";
 import { importDocx, type ImportedManuscriptBlock } from "@/lib/docx-import";
 
 type Block = ImportedManuscriptBlock;
@@ -225,7 +225,7 @@ export default function ManuscriptImportAssistant({ storyId, storyTitle, section
     }
   }
 
-  async function sendGeminiMessage(event: React.FormEvent<HTMLFormElement>) {
+  async function sendGeminiMessage(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
     const message = chatInput.trim();
     if (!message || chatBusy || !sourceBlocks.length) return;
