@@ -368,6 +368,13 @@ async def create_creator_episode(
     submission: CreatorEpisodeSubmission,
     user: AuthenticatedUser = Depends(get_current_user),
 ):
+    conflicts = await supabase.admin_get(
+        "episodes",
+        {"story_id": f"eq.{story_id}", "sequence_number": f"eq.{submission.sequence_number}",
+         "deleted_at": "is.null", "select": "id,title", "limit": "1"},
+    )
+    if conflicts:
+        raise HTTPException(409, f"Chapter number {submission.sequence_number} is already used by “{conflicts[0]['title']}”. Select that chapter to revise it, or choose an unused number.")
     return await supabase.user_rpc(
         "save_creator_episode",
         {
@@ -393,6 +400,13 @@ async def update_creator_episode(
     submission: CreatorEpisodeSubmission,
     user: AuthenticatedUser = Depends(get_current_user),
 ):
+    conflicts = await supabase.admin_get(
+        "episodes",
+        {"story_id": f"eq.{story_id}", "sequence_number": f"eq.{submission.sequence_number}",
+         "id": f"neq.{episode_id}", "deleted_at": "is.null", "select": "id,title", "limit": "1"},
+    )
+    if conflicts:
+        raise HTTPException(409, f"Chapter number {submission.sequence_number} is already used by “{conflicts[0]['title']}”. Choose an unused number.")
     return await supabase.user_rpc(
         "save_creator_episode",
         {
