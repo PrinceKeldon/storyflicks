@@ -86,6 +86,9 @@ async def get_creator_dashboard(
             "stories": [],
         }
 
+    active_story_ids = [row["id"] for row in stories]
+    story_filter = f"in.({','.join(active_story_ids)})"
+
     episodes = await supabase.admin_get_all(
         "episodes",
         {
