@@ -26,6 +26,7 @@ type StoryResponse = {
     cover_url?: string | null;
   };
   episodes: Episode[];
+  materials?: {id:string;title:string;section_type:string;placement:"front_matter"|"back_matter";position:number}[];
 };
 
 const knownEpisodes: Episode[] = [
@@ -57,6 +58,8 @@ export default async function StoryDetailPage({ params }: { params: Promise<{ sl
   const sectionLabel = story?.section_label || "Episode";
   const sectionLabelPlural = story?.section_label_plural || "Episodes";
   const isChapterGuide = sectionLabel.trim().toLowerCase() === "chapter";
+  const frontMatter = (result?.materials || []).filter(item => item.placement === "front_matter");
+  const backMatter = (result?.materials || []).filter(item => item.placement === "back_matter");
 
   return (
     <main className="app-shell detail-shell">
@@ -77,6 +80,7 @@ export default async function StoryDetailPage({ params }: { params: Promise<{ sl
           {story?.id && <SupportStoryButton storyId={story.id} slug={slug} />}
         </div>
       </section>
+      {frontMatter.length>0&&<section className="episode-guide sf-reader-material-guide"><div className="section-heading"><div><p className="eyebrow">BEFORE THE STORY</p><h2>Opening pages<span>.</span></h2></div><span className="guide-count">{frontMatter.length} SECTIONS</span></div><div className="episode-list">{frontMatter.map(item=><Link href={`/stories/${slug}/material/${item.id}`} className="episode-row chapter-guide-row" key={item.id}><span className="episode-number">·</span><div className="episode-copy"><h3>{item.title}</h3></div><span className="episode-arrow">↗</span></Link>)}</div></section>}
       <section className="episode-guide" id="episodes">
         <div className="section-heading"><div><p className="eyebrow">THE STORY SO FAR</p><h2>{sectionLabelPlural} guide<span>.</span></h2></div><span className="guide-count">{episodes.length} PUBLISHED</span></div>
         <div className="episode-list">
@@ -98,6 +102,7 @@ export default async function StoryDetailPage({ params }: { params: Promise<{ sl
         </div>
         <p className="episode-note">{story?.completion_status === "completed" ? "This story is complete. Enjoy the full journey." : "More episodes are in the works. Follow the story as it unfolds."}</p>
       </section>
+      {backMatter.length>0&&<section className="episode-guide sf-reader-material-guide"><div className="section-heading"><div><p className="eyebrow">AFTER THE STORY</p><h2>Closing pages<span>.</span></h2></div><span className="guide-count">{backMatter.length} SECTIONS</span></div><div className="episode-list">{backMatter.map(item=><Link href={`/stories/${slug}/material/${item.id}`} className="episode-row chapter-guide-row" key={item.id}><span className="episode-number">·</span><div className="episode-copy"><h3>{item.title}</h3></div><span className="episode-arrow">↗</span></Link>)}</div></section>}
       <footer className="footer"><Link className="wordmark" href="/">STORY<span>FLICKS</span><i>.</i></Link><p>Stories worth staying for.</p><span>© 2026 STORYFLICKS</span></footer>
     </main>
   );
