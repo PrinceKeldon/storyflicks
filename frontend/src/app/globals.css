@@ -40,9 +40,9 @@ button{font:inherit}
 .reader-settings>div>span{display:block;font:8px 'DM Mono',monospace;letter-spacing:1px;color:var(--reader-muted);margin-bottom:10px}.setting-options{display:flex;align-items:center;gap:7px}.setting-options button{border:1px solid color-mix(in srgb,var(--reader-ink) 20%,transparent);background:transparent;color:var(--reader-ink);padding:7px 10px;font-size:10px;cursor:pointer}.setting-options button.selected{border-color:#43b889;color:#26825e}.setting-options strong{font:10px 'DM Mono',monospace}
 .reading-page{width:min(100% - 40px,690px);margin:0 auto;padding:88px 0 90px}.reading-page.reading-width-wide{width:min(100% - 40px,850px)}
 .reading-kicker{font:9px 'DM Mono',monospace;letter-spacing:1.5px;color:var(--reader-muted);text-align:center}.reading-kicker span{color:#43b889;padding:0 5px}
-.reading-page>h1{font:500 clamp(38px,6vw,58px)/1.12 'Playfair Display',Georgia,serif;text-align:center;letter-spacing:-1px;margin:23px 0 0}.reading-deck{font:italic 17px/1.7 'Playfair Display',Georgia,serif;color:var(--reader-muted);text-align:center;max-width:570px;margin:20px auto 0}
+.reading-page>h1{font:inherit;line-height:1.6;text-align:left;letter-spacing:normal;margin:0}.reading-deck{font:italic 17px/1.7 'Playfair Display',Georgia,serif;color:var(--reader-muted);text-align:center;max-width:570px;margin:20px auto 0}
 .reading-rule{display:flex;align-items:center;justify-content:center;gap:14px;margin:43px auto 48px;color:#43b889}.reading-rule:before,.reading-rule:after{content:"";width:52px;height:1px;background:color-mix(in srgb,var(--reader-ink) 22%,transparent)}
-.manuscript{font:100% 'Times New Roman',Georgia,serif;line-height:1.75;text-align:justify;hyphens:auto}.manuscript p{font-size:1em;line-height:1.75;text-indent:2.4em;margin:0 0 .9em;white-space:pre-wrap}.manuscript p:first-child:first-letter{float:left;font:64px/.85 'Playfair Display',Georgia,serif;color:#b17d4c;padding:8px 9px 0 0}.manuscript .manuscript-dialogue{margin-top:.35em;margin-bottom:.75em}.manuscript .manuscript-emphasis{text-indent:0;text-align:center;font-style:italic;margin:1.2em 0}.manuscript h2{font:500 1.55em/1.3 'Playfair Display',Georgia,serif;margin:2.3em 0 1em}.manuscript blockquote{font:italic 1.2em/1.7 'Playfair Display',Georgia,serif;border-left:2px solid #43b889;padding:5px 0 5px 24px;margin:2em 0;color:var(--reader-muted)}.manuscript-divider{text-align:center;color:#43b889;margin:2.8em 0}
+.manuscript{font:100% 'Times New Roman',Georgia,serif;line-height:1.6;text-align:initial;hyphens:manual}.manuscript p{font-size:1em;line-height:1.6;text-indent:0;margin:0;white-space:pre-wrap}.manuscript .manuscript-dialogue{margin:0;line-height:1.6}.manuscript .manuscript-emphasis{text-indent:0;text-align:initial;font-style:italic;margin:0;line-height:1.6}.manuscript h2{font:inherit;line-height:1.6;margin:0}.manuscript blockquote{font:inherit;line-height:1.6;border:0;padding:0;margin:0;color:inherit}.manuscript-divider{text-align:center;color:#43b889;margin:0}
 .reading-asset{margin:45px 0}.reading-asset img{display:block;max-width:100%;height:auto;margin:auto}
 .reading-end{text-align:center;border-top:1px solid color-mix(in srgb,var(--reader-ink) 18%,transparent);margin-top:72px;padding-top:45px}.reading-end>span{font:8px 'DM Mono',monospace;letter-spacing:1.5px;color:var(--reader-muted)}.reading-end h2{font:500 32px 'Playfair Display',Georgia,serif;margin:16px 0 8px}.reading-end p{font-size:12px;color:var(--reader-muted);margin:0 0 24px}.reading-end .primary-button{background:#43b889;color:#102019}
 .reader-footer{display:flex;justify-content:space-between;padding:22px 5.3%;border-top:1px solid color-mix(in srgb,var(--reader-ink) 16%,transparent);font:8px 'DM Mono',monospace;letter-spacing:1px;color:var(--reader-muted)}
@@ -1014,21 +1014,23 @@ html[data-theme="light"] .user-settings-footer{border-color:rgba(43,55,44,.17)}
 .story-author-byline,.feature-author-byline,.catalogue-author-byline{margin:8px 0 0;color:#e8e3d9;font-size:13px;line-height:1.5;letter-spacing:.015em}.feature-author-byline{font-size:14px;margin:10px 0 0}.catalogue-author-byline{font-size:12px;margin:5px 0 0}
 
 
-/* Manuscript fidelity: author-defined paragraph formatting takes precedence. */
-.manuscript p{line-height:1.6;text-indent:0;margin:0;white-space:pre-wrap;text-align:left}
+/* Manuscript fidelity: only line spacing is standardised. All other layout
+   comes from the imported author formatting and the block sequence. */
+.manuscript p{line-height:1.6;text-indent:0;margin:0;white-space:pre-wrap}
+.manuscript h2,.manuscript blockquote{line-height:1.6}
 .manuscript .manuscript-paragraph{font:inherit}
-.manuscript .manuscript-dialogue{margin:0;line-height:1.6}
-.manuscript .manuscript-emphasis{text-indent:0;text-align:center;font-style:italic;margin:1.1em 0}
+.manuscript .manuscript-dialogue{line-height:1.6}
+.manuscript .manuscript-emphasis{font-style:italic}
 .manuscript p strong{font-weight:700}
 .manuscript p em{font-style:italic}
 
 
 .studio-inline-format{display:flex;align-items:center;gap:10px;margin:9px 0 0;font:9px 'DM Mono',monospace;letter-spacing:.7px;color:#a5ada3}
 .studio-inline-format select{padding:7px 9px;border:1px solid #414b43;background:#111514;color:#e8e3d9;font:10px 'DM Sans',sans-serif}
-.studio-live-preview p{line-height:1.6;margin:.0 0 .45em;text-indent:0}
+.studio-live-preview p{line-height:1.6;margin:0}
 
 /* DOCX-imported intentional blank paragraphs remain distinct from section breaks. */
-.manuscript-spacer{height:0.8em;}
+.manuscript-spacer{height:1.6em;}
 
 
 /* Creator Studio: complete theme coverage and accessible working typography. */
@@ -1493,7 +1495,7 @@ html[data-theme="light"] .studio-full-manuscript-control{background:#e3f2e9;colo
 .sf-manuscript-preview-block.is-indented{padding-left:10px}
 .sf-manuscript-preview-block h4{font-size:14px}
 .sf-manuscript-preview-break{margin:12px 0;padding:6px;text-align:center;border-top:1px dashed rgba(225,220,205,.2);color:#9da39b;font-size:10px;letter-spacing:.08em}
-.sf-manuscript-preview-space{height:9px}
+.sf-manuscript-preview-space{height:1.6em}
 .sf-manuscript-preview-note{margin:8px 0}
 .sf-manuscript-split-tools{display:grid;gap:6px;margin:14px 0;padding-top:12px;border-top:1px solid rgba(225,220,205,.14)}
 .sf-manuscript-split-tools span{color:#a7aaa4;font-size:11px}

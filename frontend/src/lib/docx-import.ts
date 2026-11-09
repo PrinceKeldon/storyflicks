@@ -1,4 +1,4 @@
-export type ManuscriptRun = { text: string; bold?: boolean; italic?: boolean; underline?: boolean; strike?: boolean; superscript?: boolean; subscript?: boolean };
+export type ManuscriptRun = { text: string; bold?: boolean; italic?: boolean; underline?: boolean; strike?: boolean; superscript?: boolean; subscript?: boolean; formatting?: { color?: string; highlight?: string; fontSizePt?: number; fontFamily?: string; smallCaps?: boolean; allCaps?: boolean }; sourceFormatting?: { runPropertiesXml?: string; runStyleXmls?: string[] } };
 export type ImportedManuscriptBlock = {
   type: "paragraph" | "heading" | "quote" | "separator" | "spacer";
   text: string;
@@ -16,6 +16,14 @@ export type ImportedManuscriptBlock = {
   italic?: boolean;
   outlineLevel?: number;
   styleId?: string;
+  sectionTitle?: boolean;
+  indentRight?: number;
+  keepNext?: boolean;
+  keepLines?: boolean;
+  widowControl?: boolean;
+  pageBreakBefore?: boolean;
+  sectionBreak?: boolean;
+  sourceFormatting?: { paragraphPropertiesXml?: string; paragraphStyleXml?: string[]; documentDefaultsXml?: string };
 };
 
 function readU16(view: DataView, offset: number) { return view.getUint16(offset, true); }
@@ -92,6 +100,10 @@ export async function importDocx(file: File): Promise<ImportedManuscriptBlock[]>
     const stylesXml = new DOMParser().parseFromString(new TextDecoder().decode(stylesBytes), "application/xml");
     if (!stylesXml.getElementsByTagName("parsererror").length) stylesRoot = stylesXml.documentElement;
   } catch { /* Word documents may omit a styles part. */ }
+  const docDefaults = stylesRoot ? child(stylesRoot, "docDefaults") : null;
+  const defaultParagraphProperties = child(child(docDefaults, "pPrDefault"), "pPr");
+  const defaultRunProperties = child(child(docDefaults, "rPrDefault"), "rPr");
+  const defaultProperty = (property: string, group: "pPr" | "rPr") => child(group === "pPr" ? defaultParagraphProperties : defaultRunProperties, property);
   const styleById = new Map<string, Element>();
   if (stylesRoot) for (const style of descendants(stylesRoot, "style")) {
     const id = style.getAttribute("styleId");
@@ -117,18 +129,20 @@ export async function importDocx(file: File): Promise<ImportedManuscriptBlock[]>
   };
   const paragraphs = Array.from(body.children).filter((node) => node.localName === "p");
   const blocks: ImportedManuscriptBlock[] = [];
+  let documentDefaultsAttached = false;
   for (const paragraph of paragraphs) {
     const pPr = child(paragraph, "pPr");
     const pStyleId = child(pPr, "pStyle")?.getAttribute("val") || "";
     const pStyle = pStyleId.toLowerCase();
     const pStyleChain = styleChain(pStyleId);
-    const alignmentNode = child(pPr, "jc") || inheritedProperty(pStyleChain, "jc", "pPr");
+    const alignmentNode = child(pPr, "jc") || inheritedProperty(pStyleChain, "jc", "pPr") || defaultProperty("jc", "pPr");
     const alignment = alignmentNode?.getAttribute("val");
-    const ind = child(pPr, "ind") || inheritedProperty(pStyleChain, "ind", "pPr");
+    const ind = child(pPr, "ind") || inheritedProperty(pStyleChain, "ind", "pPr") || defaultProperty("ind", "pPr");
     const left = twips(ind?.getAttribute("left") || ind?.getAttribute("start") || null);
     const firstLine = twips(ind?.getAttribute("firstLine") || null);
     const hanging = twips(ind?.getAttribute("hanging") || null);
-    const spacing = child(pPr, "spacing") || inheritedProperty(pStyleChain, "spacing", "pPr");
+    const right = twips(ind?.getAttribute("right") || ind?.getAttribute("end") || null);
+    const spacing = child(pPr, "spacing") || inheritedProperty(pStyleChain, "spacing", "pPr") || defaultProperty("spacing", "pPr");
     const before = twips(spacing?.getAttribute("before") || null);
     const after = twips(spacing?.getAttribute("after") || null);
     const lineRaw = spacing?.getAttribute("line");
@@ -147,9 +161,32 @@ export async function importDocx(file: File): Promise<ImportedManuscriptBlock[]>
       const runValue: ManuscriptRun = { text };
       const runStyleId = child(rPr, "rStyle")?.getAttribute("val") || "";
       const runStyleChain = styleChain(runStyleId);
+      const runStyleXmls = runStyleChain.map((style) => new XMLSerializer().serializeToString(style));
+      if (rPr || runStyleXmls.length) runValue.sourceFormatting = {
+        ...(rPr ? { runPropertiesXml: new XMLSerializer().serializeToString(rPr) } : {}),
+        ...(runStyleXmls.length ? { runStyleXmls } : {}),
+      };
+      const property = (name: string) => child(rPr, name) || inheritedProperty(runStyleChain, name, "rPr") || inheritedProperty(pStyleChain, name, "rPr") || defaultProperty(name, "rPr");
+      const color = property("color")?.getAttribute("val");
+      const highlight = property("highlight")?.getAttribute("val");
+      const sizeRaw = property("sz")?.getAttribute("val");
+      const fonts = property("rFonts");
+      const fontFamily = fonts?.getAttribute("ascii") || fonts?.getAttribute("hAnsi") || fonts?.getAttribute("eastAsia");
+      const smallCaps = onOff(rPr, "smallCaps") ?? onOffNode(inheritedProperty(runStyleChain, "smallCaps", "rPr")) ?? onOffNode(inheritedProperty(pStyleChain, "smallCaps", "rPr")) ?? onOffNode(defaultProperty("smallCaps", "rPr"));
+      const allCaps = onOff(rPr, "caps") ?? onOffNode(inheritedProperty(runStyleChain, "caps", "rPr")) ?? onOffNode(inheritedProperty(pStyleChain, "caps", "rPr")) ?? onOffNode(defaultProperty("caps", "rPr"));
+      if (color || highlight || sizeRaw || fontFamily || smallCaps !== undefined || allCaps !== undefined) runValue.formatting = {
+        ...(color && color !== "auto" ? { color: "#" + color.replace(/^#/, "") } : {}),
+        ...(highlight && highlight !== "none" ? { highlight } : {}),
+        ...(sizeRaw && Number.isFinite(Number(sizeRaw)) ? { fontSizePt: Number(sizeRaw) / 2 } : {}),
+        ...(fontFamily ? { fontFamily } : {}),
+        ...(smallCaps ? { smallCaps: true } : {}),
+        ...(allCaps ? { allCaps: true } : {}),
+      };
       for (const [key, tag] of [["bold", "b"], ["italic", "i"], ["underline", "u"], ["strike", "strike"]] as const) {
         const direct = onOff(rPr, tag);
-        const inherited = onOffNode(inheritedProperty(runStyleChain, tag, "rPr") || inheritedProperty(pStyleChain, tag, "rPr"));
+        const runStyleProperty = inheritedProperty(runStyleChain, tag, "rPr");
+        const paragraphStyleProperty = inheritedProperty(pStyleChain, tag, "rPr");
+        const inherited = runStyleProperty ? onOffNode(runStyleProperty) : paragraphStyleProperty ? onOffNode(paragraphStyleProperty) : onOffNode(defaultProperty(tag, "rPr"));
         const flag = direct !== undefined ? direct : inherited;
         if (flag !== undefined) runValue[key] = flag;
       }
@@ -159,13 +196,9 @@ export async function importDocx(file: File): Promise<ImportedManuscriptBlock[]>
       runs.push(runValue);
     }
     const text = runs.map((run) => run.text).join("");
-    const isEmpty = !text.trim();
-    const isSectionBreak = !!child(pPr, "pageBreakBefore") || !!child(pPr, "sectPr");
-    // Empty Word paragraphs are commonly used as visual separators between every
-    // manuscript paragraph. Normal paragraph spacing is controlled by paragraph
-    // formatting metadata; do not turn those empty lines into extra spacer blocks.
-    // Explicit section/page breaks remain intact.
-    if (isEmpty && !isSectionBreak) continue;
+    const pageBreakBefore = !!child(pPr, "pageBreakBefore");
+    const sectionBreak = !!child(pPr, "sectPr");
+    const isSectionBreak = sectionBreak;
     const outlineNode = child(pPr, "outlineLvl") || inheritedProperty(pStyleChain, "outlineLvl", "pPr");
     const outlineLevelRaw = outlineNode?.getAttribute("val");
     const outlineLevel = outlineLevelRaw !== null && outlineLevelRaw !== undefined ? Number(outlineLevelRaw) : undefined;
@@ -173,8 +206,9 @@ export async function importDocx(file: File): Promise<ImportedManuscriptBlock[]>
     const visibleRuns = runs.filter((run) => run.text.trim().length > 0);
     const allRunsBold = visibleRuns.length > 0 && visibleRuns.every((run) => run.bold === true);
     const isQuote = pStyle.includes("quote") || pStyle.includes("intensequote");
+    const includeDocumentDefaults = !!docDefaults && !documentDefaultsAttached;
     const block: ImportedManuscriptBlock = {
-      type: isSectionBreak ? "separator" : isEmpty ? "spacer" : isHeading ? "heading" : isQuote ? "quote" : "paragraph",
+      type: isSectionBreak ? "separator" : isHeading ? "heading" : isQuote ? "quote" : "paragraph",
       text,
       ...(runs.length ? { runs } : {}),
       ...(pStyleId ? { styleId: pStyleId } : {}),
@@ -183,13 +217,25 @@ export async function importDocx(file: File): Promise<ImportedManuscriptBlock[]>
       ...(left !== undefined ? { indentLeft: left / 12 } : {}),
       ...(firstLine !== undefined ? { indentFirstLine: firstLine / 12 } : {}),
       ...(hanging !== undefined ? { indentHanging: hanging / 12 } : {}),
-      ...(left === undefined && firstLine !== undefined ? { indent: Math.max(0, Math.min(8, Math.round(firstLine / 36))) } : {}),
+      ...(right !== undefined ? { indentRight: right / 12 } : {}),
+      ...(pageBreakBefore ? { pageBreakBefore: true } : {}),
+      ...(sectionBreak ? { sectionBreak: true } : {}),
+      ...(onOff(pPr, "keepNext") !== undefined ? { keepNext: onOff(pPr, "keepNext") } : {}),
+      ...(onOff(pPr, "keepLines") !== undefined ? { keepLines: onOff(pPr, "keepLines") } : {}),
+      ...(onOff(pPr, "widowControl") !== undefined ? { widowControl: onOff(pPr, "widowControl") } : {}),
+      ...(left === undefined && firstLine !== undefined ? { indent: firstLine / 36 } : {}),
       ...(alignment === "left" || alignment === "center" || alignment === "right" || alignment === "both" ? { align: alignment === "both" ? "justify" : alignment } : {}),
       ...(before !== undefined ? { spacingBefore: before } : {}),
       ...(after !== undefined ? { spacingAfter: after } : {}),
       ...(lineSpacing !== undefined && Number.isFinite(lineSpacing) ? { lineSpacing, lineSpacingMode: lineRule === "exact" ? "exact" as const : lineRule === "atLeast" ? "atLeast" as const : "auto" as const } : {}),
+      ...(pPr || pStyleChain.length || includeDocumentDefaults ? { sourceFormatting: {
+        ...(pPr ? { paragraphPropertiesXml: new XMLSerializer().serializeToString(pPr) } : {}),
+        ...(pStyleChain.length ? { paragraphStyleXml: pStyleChain.map((style) => new XMLSerializer().serializeToString(style)) } : {}),
+        ...(includeDocumentDefaults ? { documentDefaultsXml: new XMLSerializer().serializeToString(docDefaults!) } : {}),
+      } } : {}),
     };
     blocks.push(block);
+    if (includeDocumentDefaults) documentDefaultsAttached = true;
   }
   if (!blocks.length) throw new Error("No paragraphs were found in this Word document.");
   return blocks;
