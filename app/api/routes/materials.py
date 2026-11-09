@@ -1,4 +1,5 @@
 from typing import Any, Literal
+from datetime import datetime, timezone
 from uuid import UUID
 import json
 from fastapi import APIRouter, Depends, HTTPException
@@ -56,7 +57,7 @@ async def update_material(story_id:UUID,material_id:UUID,body:MaterialSubmission
  await editor_access(story_id,user)
  found=await supabase.admin_get("story_material_sections",{"select":"id","id":f"eq.{material_id}","story_id":f"eq.{story_id}","limit":"1"})
  if not found: raise HTTPException(404,"Story material section not found.")
- await supabase.admin_patch("story_material_sections",{"id":f"eq.{material_id}","story_id":f"eq.{story_id}"},{"title":body.title,"section_type":body.section_type,"placement":body.placement,"position":body.position,"content":body.content,"publication_status":body.publication_status,"is_visible":body.is_visible,"updated_at":"now()"})
+ await supabase.admin_patch("story_material_sections",{"id":f"eq.{material_id}","story_id":f"eq.{story_id}"},{"title":body.title,"section_type":body.section_type,"placement":body.placement,"position":body.position,"content":body.content,"publication_status":body.publication_status,"is_visible":body.is_visible,"updated_at":datetime.now(timezone.utc).isoformat()})
  rows=await supabase.admin_get("story_material_sections",{"select":"id,story_id,title,section_type,placement,position,content,publication_status,is_visible,created_at,updated_at","id":f"eq.{material_id}","limit":"1"})
  return rows[0] if rows else {"id":str(material_id)}
 
