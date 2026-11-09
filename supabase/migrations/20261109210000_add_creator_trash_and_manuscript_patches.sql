@@ -195,7 +195,9 @@ begin
       or exists(select 1 from public.reader_reactions where episode_id=any(coalesce(v_episode_ids,'{}'::uuid[])))
       or exists(select 1 from public.episode_participations where episode_id=any(coalesce(v_episode_ids,'{}'::uuid[])))
       or exists(select 1 from public.episode_entitlements where episode_id=any(coalesce(v_episode_ids,'{}'::uuid[])) or source_episode_id=any(coalesce(v_episode_ids,'{}'::uuid[])))
-      or exists(select 1 from public.episode_unlock_events where source_episode_id=any(coalesce(v_episode_ids,'{}'::uuid[])) or unlocked_episode_id=any(coalesce(v_episode_ids,'{}'::uuid[]))) then
+      or exists(select 1 from public.episode_unlock_events where source_episode_id=any(coalesce(v_episode_ids,'{}'::uuid[])) or unlocked_episode_id=any(coalesce(v_episode_ids,'{}'::uuid[])))
+      or exists(select 1 from public.episode_assets where episode_id=any(coalesce(v_episode_ids,'{}'::uuid[])))
+      or exists(select 1 from public.stories where id=p_entity_id and cover_path is not null) then
       raise exception 'This story has reader activity or support records. It can stay in Trash, but permanent deletion is blocked to preserve those records.';
     end if;
     delete from public.publication_history where story_id=p_entity_id;
@@ -210,7 +212,8 @@ begin
       or exists(select 1 from public.reader_reactions where episode_id=p_entity_id)
       or exists(select 1 from public.episode_participations where episode_id=p_entity_id)
       or exists(select 1 from public.episode_entitlements where episode_id=p_entity_id or source_episode_id=p_entity_id)
-      or exists(select 1 from public.episode_unlock_events where source_episode_id=p_entity_id or unlocked_episode_id=p_entity_id) then
+      or exists(select 1 from public.episode_unlock_events where source_episode_id=p_entity_id or unlocked_episode_id=p_entity_id)
+      or exists(select 1 from public.episode_assets where episode_id=p_entity_id) then
       raise exception 'This chapter has reader activity or access records. It can stay in Trash, but permanent deletion is blocked to preserve those records.';
     end if;
     delete from public.episodes where id=p_entity_id;
