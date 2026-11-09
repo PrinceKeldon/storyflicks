@@ -14,6 +14,9 @@ export type ImportedManuscriptBlock = {
   lineSpacingMode?: "auto" | "exact" | "atLeast";
   bold?: boolean;
   italic?: boolean;
+  bold?: boolean;
+  outlineLevel?: number;
+  styleId?: string;
 };
 
 function readU16(view: DataView, offset: number) { return view.getUint16(offset, true); }
@@ -157,12 +160,20 @@ export async function importDocx(file: File): Promise<ImportedManuscriptBlock[]>
     const text = runs.map((run) => run.text).join("");
     const isEmpty = !text.trim();
     const isSectionBreak = !!child(pPr, "pageBreakBefore") || !!child(pPr, "sectPr");
-    const isHeading = /^heading[1-6]$/.test(pStyle) || pStyle === "title" || pStyle === "subtitle";
+    const outlineNode = child(pPr, "outlineLvl") || inheritedProperty(pStyleChain, "outlineLvl", "pPr");
+    const outlineLevelRaw = outlineNode?.getAttribute("val");
+    const outlineLevel = outlineLevelRaw !== null && outlineLevelRaw !== undefined ? Number(outlineLevelRaw) : undefined;
+    const isHeading = /^heading[1-6]$/.test(pStyle) || pStyle === "title" || pStyle === "subtitle" || (outlineLevel !== undefined && Number.isFinite(outlineLevel) && outlineLevel <= 5);
+    const visibleRuns = runs.filter((run) => run.text.trim().length > 0);
+    const allRunsBold = visibleRuns.length > 0 && visibleRuns.every((run) => run.bold === true);
     const isQuote = pStyle.includes("quote") || pStyle.includes("intensequote");
     const block: ImportedManuscriptBlock = {
       type: isSectionBreak ? "separator" : isEmpty ? "spacer" : isHeading ? "heading" : isQuote ? "quote" : "paragraph",
       text,
       ...(runs.length ? { runs } : {}),
+      ...(pStyleId ? { styleId: pStyleId } : {}),
+      ...(outlineLevel !== undefined && Number.isFinite(outlineLevel) ? { outlineLevel } : {}),
+      ...(allRunsBold ? { bold: true } : {}),
       ...(left !== undefined ? { indentLeft: left / 12 } : {}),
       ...(firstLine !== undefined ? { indentFirstLine: firstLine / 12 } : {}),
       ...(hanging !== undefined ? { indentHanging: hanging / 12 } : {}),
