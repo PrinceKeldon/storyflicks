@@ -398,6 +398,11 @@ export default function ManuscriptImportAssistant({ storyId, storyTitle, section
             season_id: null, sequence_number: existing?.sequence_number ?? nextSequence++,
             title: section.title.trim(), synopsis: null, content,
           }) });
+          if (existing) {
+            await request("/creator/stories/" + storyId + "/episodes/" + existing.id + "/title", {
+              method: "PATCH", body: JSON.stringify({ title: section.title.trim() }),
+            });
+          }
         }
         savedIds.add(section.id);
         setSections(current => current.map(item => item.id === section.id ? { ...item, saved: true } : item));
