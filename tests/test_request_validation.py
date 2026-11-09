@@ -13,6 +13,7 @@ from app.api.routes.episodes import (
     ReadingProgressSubmission,
     ReviewSubmission,
 )
+from app.api.routes.manuscript import ManuscriptAnalysisSubmission, ManuscriptChatSubmission
 
 
 class CreatorRequestValidationTests(unittest.TestCase):
@@ -52,6 +53,44 @@ class CreatorRequestValidationTests(unittest.TestCase):
             )
         with self.assertRaises(ValidationError):
             AuthorReplyBodySubmission(body="x" * 10001)
+
+
+    def test_manuscript_analysis_and_chat_requests_are_bounded(self):
+        block = {"type": "paragraph", "text": "A manuscript paragraph."}
+        analysis = ManuscriptAnalysisSubmission(
+            story_title="A Story",
+            blocks=[block],
+            author_instructions="Keep the prologue separate.",
+        )
+        self.assertEqual(analysis.author_instructions, "Keep the prologue separate.")
+        with self.assertRaises(ValidationError):
+            ManuscriptAnalysisSubmission(
+                story_title="A Story",
+                blocks=[block],
+                author_instructions="x" * 4001,
+            )
+
+        chat = ManuscriptChatSubmission(
+            story_title="A Story",
+            message="Please explain the chapter boundaries.",
+            blocks=[block],
+            history=[{"role": "user", "text": "Keep the prologue separate."}],
+        )
+        self.assertEqual(chat.history[0].role, "user")
+        with self.assertRaises(ValidationError):
+            ManuscriptChatSubmission(story_title="A Story", message=" ")
+        with self.assertRaises(ValidationError):
+            ManuscriptChatSubmission(
+                story_title="A Story",
+                message="Hello",
+                history=[{"role": "assistant", "text": "Not an allowed Gemini role."}],
+            )
+        with self.assertRaises(ValidationError):
+            ManuscriptChatSubmission(
+                story_title="A Story",
+                message="Hello",
+                history=[{"role": "user", "text": "x" * 2001}],
+            )
 
     def test_reader_contributions_have_character_caps(self):
         self.assertEqual(len(ReviewSubmission(body="A review").body), 8)
