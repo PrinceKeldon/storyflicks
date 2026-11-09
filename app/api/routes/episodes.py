@@ -49,6 +49,7 @@ async def get_episode_and_story(episode_id: UUID):
         {
             "select": "id,story_id,sequence_number,title,synopsis,content,publication_status,published_at",
             "id": f"eq.{episode_id}",
+            "deleted_at": "is.null",
             "limit": "1",
         },
     )
@@ -63,6 +64,7 @@ async def get_episode_and_story(episode_id: UUID):
         {
             "select": "id,slug,title,publication_status,first_episode_free,section_label,section_label_plural",
             "id": f"eq.{episode['story_id']}",
+            "deleted_at": "is.null",
             "limit": "1",
         },
     )

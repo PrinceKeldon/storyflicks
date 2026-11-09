@@ -41,7 +41,7 @@ async def editor_access(story_id:UUID,user:AuthenticatedUser):
 @router.get("/creator/stories/{story_id}/materials")
 async def list_materials(story_id:UUID,user:AuthenticatedUser=Depends(get_current_user)):
  await editor_access(story_id,user)
- rows=await supabase.admin_get("story_material_sections",{"select":"id,story_id,title,section_type,placement,position,content,publication_status,is_visible,created_at,updated_at","story_id":f"eq.{story_id}","order":"placement.asc,position.asc,created_at.asc","limit":"200"})
+ rows=await supabase.admin_get("story_material_sections",{"select":"id,story_id,title,section_type,placement,position,content,publication_status,is_visible,created_at,updated_at","story_id":f"eq.{story_id}","deleted_at":"is.null","order":"placement.asc,position.asc,created_at.asc","limit":"200"})
  return {"materials":rows}
 
 @router.post("/creator/stories/{story_id}/materials")
@@ -55,16 +55,16 @@ async def create_material(story_id:UUID,body:MaterialSubmission,user:Authenticat
 @router.put("/creator/stories/{story_id}/materials/{material_id}")
 async def update_material(story_id:UUID,material_id:UUID,body:MaterialSubmission,user:AuthenticatedUser=Depends(get_current_user)):
  await editor_access(story_id,user)
- found=await supabase.admin_get("story_material_sections",{"select":"id","id":f"eq.{material_id}","story_id":f"eq.{story_id}","limit":"1"})
+ found=await supabase.admin_get("story_material_sections",{"select":"id","id":f"eq.{material_id}","story_id":f"eq.{story_id}","deleted_at":"is.null","limit":"1"})
  if not found: raise HTTPException(404,"Story material section not found.")
- await supabase.admin_patch("story_material_sections",{"id":f"eq.{material_id}","story_id":f"eq.{story_id}"},{"title":body.title,"section_type":body.section_type,"placement":body.placement,"position":body.position,"content":body.content,"publication_status":body.publication_status,"is_visible":body.is_visible,"updated_at":datetime.now(timezone.utc).isoformat()})
+ await supabase.admin_patch("story_material_sections",{"id":f"eq.{material_id}","story_id":f"eq.{story_id}","deleted_at":"is.null"},{"title":body.title,"section_type":body.section_type,"placement":body.placement,"position":body.position,"content":body.content,"publication_status":body.publication_status,"is_visible":body.is_visible,"updated_at":datetime.now(timezone.utc).isoformat()})
  rows=await supabase.admin_get("story_material_sections",{"select":"id,story_id,title,section_type,placement,position,content,publication_status,is_visible,created_at,updated_at","id":f"eq.{material_id}","limit":"1"})
  return rows[0] if rows else {"id":str(material_id)}
 
 @router.post("/creator/stories/{story_id}/materials/{material_id}/hide")
 async def hide_material(story_id:UUID,material_id:UUID,user:AuthenticatedUser=Depends(get_current_user)):
  await editor_access(story_id,user)
- found=await supabase.admin_get("story_material_sections",{"select":"id","id":f"eq.{material_id}","story_id":f"eq.{story_id}","limit":"1"})
+ found=await supabase.admin_get("story_material_sections",{"select":"id","id":f"eq.{material_id}","story_id":f"eq.{story_id}","deleted_at":"is.null","limit":"1"})
  if not found: raise HTTPException(404,"Story material section not found.")
  await supabase.admin_patch("story_material_sections",{"id":f"eq.{material_id}","story_id":f"eq.{story_id}"},{"is_visible":False,"publication_status":"draft"})
  return {"id":str(material_id),"hidden":True}
@@ -81,6 +81,6 @@ async def restore_material(story_id:UUID,material_id:UUID,user:AuthenticatedUser
 async def read_material(slug:str,material_id:UUID):
  stories=await supabase.admin_get("stories",{"select":"id,slug,title,publication_status","slug":f"eq.{slug}","publication_status":"eq.published","limit":"1"})
  if not stories: raise HTTPException(404,"Story not found.")
- rows=await supabase.admin_get("story_material_sections",{"select":"id,title,section_type,placement,content","id":f"eq.{material_id}","story_id":f"eq.{stories[0]['id']}","publication_status":"eq.published","is_visible":"eq.true","limit":"1"})
+ rows=await supabase.admin_get("story_material_sections",{"select":"id,title,section_type,placement,content","id":f"eq.{material_id}","story_id":f"eq.{stories[0]['id']}","publication_status":"eq.published","is_visible":"eq.true","deleted_at":"is.null","limit":"1"})
  if not rows: raise HTTPException(404,"Story material not found.")
  return {"story":stories[0],"material":rows[0]}

@@ -24,6 +24,7 @@ async def list_creator_episode_revisions(
         "episodes",
         {
             "id": f"eq.{episode_id}",
+            "deleted_at": "is.null",
             "select": "id,story_id,sequence_number,title,publication_status,scheduled_at,published_at",
             "limit": "1",
         },

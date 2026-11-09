@@ -8,7 +8,7 @@ from pydantic import BaseModel, Field, field_validator
 from app.api.deps import get_current_user
 from app.api.routes.creator_assets import require_story_editor
 from app.core.security import AuthenticatedUser
-from app.services.gemini import analyse_manuscript_structure, chat_about_manuscript
+from app.services.gemini import analyse_manuscript_structure, chat_about_manuscript, propose_manuscript_patch
 
 router = APIRouter()
 
@@ -94,4 +94,37 @@ async def chat_with_creator_manuscript(
         submission.message,
         [block.model_dump() for block in submission.blocks],
         [item.model_dump() for item in submission.history],
+    )
+
+
+class ManuscriptPatchSubmission(BaseModel):
+    story_title: str = Field(min_length=1, max_length=160)
+    section_title: str = Field(min_length=1, max_length=200)
+    target_text: str = Field(min_length=1, max_length=100000)
+    instruction: str = Field(min_length=3, max_length=2000)
+    before_context: str = Field(default="", max_length=5000)
+    after_context: str = Field(default="", max_length=5000)
+
+    @field_validator("target_text", "instruction")
+    @classmethod
+    def validate_patch_text(cls, value: str) -> str:
+        if not value.strip():
+            raise ValueError("Selected manuscript text and editing instructions cannot be blank.")
+        return value
+
+
+@router.post("/creator/stories/{story_id}/manuscript/patch")
+async def propose_creator_manuscript_patch(
+    story_id: UUID,
+    submission: ManuscriptPatchSubmission,
+    user: AuthenticatedUser = Depends(get_current_user),
+):
+    await require_story_editor(story_id, user)
+    return await propose_manuscript_patch(
+        submission.story_title,
+        submission.section_title,
+        submission.target_text,
+        submission.instruction,
+        submission.before_context,
+        submission.after_context,
     )

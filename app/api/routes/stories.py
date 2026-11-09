@@ -16,6 +16,7 @@ async def list_stories(
     params = {
         "select": "id,slug,title,author_name,tagline,synopsis,genres,cover_path,publication_status,completion_status,first_episode_free,section_label,section_label_plural,published_at",
         "publication_status": "eq.published",
+        "deleted_at": "is.null",
         "order": "published_at.desc",
         "limit": "100",
     }
@@ -52,6 +53,7 @@ async def get_story(slug: str = Path(pattern=r"^[a-z0-9]+(-[a-z0-9]+)*$", max_le
             "select": "id,slug,title,author_name,tagline,synopsis,genres,cover_path,publication_status,first_episode_free,section_label,section_label_plural,published_at",
             "slug": f"eq.{slug}",
             "publication_status": "eq.published",
+            "deleted_at": "is.null",
             "limit": "1",
         },
     )
@@ -65,6 +67,7 @@ async def get_story(slug: str = Path(pattern=r"^[a-z0-9]+(-[a-z0-9]+)*$", max_le
             "select": "id,sequence_number,title,synopsis,publication_status,published_at",
             "story_id": f"eq.{story['id']}",
             "publication_status": "eq.published",
+            "deleted_at": "is.null",
             "order": "sequence_number.asc",
         },
     )
@@ -75,6 +78,7 @@ async def get_story(slug: str = Path(pattern=r"^[a-z0-9]+(-[a-z0-9]+)*$", max_le
             "story_id": f"eq.{story['id']}",
             "publication_status": "eq.published",
             "is_visible": "eq.true",
+            "deleted_at": "is.null",
             "order": "placement.asc,position.asc",
             "limit": "100",
         },

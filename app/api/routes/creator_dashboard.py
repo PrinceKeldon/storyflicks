@@ -74,6 +74,7 @@ async def get_creator_dashboard(
         "stories",
         {
             "id": story_filter,
+            "deleted_at": "is.null",
             "select": "id,slug,title,publication_status,completion_status",
             "order": "id.asc",
         },
@@ -85,10 +86,16 @@ async def get_creator_dashboard(
             "stories": [],
         }
 
+    active_story_ids = [row["id"] for row in stories]
+    story_filter = f"in.({','.join(active_story_ids)})"
+
+    active_story_ids = [row["id"] for row in stories]
+    story_filter = f"in.({','.join(active_story_ids)})" if active_story_ids else "in.(00000000-0000-0000-0000-000000000000)"
     episodes = await supabase.admin_get_all(
         "episodes",
         {
             "story_id": story_filter,
+            "deleted_at": "is.null",
             "select": "id,story_id,sequence_number,publication_status",
             "order": "story_id.asc,sequence_number.asc,id.asc",
         },
@@ -328,12 +335,13 @@ async def get_creator_analytics(
 
     story_filter = f"in.({','.join(sorted(allowed_story_ids))})"
     stories = await supabase.admin_get_all(
-        "stories", {"id": story_filter, "select": "id,title,slug", "order": "id.asc"}
+        "stories", {"id": story_filter, "deleted_at": "is.null", "select": "id,title,slug", "order": "id.asc"}
     )
     episodes = await supabase.admin_get_all(
         "episodes",
         {
             "story_id": story_filter,
+            "deleted_at": "is.null",
             "publication_status": "eq.published",
             "select": "id,story_id,title,sequence_number,published_at",
             "order": "sequence_number.asc,id.asc",
