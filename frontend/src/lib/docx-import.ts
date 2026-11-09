@@ -14,7 +14,6 @@ export type ImportedManuscriptBlock = {
   lineSpacingMode?: "auto" | "exact" | "atLeast";
   bold?: boolean;
   italic?: boolean;
-  bold?: boolean;
   outlineLevel?: number;
   styleId?: string;
 };
