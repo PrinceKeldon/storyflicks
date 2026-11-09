@@ -1,7 +1,7 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
-from app.api.routes import account, creator, creator_assets, creator_dashboard, creator_revisions, episodes, internal, library, manuscript, materials, notifications, stories, support
+from app.api.routes import account, creator, creator_content, creator_assets, creator_dashboard, creator_revisions, episodes, internal, library, manuscript, materials, notifications, stories, support
 from app.core.config import settings
 from app.core.middleware import RequestSizeLimitMiddleware
 
@@ -23,6 +23,7 @@ app.include_router(episodes.router, prefix=settings.api_v1_prefix, tags=["Episod
 app.include_router(library.router, prefix=settings.api_v1_prefix, tags=["Library"])
 app.include_router(notifications.router, prefix=settings.api_v1_prefix, tags=["Notifications"])
 app.include_router(creator.router, prefix=settings.api_v1_prefix, tags=["Creator Studio"])
+app.include_router(creator_content.router, prefix=settings.api_v1_prefix, tags=["Creator Content"])
 app.include_router(creator_assets.router, prefix=settings.api_v1_prefix, tags=["Creator Assets"])
 app.include_router(creator_revisions.router, prefix=settings.api_v1_prefix, tags=["Creator Revisions"])
 app.include_router(creator_dashboard.router, prefix=settings.api_v1_prefix, tags=["Creator Dashboard"])
