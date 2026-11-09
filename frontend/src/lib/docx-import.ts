@@ -161,6 +161,11 @@ export async function importDocx(file: File): Promise<ImportedManuscriptBlock[]>
     const text = runs.map((run) => run.text).join("");
     const isEmpty = !text.trim();
     const isSectionBreak = !!child(pPr, "pageBreakBefore") || !!child(pPr, "sectPr");
+    // Empty Word paragraphs are commonly used as visual separators between every
+    // manuscript paragraph. Normal paragraph spacing is controlled by paragraph
+    // formatting metadata; do not turn those empty lines into extra spacer blocks.
+    // Explicit section/page breaks remain intact.
+    if (isEmpty && !isSectionBreak) continue;
     const outlineNode = child(pPr, "outlineLvl") || inheritedProperty(pStyleChain, "outlineLvl", "pPr");
     const outlineLevelRaw = outlineNode?.getAttribute("val");
     const outlineLevel = outlineLevelRaw !== null && outlineLevelRaw !== undefined ? Number(outlineLevelRaw) : undefined;
