@@ -51,6 +51,7 @@ returns jsonb language plpgsql security definer set search_path = '' as $$
 declare v_user uuid := auth.uid(); v_story public.stories%rowtype;
 begin
   if v_user is null then raise exception 'Authentication required'; end if;
+  if not exists(select 1 from public.creator_profiles where id=v_user and status='active') then raise exception 'An active creator profile is required'; end if;
   if not exists(select 1 from public.creator_profiles where id=v_user and status='active') then
     raise exception 'An active creator profile is required';
   end if;
