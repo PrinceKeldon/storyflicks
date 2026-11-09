@@ -1734,3 +1734,80 @@ html[data-theme="light"] .studio-shell :is(.studio-bulk-row>span,
   .sf-manuscript-warnings p, .sf-manuscript-split-tools button) {
   color: #46564a !important;
 }
+
+
+/* My Library follows the account-wide appearance preference. */
+html[data-theme="light"] body {
+  background: #f5f3ed;
+  color: #29332c;
+}
+html[data-theme="light"] .library-shell {
+  --paper: #29332c;
+  --ink: #f5f3ed;
+  --line: rgba(41, 51, 44, .16);
+  background: #f5f3ed;
+  color: #29332c;
+}
+html[data-theme="light"] .library-header,
+html[data-theme="light"] .library-hero,
+html[data-theme="light"] .library-tabs,
+html[data-theme="light"] .library-footer {
+  border-color: rgba(41, 51, 44, .17);
+}
+html[data-theme="light"] .library-header nav a { color: #59665b; }
+html[data-theme="light"] .library-header nav a.active,
+html[data-theme="light"] .library-tabs button.active { color: #29332c; }
+html[data-theme="light"] .library-header-link,
+html[data-theme="light"] .library-footer>span,
+html[data-theme="light"] .library-footer>a:last-child,
+html[data-theme="light"] .library-hero>div:first-child>p:last-child,
+html[data-theme="light"] .library-tabs button,
+html[data-theme="light"] .library-shelf-heading>small,
+html[data-theme="light"] .library-story-tagline,
+html[data-theme="light"] .library-story-meta,
+html[data-theme="light"] .library-card-footer>span,
+html[data-theme="light"] .library-card-footer button,
+html[data-theme="light"] .library-empty-shelf p,
+html[data-theme="light"] .library-empty-large p,
+html[data-theme="light"] .library-contribution-type,
+html[data-theme="light"] .library-contribution-copy>p:not(.eyebrow),
+html[data-theme="light"] .library-contribution-copy small,
+html[data-theme="light"] .library-reaction-row small {
+  color: #59665b;
+}
+html[data-theme="light"] .library-story-card,
+html[data-theme="light"] .library-contribution-card,
+html[data-theme="light"] .library-reaction-row {
+  background: #fffefa;
+  border-color: #d8dcd3;
+}
+html[data-theme="light"] .library-card-footer { border-color: #d8dcd3; }
+html[data-theme="light"] .library-progress-track { background: #dce2da; }
+html[data-theme="light"] .library-empty-shelf,
+html[data-theme="light"] .library-empty-large {
+  background: #eeefe8;
+  border-color: #cbd3c9;
+}
+html[data-theme="light"] .library-empty-large h3,
+html[data-theme="light"] .library-contribution-group>h3,
+html[data-theme="light"] .library-contribution-copy h4,
+html[data-theme="light"] .library-reaction-row strong,
+html[data-theme="light"] .library-story-info h3,
+html[data-theme="light"] .library-shelf-heading h2 {
+  color: #29332c;
+}
+html[data-theme="light"] .library-contribution-type>span {
+  border-color: #aeb9ad;
+  color: #435448;
+}
+html[data-theme="light"] .library-contribution-type>span.private { border-color: #b88b61; color: #80552e; }
+html[data-theme="light"] .library-contribution-type>span.public { border-color: #6ba486; color: #286b4c; }
+html[data-theme="light"] .library-state {
+  background: #f5f3ed;
+  color: #29332c;
+}
+html[data-theme="light"] .library-state>p:not(.eyebrow) { color: #59665b; }
+html[data-theme="light"] .library-state .library-secondary-link { color: #435448; }
+@media(max-width:700px) {
+  html[data-theme="light"] .library-header nav { border-top-color: rgba(41, 51, 44, .12); }
+}
