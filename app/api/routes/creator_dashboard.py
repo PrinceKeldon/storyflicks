@@ -74,6 +74,7 @@ async def get_creator_dashboard(
         "stories",
         {
             "id": story_filter,
+            "deleted_at": "is.null",
             "select": "id,slug,title,publication_status,completion_status",
             "order": "id.asc",
         },
@@ -89,6 +90,7 @@ async def get_creator_dashboard(
         "episodes",
         {
             "story_id": story_filter,
+            "deleted_at": "is.null",
             "select": "id,story_id,sequence_number,publication_status",
             "order": "story_id.asc,sequence_number.asc,id.asc",
         },
@@ -334,6 +336,7 @@ async def get_creator_analytics(
         "episodes",
         {
             "story_id": story_filter,
+            "deleted_at": "is.null",
             "publication_status": "eq.published",
             "select": "id,story_id,title,sequence_number,published_at",
             "order": "sequence_number.asc,id.asc",
