@@ -1,5 +1,5 @@
 "use client";
-import {useCallback,useEffect,useState} from "react";
+import {useCallback,useEffect,useState,type FormEvent} from "react";
 type Kind="dedication"|"foreword"|"preface"|"author_note"|"prologue"|"epilogue"|"afterword"|"acknowledgements"|"about_author"|"further_reading"|"other";
 type Placement="front_matter"|"back_matter";
 type Block={type?:string;text?:string;bold?:boolean;italic?:boolean;[key:string]:unknown};
@@ -12,7 +12,7 @@ export default function StoryMaterialsManager({storyId,request}:{storyId:string;
  useEffect(()=>{void load()},[load]);
  function choose(x:Item){setSelected(x.id);setTitle(x.title);setKind(x.section_type);setPlacement(x.placement);setPosition(x.position);setStatus(x.publication_status);setVisible(x.is_visible);setBlocks(getBlocks(x.content).length?getBlocks(x.content):[{type:"paragraph",text:""}]);setError("");setNotice("")}
  function fresh(){setSelected("");setTitle("");setKind("dedication");setPlacement("front_matter");setPosition(items.filter(x=>x.placement==="front_matter").length);setStatus("draft");setVisible(true);setBlocks([{type:"paragraph",text:""}]);setError("");setNotice("")}
- async function save(e:React.FormEvent){e.preventDefault();setBusy(true);setError("");setNotice("");try{const payload={title,section_type:kind,placement,position,content:blocks,publication_status:status,is_visible:visible};if(selected)await request("/creator/stories/"+storyId+"/materials/"+selected,{method:"PUT",body:JSON.stringify(payload)});else{const x=await request("/creator/stories/"+storyId+"/materials",{method:"POST",body:JSON.stringify(payload)}) as Item;setSelected(x.id)}await load();setNotice("Manuscript section saved.")}catch(e){setError(e instanceof Error?e.message:"Could not save this section.")}finally{setBusy(false)}}
+ async function save(e:FormEvent){e.preventDefault();setBusy(true);setError("");setNotice("");try{const payload={title,section_type:kind,placement,position,content:blocks,publication_status:status,is_visible:visible};if(selected)await request("/creator/stories/"+storyId+"/materials/"+selected,{method:"PUT",body:JSON.stringify(payload)});else{const x=await request("/creator/stories/"+storyId+"/materials",{method:"POST",body:JSON.stringify(payload)}) as Item;setSelected(x.id)}await load();setNotice("Manuscript section saved.")}catch(e){setError(e instanceof Error?e.message:"Could not save this section.")}finally{setBusy(false)}}
  async function hide(){if(!selected)return;setBusy(true);try{await request("/creator/stories/"+storyId+"/materials/"+selected+"/hide",{method:"POST"});fresh();await load();setNotice("Section hidden and returned to drafts.")}catch(e){setError(e instanceof Error?e.message:"Could not hide this section.")}finally{setBusy(false)}}
  function updateKind(v:Kind){setKind(v);setPlacement(kinds.find(k=>k.value===v)?.placement||"front_matter")}
  const sorted=[...items].sort((a,b)=>a.placement.localeCompare(b.placement)||a.position-b.position);
