@@ -163,7 +163,7 @@ async def delete_creator_material(
     )
 
 
-@router.post("/creator/stories/{story_id}/materials/{material_id}/restore")
+@router.post("/creator/trash/materials/{material_id}/restore")
 async def restore_creator_material(
     story_id: UUID,
     material_id: UUID,
