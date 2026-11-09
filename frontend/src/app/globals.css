@@ -1590,3 +1590,112 @@ html[data-theme="light"] .sf-manuscript-chat-form textarea{background:#fffefa;co
 html[data-theme="light"] .sf-materials-list{background:#fffefa;border-color:#d8d4c8}
 html[data-theme="light"] .sf-materials-list>button{border-color:#d8d4c8}
 html[data-theme="light"] .sf-materials-editor select,html[data-theme="light"] .sf-materials-editor input,html[data-theme="light"] .sf-materials-editor textarea{background:#fffefa;color:#283129;border-color:#aebbad}
+
+
+/* Creator Studio readability pass: comfortable type sizes and stronger contrast.
+   Scoped to the creator workspace so the public Reading Room typography is unchanged. */
+.studio-shell {
+  font-size: 15px;
+  line-height: 1.65;
+}
+.studio-shell :is(small, .studio-metric>span, .studio-metric small,
+  .studio-story-name small, .studio-story-count, .studio-catalogue-top small,
+  .studio-catalogue-stats, .studio-workspace-status small, .studio-episode-choice small,
+  .studio-block-heading small, .studio-block-tools>span, .studio-save-hint,
+  .studio-revision-row span, .studio-revision-row small, .studio-footnote,
+  .studio-cover-manager small, .studio-episode-assets small,
+  .studio-community-card-head>small, .studio-community-card-foot>small,
+  .studio-review-author, .studio-note-actions>span, .studio-report-meta small,
+  .studio-episode-analytics-title>span, .studio-episode-analytics-row>div small,
+  .studio-activity-day small, .sf-manuscript-safe, .sf-manuscript-step,
+  .sf-manuscript-step span, .sf-manuscript-file small,
+  .sf-manuscript-section-main small, .sf-manuscript-metrics span,
+  .sf-manuscript-preview-heading span, .sf-manuscript-preview-note,
+  .sf-manuscript-preview-break, .sf-manuscript-split-tools span,
+  .sf-manuscript-chat-status, .sf-manuscript-chat-message>span,
+  .sf-manuscript-chat-form small, .sf-materials-list h3,
+  .sf-materials-list>button small, .sf-materials-list>p) {
+  font-size: 13px !important;
+  line-height: 1.55;
+  color: #c4cdc3;
+}
+.studio-shell :is(.studio-form label, .studio-form-title,
+  .studio-workspace-select label, .studio-analytics-toolbar label,
+  .studio-report-toolbar label, .studio-sidebar-heading,
+  .studio-block-heading span, .studio-block-tools select,
+  .studio-block-tools button, .studio-upload-control, .studio-import-control,
+  .studio-tabs button, .studio-community-tabs button, .studio-header nav a,
+  .studio-header-link, .studio-text-action, .studio-outline-action,
+  .studio-primary, .studio-story-status, .studio-workspace-status span,
+  .studio-info-panel>span, .studio-community-card-head>span,
+  .studio-published-reply span, .studio-episode-choice>span:first-child,
+  .sf-manuscript-include, .sf-manuscript-section-main label,
+  .sf-manuscript-destination label, .sf-manuscript-warnings strong,
+  .sf-manuscript-chat-label, .sf-materials-editor>label,
+  .sf-materials-list>button strong) {
+  font-size: 14px !important;
+  line-height: 1.5;
+}
+.studio-shell :is(.studio-form input:not([type=checkbox]), .studio-form textarea,
+  .studio-schedule-row input, .studio-workspace-select select,
+  .studio-block-tools select, .studio-note-composer>label select,
+  .studio-report-toolbar select, .studio-analytics-toolbar select,
+  .studio-reply-composer textarea, .studio-content-block textarea,
+  .sf-manuscript-section-main input, .sf-manuscript-destination select,
+  .sf-manuscript-chat-form textarea, .sf-materials-editor input,
+  .sf-materials-editor select, .sf-materials-editor textarea,
+  .studio-bulk-row input) {
+  font-size: 16px !important;
+  line-height: 1.65;
+}
+.studio-shell :is(.studio-catalogue-card>p, .studio-empty p,
+  .studio-info-panel p, .studio-note-body, .studio-published-reply p,
+  .studio-report-meta span, .studio-preference-list label,
+  .studio-activity-legend, .studio-bulk-import-panel p,
+  .studio-bulk-review>p, .sf-manuscript-assistant-head p,
+  .sf-manuscript-upload-copy p, .sf-manuscript-upload-copy li,
+  .sf-manuscript-reconcile-intro p, .sf-manuscript-chat-head p,
+  .sf-manuscript-chat-welcome, .sf-manuscript-chat-message p,
+  .sf-manuscript-preview-block, .sf-manuscript-final-check p,
+  .sf-manuscript-complete p) {
+  font-size: 15px !important;
+  line-height: 1.7;
+}
+.studio-shell .sf-materials-list h3,
+.studio-shell .sf-manuscript-preview-break,
+.studio-shell .sf-manuscript-import-eyebrow,
+.studio-shell .studio-import-eyebrow {
+  letter-spacing: .06em;
+}
+.studio-shell :is(button, a, input, select, textarea):focus-visible {
+  outline: 3px solid #70ddb0;
+  outline-offset: 3px;
+}
+html[data-theme="light"] .studio-shell :is(small, .studio-metric>span,
+  .studio-metric small, .studio-story-name small, .studio-story-count,
+  .studio-catalogue-top small, .studio-catalogue-stats,
+  .studio-workspace-status small, .studio-episode-choice small,
+  .studio-block-heading small, .studio-block-tools>span, .studio-save-hint,
+  .studio-revision-row span, .studio-revision-row small, .studio-footnote,
+  .studio-cover-manager small, .studio-episode-assets small,
+  .studio-community-card-head>small, .studio-community-card-foot>small,
+  .studio-review-author, .studio-note-actions>span, .studio-report-meta small,
+  .studio-episode-analytics-title>span, .studio-episode-analytics-row>div small,
+  .studio-activity-day small, .sf-manuscript-safe, .sf-manuscript-step,
+  .sf-manuscript-step span, .sf-manuscript-file small,
+  .sf-manuscript-section-main small, .sf-manuscript-metrics span,
+  .sf-manuscript-preview-heading span, .sf-manuscript-preview-note,
+  .sf-manuscript-preview-break, .sf-manuscript-split-tools span,
+  .sf-manuscript-chat-status, .sf-manuscript-chat-message>span,
+  .sf-manuscript-chat-form small, .sf-materials-list h3,
+  .sf-materials-list>button small, .sf-materials-list>p) {
+  color: #46564a !important;
+}
+html[data-theme="light"] .studio-shell :is(.sf-manuscript-assistant-head p,
+  .sf-manuscript-upload-copy p, .sf-manuscript-upload-copy li,
+  .sf-manuscript-reconcile-intro p, .sf-manuscript-chat-head p,
+  .sf-manuscript-chat-welcome, .sf-manuscript-chat-form small,
+  .sf-manuscript-final-check p, .sf-manuscript-complete p,
+  .sf-materials-editor .studio-block-heading small) {
+  color: #46564a !important;
+}
