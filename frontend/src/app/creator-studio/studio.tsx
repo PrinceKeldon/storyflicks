@@ -6,6 +6,7 @@ import { useCallback, useEffect, useMemo, useState, type FormEvent, type ReactNo
 import { getSupabaseBrowserClient } from "@/lib/supabase";
 import { importDocx, type ImportedManuscriptBlock } from "@/lib/docx-import";
 import ManuscriptImportAssistant from "./ManuscriptImportAssistant";
+import StoryMaterialsManager from "./StoryMaterialsManager";
 
 type StoryCard = { id:string; slug:string; title:string; publication_status:string; completion_status:string|null; role:string; episode_count:number; published_episode_count:number; draft_episode_count:number; scheduled_episode_count:number; total_reads:number; completed_reads:number; reaction_count:number; public_review_count:number; private_feedback_count:number };
 type Dashboard = { overview:{total_stories:number;published_stories:number;draft_stories:number;total_episodes:number;published_episodes:number;draft_episodes:number;total_reads:number;completed_reads:number;total_reactions:number;public_reviews:number;private_feedback:number}; stories:StoryCard[] };
@@ -28,8 +29,8 @@ type CreatorReview = {id:string;headline:string|null;body:string;submitted_at:st
 type CreatorReport = {report_id:string;target_type:"review"|"author_reply"|"author_note";target_id:string;reason:string;details:string|null;status:string;created_at:string;story:{id:string;title:string};episode_title:string|null;content:{title:string|null;body:string;author:{username:string|null;display_name:string|null}|null};reporter:{username:string|null;display_name:string|null}|null};
 
 type Block = ImportedManuscriptBlock;
-type Tab = "overview"|"stories"|"episodes"|"community"|"audience"|"insights"|"settings";
-const tabs: {id:Tab;label:string}[] = [{id:"overview",label:"Overview"},{id:"stories",label:"My Stories"},{id:"episodes",label:"Episode Manager"},{id:"community",label:"Community"},{id:"audience",label:"Audience"},{id:"insights",label:"Insights"},{id:"settings",label:"Settings"}];
+type Tab = "overview"|"stories"|"episodes"|"structure"|"community"|"audience"|"insights"|"settings";
+const tabs: {id:Tab;label:string}[] = [{id:"overview",label:"Overview"},{id:"stories",label:"My Stories"},{id:"episodes",label:"Episode Manager"},{id:"structure",label:"Story Structure"},{id:"community",label:"Community"},{id:"audience",label:"Audience"},{id:"insights",label:"Insights"},{id:"settings",label:"Settings"}];
 function slugify(s:string){return s.toLowerCase().trim().normalize("NFKD").replace(/[\u0300-\u036f]/g,"").replace(/[^a-z0-9]+/g,"-").replace(/^-|-$/g,"");}
 function parseGenres(value:string){return [...new Set(value.split(",").map(item=>item.trim()).filter(Boolean))].slice(0,5);}
 async function detectImageContentType(file:File):Promise<string>{
@@ -279,6 +280,7 @@ export default function CreatorStudio(){
     <ManuscriptImportAssistant storyId={storyId} storyTitle={workspace.story.title} sectionLabel={workspace.story.section_label||"Episode"} sectionLabelPlural={workspace.story.section_label_plural||"Episodes"} episodes={workspace.episodes} request={request} onImported={async()=>{await loadWorkspace(storyId);await loadDashboard();}}/>
    </section>}
   </section>}
+  {tab==="structure"&&<>{workspace&&workspace.story.id===storyId?<StoryMaterialsManager storyId={storyId} request={request}/>:<section className="studio-content"><div className="studio-empty"><h3>Select a story workspace first.</h3><button className="studio-primary" onClick={()=>setTab("stories")}>Choose a story ↗</button></div></section>}</>}
   {tab==="episodes"&&<section className="studio-content"><div className="studio-section-heading"><div><p className="eyebrow">BUILD THE STORY, ONE {sectionLabel.toUpperCase()} AT A TIME</p><h2>{sectionLabelPlural} manager<span>.</span></h2><p className="studio-intro">Create drafts, review revisions and control publication.</p></div><button className="studio-primary" disabled={!workspace} onClick={addEpisode}>＋ New {sectionLabel.toLowerCase()}</button></div>
    <div className="studio-workspace-select"><label>STORY WORKSPACE<select value={storyId} onChange={e=>{setStoryId(e.target.value);setEpisodeId("");}}>{dashboard?.stories.map(s=><option value={s.id} key={s.id}>{s.title}</option>)}</select></label>{workspace&&<div className="studio-workspace-status"><span>{workspace.story.publication_status}</span><small>{workspace.episode_summary.published} published · {workspace.episode_summary.draft} drafts · {workspace.episode_summary.scheduled} scheduled</small></div>}</div>
    {!dashboard?.stories.length?<div className="studio-empty"><h3>Create a story first.</h3><button className="studio-primary" onClick={()=>{setNewStoryOpen(true);setTab("stories");}}>Create story ↗</button></div>:busy==="workspace"||!workspace?<div className="studio-loading">Loading story workspace…</div>:<>
