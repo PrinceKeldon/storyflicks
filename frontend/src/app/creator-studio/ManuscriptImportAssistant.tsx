@@ -18,6 +18,9 @@ type Section = {
   targetEpisodeId: string;
   include: boolean;
   saved: boolean;
+  kind: "episode" | "material";
+  materialType: "dedication" | "foreword" | "preface" | "author_note" | "prologue" | "epilogue" | "afterword" | "acknowledgements" | "about_author" | "further_reading" | "other";
+  placement: "front_matter" | "back_matter";
 };
 type Props = {
   storyId: string;
@@ -32,7 +35,10 @@ type ChatMessage = { role: "user" | "model"; text: string };
 type Stage = "upload" | "review" | "complete";
 
 const MAX_FILE_BYTES = 30 * 1024 * 1024;
-const chapterPattern = /^(?:(?:chapter|episode|part|section|book)\s+(?:\d{1,3}|[ivxlcdm]+|one|two|three|four|five|six|seven|eight|nine|ten|eleven|twelve|thirteen|fourteen|fifteen|sixteen|seventeen|eighteen|nineteen|twenty)(?:\s*[:.\-–—]?\s*.*)?|\d{1,3}[.)]\s+.+|(?:prologue|epilogue|foreword|preface|introduction|afterword|acknowledgements|acknowledgments))$/i;
+const MAX_EPISODE_JSON_BYTES = 2 * 1024 * 1024;
+const MAX_EPISODE_BLOCKS = 2000;
+const MAX_BLOCK_TEXT = 100000;
+const chapterPattern = /^(?:(?:chapter|episode|part|section|book)\s+(?:\d{1,3}|[ivxlcdm]+|one|two|three|four|five|six|seven|eight|nine|ten|eleven|twelve|thirteen|fourteen|fifteen|sixteen|seventeen|eighteen|nineteen|twenty)(?:\s*[:.\-–—]?\s*.*)?|\d{1,3}[.)]\s+.+|(?:prologue|epilogue|foreword|preface|introduction|afterword|acknowledgements|acknowledgments|dedication|author[’\u0027]s note|author note|about the author|further reading|copyright|title page|table of contents))$/i;
 
 function makeId() {
   return typeof crypto !== "undefined" && "randomUUID" in crypto
@@ -45,18 +51,63 @@ function wordCount(blocks: Block[]) {
 function normaliseTitle(value: string) {
   return value.toLowerCase().normalize("NFKD").replace(/[\u0300-\u036f]/g, "").replace(/^(chapter|episode|part|section|book)\s+(\d+|[ivxlcdm]+|one|two|three|four|five|six|seven|eight|nine|ten)\s*[:.\-–—]?\s*/i, "").replace(/[^a-z0-9]+/g, " ").trim();
 }
-function isChapterBoundary(block: Block) {
+function headingOutlineLevel(block: Block): number | undefined {
+  if (typeof block.outlineLevel === "number" && Number.isFinite(block.outlineLevel)) return block.outlineLevel;
+  const styleMatch = block.styleId?.match(/^heading([1-6])$/i);
+  return styleMatch ? Number(styleMatch[1]) - 1 : undefined;
+}
+function isChapterBoundary(block: Block, chapterHeadingLevel?: number) {
   const value = block.text.trim();
-  return value.length > 0 && value.length < 150 && (block.type === "heading" || chapterPattern.test(value) || /^[ivxlcdm]{1,8}[.)]?$/i.test(value));
+  if (!value || value.length >= 150) return false;
+  if (block.type === "heading") {
+    const level = headingOutlineLevel(block);
+    // DOCX Heading 2–6 styles are commonly subheadings inside a chapter.
+    // Use the manuscript's highest heading level as the chapter boundary level.
+    return level === undefined || chapterHeadingLevel === undefined || level === chapterHeadingLevel;
+  }
+  if (chapterPattern.test(value)) return true;
+
+  // Many manuscripts use Normal/Body paragraph styles for chapter titles.
+  // Recognise typographic signals without treating every bold phrase as a chapter.
+  const hasLetters = /\p{L}/u.test(value);
+  const allCaps = hasLetters && value === value.toLocaleUpperCase() && !/[.!?;]$/.test(value);
+  const centered = block.align === "center";
+  const shortStandaloneNumber = /^(?:\d{1,3}|[ivxlcdm]{1,8})[.)]?$/.test(value) && (centered || block.bold);
+  const titleLike = value.length <= 110 && !/[.!?;]$/.test(value) && (
+    (centered && (block.bold || allCaps || value.length <= 75)) ||
+    (allCaps && value.length <= 85 && value.split(/\s+/).length <= 10)
+  );
+  return shortStandaloneNumber || titleLike;
 }
 function titleFromHeading(value: string) {
   const trimmed = value.trim();
   const stripped = trimmed.replace(/^(?:(?:chapter|episode|part|section|book)\s+(?:\d{1,3}|[ivxlcdm]+|one|two|three|four|five|six|seven|eight|nine|ten|eleven|twelve|thirteen|fourteen|fifteen|sixteen|seventeen|eighteen|nineteen|twenty))\s*[:.\-–—]?\s*/i, "").replace(/^\d{1,3}[.)]\s*/, "");
   return stripped || trimmed;
 }
+function classifyMaterial(title: string): Pick<Section, "kind" | "materialType" | "placement"> | null {
+  const value = title.trim().toLowerCase().replace(/[’']/g, "");
+  const match = value.match(/^(?:chapter|episode|part|section|book)\s+/i);
+  if (match || /^\d{1,3}[.)]\s+/.test(value)) return null;
+  const types: Record<string, Section["materialType"]> = {
+    dedication: "dedication", foreword: "foreword", preface: "preface",
+    "authors note": "author_note", "author note": "author_note",
+    prologue: "prologue", epilogue: "epilogue", afterword: "afterword",
+    acknowledgements: "acknowledgements", acknowledgments: "acknowledgements",
+    "about the author": "about_author", "about author": "about_author",
+    "further reading": "further_reading",
+  };
+  const key = value.replace(/[^a-z ]/g, "").replace(/\s+/g, " ").trim();
+  if (key === "opening material" || key === "introduction" || key === "copyright" || key === "title page" || key === "table of contents") return { kind: "material", materialType: "other", placement: "front_matter" };
+  const materialType = types[key];
+  if (!materialType) return null;
+  const placement = ["epilogue", "afterword", "acknowledgements", "about_author", "further_reading"].includes(materialType) ? "back_matter" : "front_matter";
+  return { kind: "material", materialType, placement };
+}
 function detectSections(blocks: Block[]): Section[] {
-  const boundaries = blocks.map((block, index) => isChapterBoundary(block) ? index : -1).filter(index => index >= 0);
-  if (!boundaries.length) return [{ id: makeId(), title: "Complete manuscript", blocks, targetEpisodeId: "", include: true, saved: false }];
+  const headingLevels = blocks.filter(block => block.type === "heading").map(headingOutlineLevel).filter((level): level is number => level !== undefined);
+  const chapterHeadingLevel = headingLevels.length ? Math.min(...headingLevels) : undefined;
+  const boundaries = blocks.map((block, index) => isChapterBoundary(block, chapterHeadingLevel) ? index : -1).filter(index => index >= 0);
+  if (!boundaries.length) return [{ id: makeId(), title: "Complete manuscript", blocks, targetEpisodeId: "", include: true, saved: false, kind: "episode", materialType: "other", placement: "front_matter" }];
   const starts = [...boundaries];
   if (boundaries[0] > 0 && wordCount(blocks.slice(0, boundaries[0])) > 0) starts.unshift(0);
   return starts.map((start, index) => {
@@ -65,13 +116,12 @@ function detectSections(blocks: Block[]): Section[] {
     const heading = isHeadingStart ? blocks[start].text.trim() : "";
     const bodyStart = isHeadingStart ? start + 1 : start;
     const body = blocks.slice(bodyStart, end);
+    const title = isHeadingStart ? titleFromHeading(heading) : "Opening material";
+    const classified = isHeadingStart ? classifyMaterial(title) : { kind: "material" as const, materialType: "other" as const, placement: "front_matter" as const };
     return {
-      id: makeId(),
-      title: isHeadingStart ? titleFromHeading(heading) : "Opening material",
-      blocks: body.length ? body : [{ type: "paragraph", text: "" }],
-      targetEpisodeId: "",
-      include: true,
-      saved: false,
+      id: makeId(), title, blocks: body.length ? body : [{ type: "paragraph", text: "" }],
+      targetEpisodeId: "", include: true, saved: false,
+      ...(classified || { kind: "episode" as const, materialType: "other" as const, placement: "front_matter" as const }),
     };
   });
 }
@@ -196,7 +246,13 @@ export default function ManuscriptImportAssistant({ storyId, storyTitle, section
           throw new Error("Gemini returned incomplete or overlapping chapter boundaries. Your current analysis has been kept.");
         }
         const sectionBlocks = sourceBlocks.slice(item.start_block, item.end_block + 1);
-        if (sectionBlocks[0] && (sectionBlocks[0].type === "heading" || /^(chapter|episode|part|section|book)\s+/i.test(sectionBlocks[0].text.trim()))) {
+        const firstBlockTitle = sectionBlocks[0] ? normaliseTitle(sectionBlocks[0].text) : "";
+        const suggestedTitle = normaliseTitle(item.title);
+        if (sectionBlocks[0] && (
+          sectionBlocks[0].type === "heading"
+          || /^(chapter|episode|part|section|book)\s+/i.test(sectionBlocks[0].text.trim())
+          || (firstBlockTitle && firstBlockTitle === suggestedTitle)
+        )) {
           sectionBlocks.shift();
         }
         suggested.push({
@@ -206,6 +262,7 @@ export default function ManuscriptImportAssistant({ storyId, storyTitle, section
           targetEpisodeId: "",
           include: true,
           saved: false,
+          ...(classifyMaterial(item.title) || { kind: "episode" as const, materialType: "other" as const, placement: "front_matter" as const }),
         });
         expectedStart = item.end_block + 1;
       }
@@ -267,7 +324,7 @@ export default function ManuscriptImportAssistant({ storyId, storyTitle, section
       const source = current[index];
       if (blockIndex <= 0 || blockIndex >= source.blocks.length) return current;
       const first = { ...source, blocks: source.blocks.slice(0, blockIndex) };
-      const second: Section = { id: makeId(), title: "New " + sectionLabel.toLowerCase(), blocks: source.blocks.slice(blockIndex), targetEpisodeId: "", include: true, saved: false };
+      const second: Section = { id: makeId(), title: "New " + sectionLabel.toLowerCase(), blocks: source.blocks.slice(blockIndex), targetEpisodeId: "", include: true, saved: false, kind: source.kind, materialType: source.materialType, placement: source.placement };
       const next = [...current]; next.splice(index, 1, first, second); return next;
     });
     setExpandedId("");
@@ -297,28 +354,60 @@ export default function ManuscriptImportAssistant({ storyId, storyTitle, section
   }
   async function importSections() {
     if (!canImport) return;
+    const pending = sections.filter(section => section.include && !section.saved);
+    for (const section of pending) {
+      if (section.title.trim().length > 200) {
+        setError('“' + section.title.slice(0, 60) + '” has a title longer than STORYFLICKS allows (200 characters). Shorten it before importing.');
+        return;
+      }
+      if (section.blocks.length > MAX_EPISODE_BLOCKS) {
+        setError('“' + section.title + '” contains ' + section.blocks.length.toLocaleString('en-GB') + ' blocks. One episode can contain at most ' + MAX_EPISODE_BLOCKS.toLocaleString('en-GB') + '. Split this section into smaller chapters before importing.');
+        return;
+      }
+      const invalidBlock = section.blocks.find(block => block.text.length > MAX_BLOCK_TEXT || (block.runs || []).length > 10000 || (block.runs || []).some(run => run.text.length > MAX_BLOCK_TEXT));
+      if (invalidBlock) {
+        setError('“' + section.title + '” contains a paragraph or formatting run that exceeds the episode content limit. Split this section at a paragraph boundary before importing.');
+        return;
+      }
+      const payload = { blocks: section.blocks.filter(block => block.type === "separator" || block.type === "spacer" || block.text.trim()) };
+      const bytes = new TextEncoder().encode(JSON.stringify(payload)).length;
+      if (bytes > MAX_EPISODE_JSON_BYTES) {
+        setError('“' + section.title + '” is ' + (bytes / (1024 * 1024)).toFixed(2) + ' MB. One episode is limited to 2 MB of content. Split this section into smaller chapters before importing.');
+        return;
+      }
+    }
     setBusy(true); setError(""); setNotice("");
     const savedIds = new Set(sections.filter(section => section.saved).map(section => section.id));
     try {
       let nextSequence = Math.max(0, ...orderedEpisodes.map(episode => episode.sequence_number)) + 1;
+      let frontMatterPosition = 0;
+      let backMatterPosition = 0;
       for (const section of sections) {
         if (!section.include || savedIds.has(section.id)) continue;
-        const existing = section.targetEpisodeId ? orderedEpisodes.find(episode => episode.id === section.targetEpisodeId) : undefined;
-        const path = existing ? "/creator/stories/" + storyId + "/episodes/" + existing.id : "/creator/stories/" + storyId + "/episodes";
-        await request(path, { method: existing ? "PUT" : "POST", body: JSON.stringify({
-          season_id: null,
-          sequence_number: existing?.sequence_number ?? nextSequence++,
-          title: section.title.trim(),
-          synopsis: null,
-          content: { blocks: section.blocks.filter(block => block.type === "separator" || block.type === "spacer" || block.text.trim()) },
-        }) });
+        const content = { blocks: section.blocks.filter(block => block.type === "separator" || block.type === "spacer" || block.text.trim()) };
+        if (section.kind === "material") {
+          await request("/creator/stories/" + storyId + "/materials", { method: "POST", body: JSON.stringify({
+            title: section.title.trim(), section_type: section.materialType, placement: section.placement,
+            position: section.placement === "front_matter" ? frontMatterPosition++ : backMatterPosition++,
+            content, publication_status: "draft", is_visible: true,
+          }) });
+        } else {
+          const existing = section.targetEpisodeId ? orderedEpisodes.find(episode => episode.id === section.targetEpisodeId) : undefined;
+          const path = existing ? "/creator/stories/" + storyId + "/episodes/" + existing.id : "/creator/stories/" + storyId + "/episodes";
+          await request(path, { method: existing ? "PUT" : "POST", body: JSON.stringify({
+            season_id: null, sequence_number: existing?.sequence_number ?? nextSequence++,
+            title: section.title.trim(), synopsis: null, content,
+          }) });
+        }
         savedIds.add(section.id);
         setSections(current => current.map(item => item.id === section.id ? { ...item, saved: true } : item));
       }
-      const revised = included.filter(section => !!section.targetEpisodeId).length;
-      const added = included.length - revised;
+      const materialsAdded = included.filter(section => section.kind === "material").length;
+      const episodeSections = included.filter(section => section.kind === "episode");
+      const revised = episodeSections.filter(section => !!section.targetEpisodeId).length;
+      const added = episodeSections.length - revised;
       setStage("complete");
-      setNotice("Import complete: " + added + " new draft " + (added === 1 ? "section" : "sections") + " and " + revised + " draft " + (revised === 1 ? "revision" : "revisions") + " saved. Nothing was published.");
+      setNotice("Import complete: " + added + " new draft " + (added === 1 ? "chapter/episode" : "chapters/episodes") + ", " + revised + " draft " + (revised === 1 ? "revision" : "revisions") + " and " + materialsAdded + " front/back matter section(s) saved. Nothing was published.");
       await onImported();
     } catch (caught) {
       const completed = savedIds.size;
@@ -365,7 +454,7 @@ export default function ManuscriptImportAssistant({ storyId, storyTitle, section
           <div><small>Your instructions are included in the next chapter analysis. Gemini cannot save or publish your story.</small><button type="submit" className="studio-primary" disabled={chatBusy || busy || !chatInput.trim()}>{chatBusy ? "Gemini is replying…" : "Send to Gemini ↗"}</button></div>
         </form>
       </section>
-      <div className="sf-manuscript-reconcile-intro"><div><h4>Review {sectionLabelPlural.toLowerCase()} structure</h4><p>Rename, reorder, split or merge {sectionLabelPlural.toLowerCase()}. Then choose whether each becomes a new draft or a draft revision of an existing {sectionLabel.toLowerCase()}.</p></div></div>
+      <div className="sf-manuscript-reconcile-intro"><div><h4>Review manuscript structure</h4><p>Check the detected front matter, chapters/episodes and back matter. You can change placement, reorder, split or merge material before importing. All imported content remains draft-only.</p></div></div>
       <div className="sf-manuscript-section-list">
         {sections.map((section, index) => {
           const expanded = expandedId === section.id;
@@ -377,7 +466,7 @@ export default function ManuscriptImportAssistant({ storyId, storyTitle, section
               <div className="sf-manuscript-section-main"><label>Section title<input value={section.title} disabled={section.saved || busy} onChange={event => updateSection(section.id, { title: event.target.value })}/></label><small>{words.toLocaleString("en-GB")} words · {section.blocks.length} content blocks {section.saved ? "· SAVED" : ""}</small></div>
               <div className="sf-manuscript-order-controls"><button type="button" className="studio-text-action" disabled={busy || section.saved || index === 0 || sections[index - 1]?.saved} aria-label={"Move " + sectionLabel.toLowerCase() + " up"} onClick={() => moveSection(section.id, -1)}>↑</button><button type="button" className="studio-text-action" disabled={busy || section.saved || index === sections.length - 1 || sections[index + 1]?.saved} aria-label={"Move " + sectionLabel.toLowerCase() + " down"} onClick={() => moveSection(section.id, 1)}>↓</button><button type="button" className="studio-text-action" disabled={busy || section.saved} onClick={() => setExpandedId(expanded ? "" : section.id)}>{expanded ? "Hide preview" : "Preview & edit split"}</button></div>
             </div>
-            <div className="sf-manuscript-destination"><label>Import destination<select value={section.targetEpisodeId || "new"} disabled={section.saved || busy} onChange={event => updateSection(section.id, { targetEpisodeId: event.target.value === "new" ? "" : event.target.value })}><option value="new">Create a new draft {sectionLabel.toLowerCase()}</option>{orderedEpisodes.map(episode => <option key={episode.id} value={episode.id}>{episode.sequence_number}. {episode.title} · {episode.publication_status}</option>)}</select></label>{suggested && !section.targetEpisodeId && <small>Possible title match: {suggested.title}. It will remain untouched unless you select it.</small>}{section.targetEpisodeId && <small>This will create a draft revision. The published version remains unchanged.</small>}</div>
+            <div className="sf-manuscript-destination"><label>Content category<select value={section.kind} disabled={section.saved || busy} onChange={event => updateSection(section.id,event.target.value==="material"?{kind:"material",materialType:"other",placement:"front_matter",targetEpisodeId:""}:{kind:"episode",targetEpisodeId:""})}><option value="episode">Main story — {sectionLabel.toLowerCase()}</option><option value="material">Front / back matter</option></select></label>{section.kind === "material" ? <><label>Material type<select value={section.materialType} disabled={section.saved || busy} onChange={event => updateSection(section.id,{materialType:event.target.value as Section["materialType"]})}><option value="dedication">Dedication</option><option value="foreword">Foreword</option><option value="preface">Preface</option><option value="author_note">Author’s Note</option><option value="prologue">Prologue</option><option value="epilogue">Epilogue</option><option value="afterword">Afterword</option><option value="acknowledgements">Acknowledgements</option><option value="about_author">About the Author</option><option value="further_reading">Further Reading</option><option value="other">Other material</option></select></label><label>Manuscript area<select value={section.placement} disabled={section.saved || busy} onChange={event => updateSection(section.id,{placement:event.target.value as Section["placement"]})}><option value="front_matter">Before the story</option><option value="back_matter">After the story</option></select></label><small>This will be saved separately from the numbered story sequence.</small></> : <><label>Import destination<select value={section.targetEpisodeId || "new"} disabled={section.saved || busy} onChange={event => updateSection(section.id, { targetEpisodeId: event.target.value === "new" ? "" : event.target.value })}><option value="new">Create a new draft {sectionLabel.toLowerCase()}</option>{orderedEpisodes.map(episode => <option key={episode.id} value={episode.id}>{episode.sequence_number}. {episode.title} · {episode.publication_status}</option>)}</select></label>{suggested && !section.targetEpisodeId && <small>Possible title match: {suggested.title}. It will remain untouched unless you select it.</small>}{section.targetEpisodeId && <small>This will create a draft revision. The published version remains unchanged.</small>}</>}</div>
             {duplicateTargets.includes(section.targetEpisodeId) && section.targetEpisodeId && <p className="sf-manuscript-inline-warning">Two manuscript sections cannot be mapped to the same existing section.</p>}
             {expanded && <div className="sf-manuscript-preview"><div className="sf-manuscript-preview-heading"><strong>Content preview</strong><span>{Math.min(section.blocks.length, 80)} of {section.blocks.length} blocks shown</span></div>{section.blocks.slice(0, showAllBlocks ? section.blocks.length : 80).map(blockPreview)}{section.blocks.length > 80 && <button type="button" className="studio-text-action" onClick={() => setShowAllBlocks(value => !value)}>{showAllBlocks ? "Show first 80 blocks" : "Show all " + section.blocks.length + " blocks"}</button>}
               {section.blocks.length > 1 && <div className="sf-manuscript-split-tools"><span>Need to correct a chapter boundary?</span>{section.blocks.slice(1, showAllBlocks ? section.blocks.length : 80).map((block, blockIndex) => <button type="button" key={blockIndex + 1} disabled={busy || section.saved} onClick={() => splitSection(section.id, blockIndex + 1)}>Split before: {(block.text || block.type).slice(0, 42)}{(block.text || "").length > 42 ? "…" : ""}</button>)}</div>}

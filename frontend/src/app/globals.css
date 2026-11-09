@@ -1569,3 +1569,168 @@ html[data-theme="light"] .sf-manuscript-chat-message.user{background:#f5e9df}
 html[data-theme="light"] .sf-manuscript-chat-message p{color:#303b31}
 html[data-theme="light"] .sf-manuscript-chat-form textarea{background:#fffefa;color:#283129;border-color:#aebbad}
 @media(max-width:700px){.sf-manuscript-chat{padding:15px}.sf-manuscript-chat-head{flex-direction:column}.sf-manuscript-chat-form>div{align-items:stretch;flex-direction:column}.sf-manuscript-chat-form>div button{width:100%}.sf-manuscript-chat-message{max-width:100%}}
+
+
+/* Independent front matter and back matter workspace */
+.sf-materials-layout{display:grid;grid-template-columns:minmax(220px,.72fr) minmax(0,1.5fr);gap:22px;align-items:start;margin-top:22px}
+.sf-materials-list{padding:18px;border:1px solid rgba(225,220,205,.15);border-radius:10px;background:rgba(255,255,255,.025)}
+.sf-materials-list h3{margin:8px 0 12px;color:#bd866c;font-size:10px;letter-spacing:.14em}
+.sf-materials-list h3:not(:first-child){margin-top:26px}
+.sf-materials-list>button{display:grid;gap:5px;width:100%;padding:12px;margin:5px 0;text-align:left;border:1px solid rgba(225,220,205,.12);border-radius:6px;background:transparent;color:inherit;cursor:pointer}
+.sf-materials-list>button.active{border-color:#bd866c;background:rgba(189,134,108,.09)}
+.sf-materials-list>button small,.sf-materials-list>p{color:#9da39b;font-size:11px}
+.sf-materials-list>button strong{font-size:13px}
+.sf-materials-editor{min-width:0}
+.sf-materials-editor>label{display:grid;gap:7px;margin:14px 0;font-size:12px}
+.sf-materials-editor select,.sf-materials-editor input,.sf-materials-editor textarea{width:100%;padding:11px;border:1px solid rgba(225,220,205,.2);border-radius:5px;background:rgba(0,0,0,.12);color:inherit}
+.sf-materials-editor .studio-block-heading{display:flex;align-items:center;justify-content:space-between;gap:12px;margin:22px 0 12px}
+.sf-materials-editor .studio-block-heading small{display:block;color:#9da39b;font-size:11px;line-height:1.5}
+.sf-materials-editor .studio-block-heading button{flex-shrink:0}
+@media(max-width:760px){.sf-materials-layout{grid-template-columns:1fr}.sf-materials-editor .studio-block-heading{align-items:flex-start;flex-direction:column}}
+html[data-theme="light"] .sf-materials-list{background:#fffefa;border-color:#d8d4c8}
+html[data-theme="light"] .sf-materials-list>button{border-color:#d8d4c8}
+html[data-theme="light"] .sf-materials-editor select,html[data-theme="light"] .sf-materials-editor input,html[data-theme="light"] .sf-materials-editor textarea{background:#fffefa;color:#283129;border-color:#aebbad}
+
+
+/* Creator Studio readability pass: comfortable type sizes and stronger contrast.
+   Scoped to the creator workspace so the public Reading Room typography is unchanged. */
+.studio-shell {
+  font-size: 15px;
+  line-height: 1.65;
+}
+.studio-shell :is(small, .studio-metric>span, .studio-metric small,
+  .studio-story-name small, .studio-story-count, .studio-catalogue-top small,
+  .studio-catalogue-stats, .studio-workspace-status small, .studio-episode-choice small,
+  .studio-block-heading small, .studio-block-tools>span, .studio-save-hint,
+  .studio-revision-row span, .studio-revision-row small, .studio-footnote,
+  .studio-cover-manager small, .studio-episode-assets small,
+  .studio-community-card-head>small, .studio-community-card-foot>small,
+  .studio-review-author, .studio-note-actions>span, .studio-report-meta small,
+  .studio-episode-analytics-title>span, .studio-episode-analytics-row>div small,
+  .studio-activity-day small, .sf-manuscript-safe, .sf-manuscript-step,
+  .sf-manuscript-step span, .sf-manuscript-file small,
+  .sf-manuscript-section-main small, .sf-manuscript-metrics span,
+  .sf-manuscript-preview-heading span, .sf-manuscript-preview-note,
+  .sf-manuscript-preview-break, .sf-manuscript-split-tools span,
+  .sf-manuscript-chat-status, .sf-manuscript-chat-message>span,
+  .sf-manuscript-chat-form small, .sf-materials-list h3,
+  .sf-materials-list>button small, .sf-materials-list>p) {
+  font-size: 13px !important;
+  line-height: 1.55;
+  color: #c4cdc3;
+}
+.studio-shell :is(.studio-form label, .studio-form-title,
+  .studio-workspace-select label, .studio-analytics-toolbar label,
+  .studio-report-toolbar label, .studio-sidebar-heading,
+  .studio-block-heading span, .studio-block-tools select,
+  .studio-block-tools button, .studio-upload-control, .studio-import-control,
+  .studio-tabs button, .studio-community-tabs button, .studio-header nav a,
+  .studio-header-link, .studio-text-action, .studio-outline-action,
+  .studio-primary, .studio-story-status, .studio-workspace-status span,
+  .studio-info-panel>span, .studio-community-card-head>span,
+  .studio-published-reply span, .studio-episode-choice>span:first-child,
+  .sf-manuscript-include, .sf-manuscript-section-main label,
+  .sf-manuscript-destination label, .sf-manuscript-warnings strong,
+  .sf-manuscript-chat-label, .sf-materials-editor>label,
+  .sf-materials-list>button strong) {
+  font-size: 14px !important;
+  line-height: 1.5;
+}
+.studio-shell :is(.studio-form input:not([type=checkbox]), .studio-form textarea,
+  .studio-schedule-row input, .studio-workspace-select select,
+  .studio-block-tools select, .studio-note-composer>label select,
+  .studio-report-toolbar select, .studio-analytics-toolbar select,
+  .studio-reply-composer textarea, .studio-content-block textarea,
+  .sf-manuscript-section-main input, .sf-manuscript-destination select,
+  .sf-manuscript-chat-form textarea, .sf-materials-editor input,
+  .sf-materials-editor select, .sf-materials-editor textarea,
+  .studio-bulk-row input) {
+  font-size: 16px !important;
+  line-height: 1.65;
+}
+.studio-shell :is(.studio-catalogue-card>p, .studio-empty p,
+  .studio-info-panel p, .studio-note-body, .studio-published-reply p,
+  .studio-report-meta span, .studio-preference-list label,
+  .studio-activity-legend, .studio-bulk-import-panel p,
+  .studio-bulk-review>p, .sf-manuscript-assistant-head p,
+  .sf-manuscript-upload-copy p, .sf-manuscript-upload-copy li,
+  .sf-manuscript-reconcile-intro p, .sf-manuscript-chat-head p,
+  .sf-manuscript-chat-welcome, .sf-manuscript-chat-message p,
+  .sf-manuscript-preview-block, .sf-manuscript-final-check p,
+  .sf-manuscript-complete p) {
+  font-size: 15px !important;
+  line-height: 1.7;
+}
+.studio-shell .sf-materials-list h3,
+.studio-shell .sf-manuscript-preview-break,
+.studio-shell .sf-manuscript-import-eyebrow,
+.studio-shell .studio-import-eyebrow {
+  letter-spacing: .06em;
+}
+.studio-shell :is(button, a, input, select, textarea):focus-visible {
+  outline: 3px solid #70ddb0;
+  outline-offset: 3px;
+}
+html[data-theme="light"] .studio-shell :is(small, .studio-metric>span,
+  .studio-metric small, .studio-story-name small, .studio-story-count,
+  .studio-catalogue-top small, .studio-catalogue-stats,
+  .studio-workspace-status small, .studio-episode-choice small,
+  .studio-block-heading small, .studio-block-tools>span, .studio-save-hint,
+  .studio-revision-row span, .studio-revision-row small, .studio-footnote,
+  .studio-cover-manager small, .studio-episode-assets small,
+  .studio-community-card-head>small, .studio-community-card-foot>small,
+  .studio-review-author, .studio-note-actions>span, .studio-report-meta small,
+  .studio-episode-analytics-title>span, .studio-episode-analytics-row>div small,
+  .studio-activity-day small, .sf-manuscript-safe, .sf-manuscript-step,
+  .sf-manuscript-step span, .sf-manuscript-file small,
+  .sf-manuscript-section-main small, .sf-manuscript-metrics span,
+  .sf-manuscript-preview-heading span, .sf-manuscript-preview-note,
+  .sf-manuscript-preview-break, .sf-manuscript-split-tools span,
+  .sf-manuscript-chat-status, .sf-manuscript-chat-message>span,
+  .sf-manuscript-chat-form small, .sf-materials-list h3,
+  .sf-materials-list>button small, .sf-materials-list>p) {
+  color: #46564a !important;
+}
+html[data-theme="light"] .studio-shell :is(.sf-manuscript-assistant-head p,
+  .sf-manuscript-upload-copy p, .sf-manuscript-upload-copy li,
+  .sf-manuscript-reconcile-intro p, .sf-manuscript-chat-head p,
+  .sf-manuscript-chat-welcome, .sf-manuscript-chat-form small,
+  .sf-manuscript-final-check p, .sf-manuscript-complete p,
+  .sf-materials-editor .studio-block-heading small) {
+  color: #46564a !important;
+}
+
+
+/* Creator access/loading states use the same readable working typography. */
+.studio-state { font-size: 15px; line-height: 1.7; }
+.studio-state>p:not(.eyebrow) { font-size: 16px; line-height: 1.75; }
+.studio-state .eyebrow { font-size: 13px; }
+.studio-state :is(.primary-button,.text-button,.outline-button) { font-size: 14px; min-height: 44px; }
+.studio-shell .studio-full-manuscript-control,
+.studio-shell .studio-import-eyebrow { font-size: 14px !important; }
+html[data-theme="light"] .studio-state>p:not(.eyebrow) { color: #3f4d42 !important; }
+
+
+/* Catch the remaining compact utility labels and preview captions. */
+.studio-shell :is(.studio-block-heading button, .studio-editor-actions button,
+  .studio-bulk-review .studio-form-title span, .studio-bulk-row>span,
+  .studio-revision-row i, .studio-cover-placeholder,
+  .studio-live-preview .eyebrow, .studio-asset-strip figcaption,
+  .sf-manuscript-preview-heading strong, .sf-manuscript-inline-warning,
+  .sf-manuscript-warnings strong, .sf-manuscript-warnings p,
+  .sf-manuscript-split-tools button, .sf-manuscript-final-check strong) {
+  font-size: 13px !important;
+  line-height: 1.55;
+}
+.studio-shell :is(.studio-bulk-row>span, .studio-revision-row i,
+  .studio-cover-placeholder, .studio-asset-strip figcaption,
+  .sf-manuscript-inline-warning, .sf-manuscript-warnings p,
+  .sf-manuscript-split-tools button) {
+  color: #c4cdc3;
+}
+html[data-theme="light"] .studio-shell :is(.studio-bulk-row>span,
+  .studio-revision-row i, .studio-cover-placeholder,
+  .studio-asset-strip figcaption, .sf-manuscript-inline-warning,
+  .sf-manuscript-warnings p, .sf-manuscript-split-tools button) {
+  color: #46564a !important;
+}

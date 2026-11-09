@@ -14,6 +14,8 @@ export type ImportedManuscriptBlock = {
   lineSpacingMode?: "auto" | "exact" | "atLeast";
   bold?: boolean;
   italic?: boolean;
+  outlineLevel?: number;
+  styleId?: string;
 };
 
 function readU16(view: DataView, offset: number) { return view.getUint16(offset, true); }
@@ -64,11 +66,13 @@ function child(parent: Element | null, name: string): Element | null {
 function descendants(parent: Element, name: string): Element[] {
   return Array.from(parent.getElementsByTagNameNS("*", name));
 }
-function onOff(parent: Element | null, name: string): boolean | undefined {
-  const node = child(parent, name);
+function onOffNode(node: Element | null): boolean | undefined {
   if (!node) return undefined;
   const value = node.getAttribute("val");
   return value === "0" || value === "false" || value === "none" || value === "nil" ? false : true;
+}
+function onOff(parent: Element | null, name: string): boolean | undefined {
+  return onOffNode(child(parent, name));
 }
 function twips(value: string | null): number | undefined {
   if (value === null) return undefined;
@@ -136,8 +140,8 @@ export async function importDocx(file: File): Promise<ImportedManuscriptBlock[]>
       let text = "";
       for (const node of Array.from(run.children)) {
         if (node.localName === "t" || node.localName === "delText") text += node.textContent || "";
-        else if (node.localName === "tab") text += "\\t";
-        else if (node.localName === "br" || node.localName === "cr") text += "\\n";
+        else if (node.localName === "tab") text += "\t";
+        else if (node.localName === "br" || node.localName === "cr") text += "\n";
       }
       if (!text) continue;
       const runValue: ManuscriptRun = { text };
@@ -145,7 +149,7 @@ export async function importDocx(file: File): Promise<ImportedManuscriptBlock[]>
       const runStyleChain = styleChain(runStyleId);
       for (const [key, tag] of [["bold", "b"], ["italic", "i"], ["underline", "u"], ["strike", "strike"]] as const) {
         const direct = onOff(rPr, tag);
-        const inherited = onOff(inheritedProperty(runStyleChain, tag, "rPr") || inheritedProperty(pStyleChain, tag, "rPr"), tag);
+        const inherited = onOffNode(inheritedProperty(runStyleChain, tag, "rPr") || inheritedProperty(pStyleChain, tag, "rPr"));
         const flag = direct !== undefined ? direct : inherited;
         if (flag !== undefined) runValue[key] = flag;
       }
@@ -157,12 +161,20 @@ export async function importDocx(file: File): Promise<ImportedManuscriptBlock[]>
     const text = runs.map((run) => run.text).join("");
     const isEmpty = !text.trim();
     const isSectionBreak = !!child(pPr, "pageBreakBefore") || !!child(pPr, "sectPr");
-    const isHeading = /^heading[1-6]$/.test(pStyle) || pStyle === "title" || pStyle === "subtitle";
+    const outlineNode = child(pPr, "outlineLvl") || inheritedProperty(pStyleChain, "outlineLvl", "pPr");
+    const outlineLevelRaw = outlineNode?.getAttribute("val");
+    const outlineLevel = outlineLevelRaw !== null && outlineLevelRaw !== undefined ? Number(outlineLevelRaw) : undefined;
+    const isHeading = /^heading[1-6]$/.test(pStyle) || pStyle === "title" || pStyle === "subtitle" || (outlineLevel !== undefined && Number.isFinite(outlineLevel) && outlineLevel <= 5);
+    const visibleRuns = runs.filter((run) => run.text.trim().length > 0);
+    const allRunsBold = visibleRuns.length > 0 && visibleRuns.every((run) => run.bold === true);
     const isQuote = pStyle.includes("quote") || pStyle.includes("intensequote");
     const block: ImportedManuscriptBlock = {
       type: isSectionBreak ? "separator" : isEmpty ? "spacer" : isHeading ? "heading" : isQuote ? "quote" : "paragraph",
       text,
       ...(runs.length ? { runs } : {}),
+      ...(pStyleId ? { styleId: pStyleId } : {}),
+      ...(outlineLevel !== undefined && Number.isFinite(outlineLevel) ? { outlineLevel } : {}),
+      ...(allRunsBold ? { bold: true } : {}),
       ...(left !== undefined ? { indentLeft: left / 12 } : {}),
       ...(firstLine !== undefined ? { indentFirstLine: firstLine / 12 } : {}),
       ...(hanging !== undefined ? { indentHanging: hanging / 12 } : {}),
