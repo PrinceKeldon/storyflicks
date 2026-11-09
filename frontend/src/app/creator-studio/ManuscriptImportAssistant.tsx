@@ -246,7 +246,13 @@ export default function ManuscriptImportAssistant({ storyId, storyTitle, section
           throw new Error("Gemini returned incomplete or overlapping chapter boundaries. Your current analysis has been kept.");
         }
         const sectionBlocks = sourceBlocks.slice(item.start_block, item.end_block + 1);
-        if (sectionBlocks[0] && (sectionBlocks[0].type === "heading" || /^(chapter|episode|part|section|book)\s+/i.test(sectionBlocks[0].text.trim()))) {
+        const firstBlockTitle = sectionBlocks[0] ? normaliseTitle(sectionBlocks[0].text) : "";
+        const suggestedTitle = normaliseTitle(item.title);
+        if (sectionBlocks[0] && (
+          sectionBlocks[0].type === "heading"
+          || /^(chapter|episode|part|section|book)\s+/i.test(sectionBlocks[0].text.trim())
+          || (firstBlockTitle && firstBlockTitle === suggestedTitle)
+        )) {
           sectionBlocks.shift();
         }
         suggested.push({
