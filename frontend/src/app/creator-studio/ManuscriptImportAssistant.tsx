@@ -361,13 +361,16 @@ export default function ManuscriptImportAssistant({ storyId, storyTitle, section
     const savedIds = new Set(sections.filter(section => section.saved).map(section => section.id));
     try {
       let nextSequence = Math.max(0, ...orderedEpisodes.map(episode => episode.sequence_number)) + 1;
+      let frontMatterPosition = 0;
+      let backMatterPosition = 0;
       for (const section of sections) {
         if (!section.include || savedIds.has(section.id)) continue;
         const content = { blocks: section.blocks.filter(block => block.type === "separator" || block.type === "spacer" || block.text.trim()) };
         if (section.kind === "material") {
           await request("/creator/stories/" + storyId + "/materials", { method: "POST", body: JSON.stringify({
             title: section.title.trim(), section_type: section.materialType, placement: section.placement,
-            position: 0, content, publication_status: "draft", is_visible: true,
+            position: section.placement === "front_matter" ? frontMatterPosition++ : backMatterPosition++,
+            content, publication_status: "draft", is_visible: true,
           }) });
         } else {
           const existing = section.targetEpisodeId ? orderedEpisodes.find(episode => episode.id === section.targetEpisodeId) : undefined;
