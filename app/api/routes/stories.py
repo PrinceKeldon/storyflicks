@@ -68,5 +68,16 @@ async def get_story(slug: str = Path(pattern=r"^[a-z0-9]+(-[a-z0-9]+)*$", max_le
             "order": "sequence_number.asc",
         },
     )
+    materials = await supabase.admin_get(
+        "story_material_sections",
+        {
+            "select": "id,title,section_type,placement,position",
+            "story_id": f"eq.{story['id']}",
+            "publication_status": "eq.published",
+            "is_visible": "eq.true",
+            "order": "placement.asc,position.asc",
+            "limit": "100",
+        },
+    )
     story["cover_url"] = public_storage_url(story.get("cover_path"))
-    return {"story": story, "episodes": episodes}
+    return {"story": story, "episodes": episodes, "materials": materials}
