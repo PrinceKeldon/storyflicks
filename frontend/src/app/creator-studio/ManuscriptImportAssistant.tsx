@@ -51,10 +51,21 @@ function wordCount(blocks: Block[]) {
 function normaliseTitle(value: string) {
   return value.toLowerCase().normalize("NFKD").replace(/[\u0300-\u036f]/g, "").replace(/^(chapter|episode|part|section|book)\s+(\d+|[ivxlcdm]+|one|two|three|four|five|six|seven|eight|nine|ten)\s*[:.\-–—]?\s*/i, "").replace(/[^a-z0-9]+/g, " ").trim();
 }
-function isChapterBoundary(block: Block) {
+function headingOutlineLevel(block: Block): number | undefined {
+  if (typeof block.outlineLevel === "number" && Number.isFinite(block.outlineLevel)) return block.outlineLevel;
+  const styleMatch = block.styleId?.match(/^heading([1-6])$/i);
+  return styleMatch ? Number(styleMatch[1]) - 1 : undefined;
+}
+function isChapterBoundary(block: Block, chapterHeadingLevel?: number) {
   const value = block.text.trim();
   if (!value || value.length >= 150) return false;
-  if (block.type === "heading" || chapterPattern.test(value)) return true;
+  if (block.type === "heading") {
+    const level = headingOutlineLevel(block);
+    // DOCX Heading 2–6 styles are commonly subheadings inside a chapter.
+    // Use the manuscript's highest heading level as the chapter boundary level.
+    return level === undefined || chapterHeadingLevel === undefined || level === chapterHeadingLevel;
+  }
+  if (chapterPattern.test(value)) return true;
 
   // Many manuscripts use Normal/Body paragraph styles for chapter titles.
   // Recognise typographic signals without treating every bold phrase as a chapter.
@@ -93,7 +104,9 @@ function classifyMaterial(title: string): Pick<Section, "kind" | "materialType" 
   return { kind: "material", materialType, placement };
 }
 function detectSections(blocks: Block[]): Section[] {
-  const boundaries = blocks.map((block, index) => isChapterBoundary(block) ? index : -1).filter(index => index >= 0);
+  const headingLevels = blocks.filter(block => block.type === "heading").map(headingOutlineLevel).filter((level): level is number => level !== undefined);
+  const chapterHeadingLevel = headingLevels.length ? Math.min(...headingLevels) : undefined;
+  const boundaries = blocks.map((block, index) => isChapterBoundary(block, chapterHeadingLevel) ? index : -1).filter(index => index >= 0);
   if (!boundaries.length) return [{ id: makeId(), title: "Complete manuscript", blocks, targetEpisodeId: "", include: true, saved: false, kind: "episode", materialType: "other", placement: "front_matter" }];
   const starts = [...boundaries];
   if (boundaries[0] > 0 && wordCount(blocks.slice(0, boundaries[0])) > 0) starts.unshift(0);
