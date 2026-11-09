@@ -56,6 +56,7 @@ export default async function StoryDetailPage({ params }: { params: Promise<{ sl
   const episodes = result?.episodes ?? (slug === "the-priest" ? knownEpisodes : []);
   const sectionLabel = story?.section_label || "Episode";
   const sectionLabelPlural = story?.section_label_plural || "Episodes";
+  const isChapterGuide = sectionLabel.trim().toLowerCase() === "chapter";
 
   return (
     <main className="app-shell detail-shell">
@@ -81,18 +82,16 @@ export default async function StoryDetailPage({ params }: { params: Promise<{ sl
         <div className="episode-list">
           {episodes.map((episode) => (
             episode.id ? (
-              <Link href={`/stories/${slug}/read/${episode.id}`} className="episode-row" key={episode.id}>
+              <Link href={`/stories/${slug}/read/${episode.id}`} className={isChapterGuide ? "episode-row chapter-guide-row" : "episode-row"} key={episode.id}>
                 <span className="episode-number">{String(episode.sequence_number).padStart(2, "0")}</span>
-                <div className="episode-copy"><h3>{episode.title}</h3><p>{episode.synopsis || (episode.sequence_number === 1 ? "Every secret has a beginning." : "The confession leaves its mark.")}</p></div>
-                <span className="episode-status">PUBLISHED</span>
-                <span className="episode-arrow">↗</span>
+                <div className="episode-copy"><h3>{episode.title}</h3>{!isChapterGuide && <p>{episode.synopsis || (episode.sequence_number === 1 ? "Every secret has a beginning." : "The confession leaves its mark.")}</p>}</div>
+                {!isChapterGuide && <><span className="episode-status">PUBLISHED</span><span className="episode-arrow">↗</span></>}
               </Link>
             ) : (
-              <article className="episode-row" key={episode.sequence_number}>
+              <article className={isChapterGuide ? "episode-row chapter-guide-row" : "episode-row"} key={episode.sequence_number}>
                 <span className="episode-number">{String(episode.sequence_number).padStart(2, "0")}</span>
-                <div className="episode-copy"><h3>{episode.title}</h3><p>{episode.synopsis || (episode.sequence_number === 1 ? "Every secret has a beginning." : "The confession leaves its mark.")}</p></div>
-                <span className="episode-status">PUBLISHED</span>
-                <span className="episode-arrow">↗</span>
+                <div className="episode-copy"><h3>{episode.title}</h3>{!isChapterGuide && <p>{episode.synopsis || (episode.sequence_number === 1 ? "Every secret has a beginning." : "The confession leaves its mark.")}</p>}</div>
+                {!isChapterGuide && <><span className="episode-status">PUBLISHED</span><span className="episode-arrow">↗</span></>}
               </article>
             )
           ))}
