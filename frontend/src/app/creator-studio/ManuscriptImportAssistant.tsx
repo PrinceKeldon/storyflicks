@@ -38,7 +38,7 @@ const MAX_FILE_BYTES = 30 * 1024 * 1024;
 const MAX_EPISODE_JSON_BYTES = 2 * 1024 * 1024;
 const MAX_EPISODE_BLOCKS = 2000;
 const MAX_BLOCK_TEXT = 100000;
-const chapterPattern = /^(?:(?:chapter|episode|part|section|book)\s+(?:\d{1,3}|[ivxlcdm]+|one|two|three|four|five|six|seven|eight|nine|ten|eleven|twelve|thirteen|fourteen|fifteen|sixteen|seventeen|eighteen|nineteen|twenty)(?:\s*[:.\-–—]?\s*.*)?|\d{1,3}[.)]\s+.+|(?:prologue|epilogue|foreword|preface|introduction|afterword|acknowledgements|acknowledgments))$/i;
+const chapterPattern = /^(?:(?:chapter|episode|part|section|book)\s+(?:\d{1,3}|[ivxlcdm]+|one|two|three|four|five|six|seven|eight|nine|ten|eleven|twelve|thirteen|fourteen|fifteen|sixteen|seventeen|eighteen|nineteen|twenty)(?:\s*[:.\-–—]?\s*.*)?|\d{1,3}[.)]\s+.+|(?:prologue|epilogue|foreword|preface|introduction|afterword|acknowledgements|acknowledgments|dedication|author[’\u0027]s note|author note|about the author|further reading|copyright|title page|table of contents))$/i;
 
 function makeId() {
   return typeof crypto !== "undefined" && "randomUUID" in crypto
@@ -86,6 +86,7 @@ function classifyMaterial(title: string): Pick<Section, "kind" | "materialType" 
     "further reading": "further_reading",
   };
   const key = value.replace(/[^a-z ]/g, "").replace(/\s+/g, " ").trim();
+  if (key === "opening material" || key === "introduction" || key === "copyright" || key === "title page" || key === "table of contents") return { kind: "material", materialType: "other", placement: "front_matter" };
   const materialType = types[key];
   if (!materialType) return null;
   const placement = ["epilogue", "afterword", "acknowledgements", "about_author", "further_reading"].includes(materialType) ? "back_matter" : "front_matter";
@@ -304,7 +305,7 @@ export default function ManuscriptImportAssistant({ storyId, storyTitle, section
       const source = current[index];
       if (blockIndex <= 0 || blockIndex >= source.blocks.length) return current;
       const first = { ...source, blocks: source.blocks.slice(0, blockIndex) };
-      const second: Section = { id: makeId(), title: "New " + sectionLabel.toLowerCase(), blocks: source.blocks.slice(blockIndex), targetEpisodeId: "", include: true, saved: false };
+      const second: Section = { id: makeId(), title: "New " + sectionLabel.toLowerCase(), blocks: source.blocks.slice(blockIndex), targetEpisodeId: "", include: true, saved: false, kind: source.kind, materialType: source.materialType, placement: source.placement };
       const next = [...current]; next.splice(index, 1, first, second); return next;
     });
     setExpandedId("");
