@@ -66,11 +66,13 @@ function child(parent: Element | null, name: string): Element | null {
 function descendants(parent: Element, name: string): Element[] {
   return Array.from(parent.getElementsByTagNameNS("*", name));
 }
-function onOff(parent: Element | null, name: string): boolean | undefined {
-  const node = child(parent, name);
+function onOffNode(node: Element | null): boolean | undefined {
   if (!node) return undefined;
   const value = node.getAttribute("val");
   return value === "0" || value === "false" || value === "none" || value === "nil" ? false : true;
+}
+function onOff(parent: Element | null, name: string): boolean | undefined {
+  return onOffNode(child(parent, name));
 }
 function twips(value: string | null): number | undefined {
   if (value === null) return undefined;
@@ -147,7 +149,7 @@ export async function importDocx(file: File): Promise<ImportedManuscriptBlock[]>
       const runStyleChain = styleChain(runStyleId);
       for (const [key, tag] of [["bold", "b"], ["italic", "i"], ["underline", "u"], ["strike", "strike"]] as const) {
         const direct = onOff(rPr, tag);
-        const inherited = onOff(inheritedProperty(runStyleChain, tag, "rPr") || inheritedProperty(pStyleChain, tag, "rPr"), tag);
+        const inherited = onOffNode(inheritedProperty(runStyleChain, tag, "rPr") || inheritedProperty(pStyleChain, tag, "rPr"));
         const flag = direct !== undefined ? direct : inherited;
         if (flag !== undefined) runValue[key] = flag;
       }
