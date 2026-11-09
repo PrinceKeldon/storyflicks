@@ -247,7 +247,7 @@ export default function ManuscriptImportAssistant({ storyId, storyTitle, section
         }),
       }) as { reply?: string; model?: string };
       if (!result.reply?.trim()) throw new Error("Gemini returned an empty reply. Please try again.");
-      setChatMessages(current => [...current, { role: "model", text: result.reply!.trim() }].slice(-20));
+      setChatMessages(current => [...current, { role: "model" as const, text: result.reply!.trim() }].slice(-20));
     } catch (caught) {
       setError(caught instanceof Error ? caught.message : "Gemini could not reply. Please try again.");
       setChatMessages(current => current.filter((item, index) => !(index === current.length - 1 && item.role === "user" && item.text === message)));
