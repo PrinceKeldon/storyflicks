@@ -14,6 +14,7 @@ from app.api.routes.episodes import (
     ReviewSubmission,
 )
 from app.api.routes.manuscript import ManuscriptAnalysisSubmission, ManuscriptChatSubmission, ManuscriptBlock
+from app.api.routes.materials import MaterialSubmission
 
 
 class CreatorRequestValidationTests(unittest.TestCase):
@@ -92,6 +93,21 @@ class CreatorRequestValidationTests(unittest.TestCase):
                 message="Hello",
                 history=[{"role": "user", "text": "x" * 2001}],
             )
+
+    def test_story_material_sections_are_bounded_and_typed(self):
+        valid = MaterialSubmission(
+            title="Dedication",
+            section_type="dedication",
+            placement="front_matter",
+            content={"blocks": [{"type": "paragraph", "text": "For my family."}]},
+        )
+        self.assertEqual(valid.placement, "front_matter")
+        with self.assertRaises(ValidationError):
+            MaterialSubmission(title=" ", placement="front_matter")
+        with self.assertRaises(ValidationError):
+            MaterialSubmission(title="Unknown", section_type="chapter", placement="front_matter")
+        with self.assertRaises(ValidationError):
+            MaterialSubmission(title="Too large", placement="back_matter", content={"text": "x" * (2 * 1024 * 1024)})
 
     def test_reader_contributions_have_character_caps(self):
         self.assertEqual(len(ReviewSubmission(body="A review").body), 8)
