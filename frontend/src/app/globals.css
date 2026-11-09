@@ -1699,3 +1699,13 @@ html[data-theme="light"] .studio-shell :is(.sf-manuscript-assistant-head p,
   .sf-materials-editor .studio-block-heading small) {
   color: #46564a !important;
 }
+
+
+/* Creator access/loading states use the same readable working typography. */
+.studio-state { font-size: 15px; line-height: 1.7; }
+.studio-state>p:not(.eyebrow) { font-size: 16px; line-height: 1.75; }
+.studio-state .eyebrow { font-size: 13px; }
+.studio-state :is(.primary-button,.text-button,.outline-button) { font-size: 14px; min-height: 44px; }
+.studio-shell .studio-full-manuscript-control,
+.studio-shell .studio-import-eyebrow { font-size: 14px !important; }
+html[data-theme="light"] .studio-state>p:not(.eyebrow) { color: #3f4d42 !important; }
