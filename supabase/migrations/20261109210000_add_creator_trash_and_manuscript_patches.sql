@@ -63,6 +63,11 @@ begin
   if v_story.deleted_at is not null then
     return jsonb_build_object('story_id',p_story_id,'status','already_deleted');
   end if;
+  delete from public.episode_publication_queue
+  where episode_id in (select id from public.episodes where story_id=p_story_id);
+  update public.episodes
+  set publication_status='draft',scheduled_at=null,updated_at=now()
+  where story_id=p_story_id and publication_status='scheduled' and deleted_at is null;
   update public.stories set deleted_at=now(),deleted_by=v_user,deleted_from_status=publication_status,publication_status='draft',updated_at=now() where id=p_story_id;
   insert into public.creator_content_audit(entity_type,entity_id,entity_title,actor_id,action,details)
   values('story',p_story_id,v_story.title,v_user,'deleted',jsonb_build_object('previous_status',v_story.publication_status));
