@@ -1,3 +1,4 @@
+import asyncio
 from uuid import UUID
 
 from fastapi import APIRouter, Depends, HTTPException
@@ -33,7 +34,7 @@ async def list_creator_trash(user: AuthenticatedUser = Depends(get_current_user)
     if not story_ids:
         return {"stories": [], "episodes": [], "materials": []}
     story_filter = f"in.({','.join(story_ids)})"
-    stories, episodes, materials = await __import__("asyncio").gather(
+    stories, episodes, materials = await asyncio.gather(
         supabase.admin_get(
             "stories",
             {
