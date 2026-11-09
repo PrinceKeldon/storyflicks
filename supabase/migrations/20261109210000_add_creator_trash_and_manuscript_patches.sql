@@ -78,7 +78,7 @@ begin
   end if;
   select * into v_story from public.stories where id=p_story_id and deleted_at is not null for update;
   if not found then raise exception 'Trashed story not found'; end if;
-  update public.stories set deleted_at=null,deleted_by=null,publication_status=coalesce(deleted_from_status,'draft'),deleted_from_status=null,updated_at=now() where id=p_story_id;
+  update public.stories set deleted_at=null,deleted_by=null,publication_status='draft',deleted_from_status=null,updated_at=now() where id=p_story_id;
   insert into public.creator_content_audit(entity_type,entity_id,entity_title,actor_id,action)
   values('story',p_story_id,v_story.title,v_user,'restored');
   return jsonb_build_object('story_id',p_story_id,'status','restored');
@@ -117,7 +117,7 @@ begin
   if exists(select 1 from public.episodes active where active.story_id=v_episode.story_id and active.sequence_number=v_episode.sequence_number and active.deleted_at is null and active.id<>p_episode_id) then
     raise exception 'Chapter number % is already in use. Move or delete the active chapter before restoring this item.',v_episode.sequence_number;
   end if;
-  update public.episodes set deleted_at=null,deleted_by=null,publication_status=coalesce(deleted_from_status,'draft'),deleted_from_status=null,updated_at=now() where id=p_episode_id;
+  update public.episodes set deleted_at=null,deleted_by=null,publication_status='draft',deleted_from_status=null,updated_at=now() where id=p_episode_id;
   insert into public.creator_content_audit(entity_type,entity_id,entity_title,actor_id,action,details)
   values('episode',p_episode_id,v_episode.title,v_user,'restored',jsonb_build_object('sequence_number',v_episode.sequence_number));
   return jsonb_build_object('episode_id',p_episode_id,'status','restored');
@@ -191,7 +191,10 @@ begin
     if exists(select 1 from public.reader_support_contributions where story_id=p_entity_id)
       or exists(select 1 from public.reading_progress where episode_id=any(coalesce(v_episode_ids,'{}'::uuid[])))
       or exists(select 1 from public.reviews where episode_id=any(coalesce(v_episode_ids,'{}'::uuid[])))
-      or exists(select 1 from public.reader_reactions where episode_id=any(coalesce(v_episode_ids,'{}'::uuid[]))) then
+      or exists(select 1 from public.reader_reactions where episode_id=any(coalesce(v_episode_ids,'{}'::uuid[])))
+      or exists(select 1 from public.episode_participations where episode_id=any(coalesce(v_episode_ids,'{}'::uuid[])))
+      or exists(select 1 from public.episode_entitlements where episode_id=any(coalesce(v_episode_ids,'{}'::uuid[])) or source_episode_id=any(coalesce(v_episode_ids,'{}'::uuid[])))
+      or exists(select 1 from public.episode_unlock_events where source_episode_id=any(coalesce(v_episode_ids,'{}'::uuid[])) or unlocked_episode_id=any(coalesce(v_episode_ids,'{}'::uuid[]))) then
       raise exception 'This story has reader activity or support records. It can stay in Trash, but permanent deletion is blocked to preserve those records.';
     end if;
     delete from public.publication_history where story_id=p_entity_id;
@@ -239,3 +242,55 @@ grant execute on function public.creator_delete_material(uuid) to authenticated,
 grant execute on function public.creator_restore_material(uuid) to authenticated,service_role;
 grant execute on function public.creator_delete_draft_revision(uuid) to authenticated,service_role;
 grant execute on function public.creator_purge_trash(text,uuid) to authenticated,service_role;
+
+
+-- Creator workspace omits trashed content and refuses to open a trashed story.
+create or replace function public.get_creator_story_workspace(p_story_id uuid)
+returns jsonb language plpgsql security definer set search_path to '' as $function$
+declare
+  v_user_id uuid := auth.uid();
+  v_story jsonb;
+  v_role text;
+  v_seasons jsonb;
+  v_episodes jsonb;
+  v_total_episodes integer;
+  v_published_episodes integer;
+  v_draft_episodes integer;
+  v_scheduled_episodes integer;
+begin
+  if v_user_id is null then raise exception 'Authentication required'; end if;
+  if not exists(select 1 from public.creator_profiles cp where cp.id=v_user_id and cp.status='active') then
+    raise exception 'An active creator profile is required';
+  end if;
+  select sc.role into v_role from public.story_creators sc
+  where sc.story_id=p_story_id and sc.creator_id=v_user_id;
+  if v_role is null or v_role not in ('owner','author','editor') then
+    raise exception 'You do not have permission to manage this story';
+  end if;
+  select to_jsonb(s) into v_story from public.stories s
+  where s.id=p_story_id and s.deleted_at is null;
+  if v_story is null then raise exception 'Story not found or moved to Trash'; end if;
+  select coalesce(jsonb_agg(to_jsonb(season) order by season.id),'[]'::jsonb)
+  into v_seasons from public.seasons season where season.story_id=p_story_id;
+  select
+    coalesce(jsonb_agg(to_jsonb(e) || jsonb_build_object(
+      'latest_revision',(
+        select jsonb_build_object('id',er.id,'revision_number',er.revision_number,
+          'revision_status',er.revision_status,'created_at',er.created_at,'published_at',er.published_at)
+        from public.episode_revisions er where er.episode_id=e.id
+        order by er.revision_number desc limit 1
+      )
+    ) order by e.sequence_number),'[]'::jsonb),
+    count(*)::integer,
+    count(*) filter(where e.publication_status='published')::integer,
+    count(*) filter(where e.publication_status='draft')::integer,
+    count(*) filter(where e.publication_status='scheduled')::integer
+  into v_episodes,v_total_episodes,v_published_episodes,v_draft_episodes,v_scheduled_episodes
+  from public.episodes e where e.story_id=p_story_id and e.deleted_at is null;
+  return jsonb_build_object(
+    'story',v_story,'creator_role',v_role,'seasons',v_seasons,'episodes',v_episodes,
+    'episode_summary',jsonb_build_object('total',v_total_episodes,'published',v_published_episodes,
+      'draft',v_draft_episodes,'scheduled',v_scheduled_episodes)
+  );
+end;
+$function$;
