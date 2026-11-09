@@ -1015,9 +1015,9 @@ html[data-theme="light"] .user-settings-footer{border-color:rgba(43,55,44,.17)}
 
 
 /* Manuscript fidelity: author-defined paragraph formatting takes precedence. */
-.manuscript p{line-height:1.6;text-indent:0;margin:0 0 .45em;white-space:pre-wrap;text-align:left}
+.manuscript p{line-height:1.6;text-indent:0;margin:0;white-space:pre-wrap;text-align:left}
 .manuscript .manuscript-paragraph{font:inherit}
-.manuscript .manuscript-dialogue{margin:.12em 0;line-height:1.6}
+.manuscript .manuscript-dialogue{margin:0;line-height:1.6}
 .manuscript .manuscript-emphasis{text-indent:0;text-align:center;font-style:italic;margin:1.1em 0}
 .manuscript p strong{font-weight:700}
 .manuscript p em{font-style:italic}
