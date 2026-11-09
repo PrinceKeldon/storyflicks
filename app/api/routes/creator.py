@@ -8,6 +8,7 @@ from pydantic import BaseModel, Field, field_validator
 
 from app.api.deps import get_current_user, supabase
 from app.core.security import AuthenticatedUser
+from app.api.routes.creator_assets import require_story_editor
 
 router = APIRouter()
 
@@ -360,6 +361,46 @@ async def update_creator_story(
         },
         user.access_token,
     )
+
+
+class CreatorEpisodeTitleSubmission(BaseModel):
+    title: str = Field(min_length=1, max_length=200)
+
+    @field_validator("title")
+    @classmethod
+    def validate_title(cls, value: str) -> str:
+        title = value.strip()
+        if not title:
+            raise ValueError("A chapter title is required.")
+        return title
+
+
+@router.patch("/creator/stories/{story_id}/episodes/{episode_id}/title")
+async def update_creator_episode_title(
+    story_id: UUID,
+    episode_id: UUID,
+    submission: CreatorEpisodeTitleSubmission,
+    user: AuthenticatedUser = Depends(get_current_user),
+):
+    await require_story_editor(story_id, user)
+    episodes = await supabase.admin_get(
+        "episodes",
+        {
+            "id": f"eq.{episode_id}",
+            "story_id": f"eq.{story_id}",
+            "deleted_at": "is.null",
+            "select": "id",
+            "limit": "1",
+        },
+    )
+    if not episodes:
+        raise HTTPException(404, "Chapter not found in this story.")
+    await supabase.admin_patch(
+        "episodes",
+        {"id": f"eq.{episode_id}", "story_id": f"eq.{story_id}"},
+        {"title": submission.title},
+    )
+    return {"episode_id": str(episode_id), "title": submission.title}
 
 
 @router.post("/creator/stories/{story_id}/episodes")
