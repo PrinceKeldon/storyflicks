@@ -140,8 +140,8 @@ export async function importDocx(file: File): Promise<ImportedManuscriptBlock[]>
       let text = "";
       for (const node of Array.from(run.children)) {
         if (node.localName === "t" || node.localName === "delText") text += node.textContent || "";
-        else if (node.localName === "tab") text += "\\t";
-        else if (node.localName === "br" || node.localName === "cr") text += "\\n";
+        else if (node.localName === "tab") text += "\t";
+        else if (node.localName === "br" || node.localName === "cr") text += "\n";
       }
       if (!text) continue;
       const runValue: ManuscriptRun = { text };
