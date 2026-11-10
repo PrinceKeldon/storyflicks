@@ -223,6 +223,11 @@ export default function ReadingRoom({ slug, episodeId }: { slug: string; episode
   const sourceTitleRuns = sourceTitleBlock?.runs || [];
   const sourceTitleRunFormat = sourceTitleRuns[0]?.formatting;
   const leadingBlocks = sourceTitleIndex > 0 ? blocks.slice(0, sourceTitleIndex) : [];
+  const firstBodyParagraphIndex = blocks.findIndex((block, index) => {
+    if (index <= sourceTitleIndex || !blockText(block).trim()) return false;
+    const kind = String(block.type || "paragraph").toLowerCase();
+    return kind === "paragraph" || kind === "dialogue" || kind === "emphasis";
+  });
 
   if (status === "loading") return <main className="reader-state"><span className="reader-state-mark">SF.</span><p>Preparing your reading room…</p></main>;
   if (status === "signed-out") return <main className="reader-state"><span className="reader-state-mark">SF.</span><p className="eyebrow">YOUR STORY IS WAITING</p><h1>Sign in to enter the Reading Room.</h1><p>Your reading progress and episode access are tied to your account.</p><Link className="primary-button" href={`/sign-in?next=/stories/${slug}/read/${episodeId}`}>Sign in to continue <span>↗</span></Link></main>;
@@ -272,7 +277,7 @@ export default function ReadingRoom({ slug, episodeId }: { slug: string; episode
       <article className={`reading-page reading-width-${width}`}>
         <div className="reading-kicker">{payload.story.title} <span>·</span> {(payload.story.section_label || "Episode").toUpperCase()} {String(payload.episode.sequence_number).padStart(2, "0")}</div>
         {leadingBlocks.length > 0 && <div className="manuscript" style={{ fontSize: `${fontScale}%` }}>{leadingBlocks.map((block, index) => <p key={"leading-" + index} style={manuscriptBlockStyle(block)}>{renderRuns(block)}</p>)}</div>}
-        <h1 style={{ ...manuscriptBlockStyle(sourceTitleBlock || {}), fontWeight: sourceTitleBlock?.bold || (sourceTitleRuns.length > 0 && sourceTitleRuns.every((run) => run.bold)) ? 700 : undefined, fontStyle: sourceTitleBlock?.italic || (sourceTitleRuns.length > 0 && sourceTitleRuns.every((run) => run.italic)) ? "italic" : undefined, textAlign: sourceTitleBlock?.align || "left", fontFamily: sourceTitleRunFormat?.fontFamily, fontSize: typeof sourceTitleRunFormat?.fontSizePt === "number" ? sourceTitleRunFormat.fontSizePt + "pt" : undefined, color: sourceTitleRunFormat?.color }}>{payload.episode.title}</h1>
+        <h1 className="reading-episode-title" style={{ ...manuscriptBlockStyle(sourceTitleBlock || {}), fontWeight: sourceTitleBlock?.bold || (sourceTitleRuns.length > 0 && sourceTitleRuns.every((run) => run.bold)) ? 700 : 500, fontStyle: sourceTitleBlock?.italic || (sourceTitleRuns.length > 0 && sourceTitleRuns.every((run) => run.italic)) ? "italic" : undefined, textAlign: "center", fontFamily: "'Playfair Display', Georgia, serif", color: sourceTitleRunFormat?.color }}>{payload.episode.title}</h1>
         {payload.episode.synopsis && <p className="reading-deck">{payload.episode.synopsis}</p>}
         <div className="reading-rule"><span>✦</span></div>
         <div className="manuscript" style={{ fontSize: `${fontScale}%` }}>
@@ -290,7 +295,7 @@ export default function ReadingRoom({ slug, episodeId }: { slug: string; episode
             if (kind.includes("quote")) return <blockquote style={style} key={index}>{renderRuns(block)}</blockquote>;
             if (kind === "dialogue") return <p className="manuscript-dialogue" style={style} key={index}>{renderRuns(block)}</p>;
             if (kind === "emphasis") return <p className="manuscript-emphasis" style={style} key={index}>{renderRuns(block)}</p>;
-            return <p className="manuscript-paragraph" style={style} key={index}>{renderRuns(block)}</p>;
+            return <p className={`manuscript-paragraph${index === firstBodyParagraphIndex ? " has-drop-cap" : ""}`} style={style} key={index}>{renderRuns(block)}</p>;
           })}
         </div>
         {payload.episode.assets?.filter((asset) => asset.public_url).map((asset) => <figure className="reading-asset" key={asset.id}><img src={asset.public_url!} alt={asset.alt_text || "Story illustration"} /></figure>)}
