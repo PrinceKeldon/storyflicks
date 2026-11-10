@@ -52,6 +52,25 @@ class SupabaseService:
         self._raise_for_supabase(response)
         return response.json() if response.content else None
 
+    async def admin_insert_if_missing(
+        self, table: str, payload: dict[str, Any], on_conflict: str
+    ) -> None:
+        """Insert a row unless one with the same `on_conflict` column(s) exists.
+
+        An existing row is left untouched, so this is safe to repeat.
+        """
+        async with httpx.AsyncClient(timeout=20.0) as client:
+            response = await client.post(
+                f"{settings.supabase_rest_url}/{table}",
+                headers={
+                    **self._admin_headers(),
+                    "Prefer": "resolution=ignore-duplicates,return=minimal",
+                },
+                params={"on_conflict": on_conflict},
+                json=payload,
+            )
+        self._raise_for_supabase(response)
+
     async def admin_patch(
         self, table: str, params: dict[str, str], payload: dict[str, Any]
     ) -> Any:
