@@ -2055,16 +2055,16 @@ body :is(.eyebrow, .feature-overline, .feature-kicker, .feature-meta, .art-capti
 /* App-wide typography and high-contrast text standard.
    Interface typography is never smaller than 16px. Authored manuscript run formatting
    remains intact in the reading surfaces. */
-html[data-theme="light"] body :not(.reading-room, .reading-room *) {
-  --site-text-primary: #000000;
-}
-html[data-theme="dark"] body :not(.reading-room, .reading-room *) {
-  --site-text-primary: #ffffff;
-}
-html[data-theme="light"] body :is(h1,h2,h3,h4,h5,h6,p,a,button,label,input,textarea,select,small,strong,em,span,li,summary,dt,dd,td,th,legend,figcaption,blockquote,time,output):not(.reading-room, .reading-room *) {
+html[data-theme="light"] body {
   color: #000000 !important;
 }
-html[data-theme="dark"] body :is(h1,h2,h3,h4,h5,h6,p,a,button,label,input,textarea,select,small,strong,em,span,li,summary,dt,dd,td,th,legend,figcaption,blockquote,time,output):not(.reading-room, .reading-room *) {
+html[data-theme="dark"] body {
+  color: #ffffff !important;
+}
+html[data-theme="light"] body *:not(.reading-room, .reading-room *) {
+  color: #000000 !important;
+}
+html[data-theme="dark"] body *:not(.reading-room, .reading-room *) {
   color: #ffffff !important;
 }
 html[data-theme="light"] body :is(input,textarea,select)::placeholder {
