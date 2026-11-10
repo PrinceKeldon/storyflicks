@@ -217,6 +217,8 @@ export default function ReadingRoom({ slug, episodeId }: { slug: string; episode
     requestAnimationFrame(() => window.scrollTo(0, y));
   }, [payload, status]);
 
+  const episodeArtwork = payload?.episode.assets?.find((asset) => asset.asset_type === "inline_image" && asset.public_url);
+  const bodyAssets = payload?.episode.assets?.filter((asset) => asset.public_url && asset.id !== episodeArtwork?.id) || [];
   const blocks = useMemo(() => extractBlocks(payload?.episode.content), [payload]);
   const sourceTitleIndex = blocks.findIndex((block) => block.sectionTitle === true);
   const sourceTitleBlock = sourceTitleIndex >= 0 ? blocks[sourceTitleIndex] : undefined;
@@ -278,11 +280,11 @@ export default function ReadingRoom({ slug, episodeId }: { slug: string; episode
         <div className="reading-kicker">{payload.story.title} <span>·</span> {(payload.story.section_label || "Episode").toUpperCase()} {String(payload.episode.sequence_number).padStart(2, "0")}</div>
         {leadingBlocks.length > 0 && <div className="manuscript" style={{ fontSize: `${fontScale}%` }}>{leadingBlocks.map((block, index) => <p key={"leading-" + index} style={manuscriptBlockStyle(block)}>{renderRuns(block)}</p>)}</div>}
         <div className="reading-episode-heading">
-          {payload.episode.assets?.find((asset) => asset.asset_type === "episode_image" && asset.public_url)?.public_url && (
+          {episodeArtwork?.public_url && (
             <img
               className="reading-episode-thumbnail"
-              src={payload.episode.assets.find((asset) => asset.asset_type === "episode_image" && asset.public_url)!.public_url!}
-              alt={payload.episode.assets.find((asset) => asset.asset_type === "episode_image" && asset.public_url)?.alt_text || `${payload.episode.title} episode artwork`}
+              src={episodeArtwork.public_url}
+              alt={episodeArtwork.alt_text || `${payload.episode.title} episode artwork`}
             />
           )}
           <div className="reading-episode-heading-copy">
@@ -309,7 +311,7 @@ export default function ReadingRoom({ slug, episodeId }: { slug: string; episode
             return <p className={`manuscript-paragraph${index === firstBodyParagraphIndex ? " has-drop-cap" : ""}`} style={style} key={index}>{renderRuns(block)}</p>;
           })}
         </div>
-        {payload.episode.assets?.filter((asset) => asset.public_url).map((asset) => <figure className="reading-asset" key={asset.id}><img src={asset.public_url!} alt={asset.alt_text || "Story illustration"} /></figure>)}
+        {bodyAssets.map((asset) => <figure className="reading-asset" key={asset.id}><img src={asset.public_url!} alt={asset.alt_text || "Story illustration"} /></figure>)}
         <footer className="reading-end">
           <span>END OF {(payload.story.section_label || "Episode").toUpperCase()} {String(payload.episode.sequence_number).padStart(2, "0")}</span>
           <h2>Let that one settle.</h2>

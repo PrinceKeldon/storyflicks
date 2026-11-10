@@ -86,7 +86,7 @@ async def get_story(slug: str = Path(pattern=r"^[a-z0-9]+(-[a-z0-9]+)*$", max_le
 
     episode_image_by_id = {}
     for asset in episode_assets:
-        if asset.get("asset_type") != "episode_image" or not asset.get("storage_path"):
+        if asset.get("asset_type") != "inline_image" or not asset.get("storage_path"):
             continue
         episode_image_by_id.setdefault(
             str(asset["episode_id"]),

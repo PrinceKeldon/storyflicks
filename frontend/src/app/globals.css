@@ -1934,11 +1934,11 @@ html[data-theme="light"] .library-state .library-secondary-link { color: #435448
 }
 .reading-episode-thumbnail {
   display: block;
-  flex: 0 0 clamp(104px, 14vw, 142px);
-  width: clamp(104px, 14vw, 142px);
+  flex: 0 0 clamp(92px, 12vw, 116px);
+  width: clamp(92px, 12vw, 116px);
   aspect-ratio: 2 / 3;
   height: auto;
-  object-fit: cover;
+  object-fit: contain;
   border: 1px solid var(--line);
   border-radius: 3px;
   background: #171918;
@@ -1975,11 +1975,11 @@ html[data-theme="light"] .library-state .library-secondary-link { color: #435448
     margin-top: 18px;
   }
   .reading-episode-thumbnail {
-    flex-basis: 88px;
-    width: 88px;
+    flex-basis: 78px;
+    width: 78px;
   }
 }
 @media(max-width:380px) {
   .reading-episode-heading { gap: 12px; }
-  .reading-episode-thumbnail { flex-basis: 76px; width: 76px; }
+  .reading-episode-thumbnail { flex-basis: 70px; width: 70px; }
 }
