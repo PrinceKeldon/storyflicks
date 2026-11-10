@@ -36,7 +36,7 @@ export default function TermsPage() {
           You must provide an email address that you control and keep your sign-in credentials
           secure. You are responsible for activity carried out through your account, except where
           applicable law provides otherwise. You must not impersonate another person, misuse
-          another user's account or attempt to bypass access controls. Some creator features are
+          another user&apos;s account or attempt to bypass access controls. Some creator features are
           available only to accounts that have been granted creator access.
         </p>
 
@@ -78,7 +78,7 @@ export default function TermsPage() {
           features are available. Public reviews may be displayed to other users with your platform
           profile name. Private feedback is not intended to appear as a public review. You must not
           submit unlawful, defamatory, threatening, harassing, discriminatory, deceptive, spam or
-          infringing material, or disclose another person's private information without a lawful
+          infringing material, or disclose another person&apos;s private information without a lawful
           basis.
         </p>
 
