@@ -58,7 +58,7 @@ def paid_event(**overrides) -> dict:
         "payment_status": "paid",
         "payment_intent": "pi_test_123",
         "amount_total": 500,
-        "currency": "eur",
+        "currency": "usd",
         "metadata": {
             "purpose": "reader_support",
             "user_id": str(uuid4()),
@@ -96,7 +96,7 @@ class WebhookTests(unittest.IsolatedAsyncioTestCase):
         self.assertEqual(row["stripe_checkout_session_id"], "cs_test_123")
         self.assertEqual(row["user_id"], session["metadata"]["user_id"])
         self.assertEqual(row["story_id"], session["metadata"]["story_id"])
-        self.assertEqual((row["amount_cents"], row["currency"]), (500, "eur"))
+        self.assertEqual((row["amount_cents"], row["currency"]), (500, "usd"))
         self.assertEqual(insert_call[3], "stripe_checkout_session_id")
         self.assertEqual(patch_call[0], "patch")
         self.assertEqual(
@@ -117,11 +117,19 @@ class WebhookTests(unittest.IsolatedAsyncioTestCase):
         self.assertEqual(self.fake.calls, [])
 
     async def test_amount_or_currency_we_never_create_is_ignored(self):
-        for overrides in ({"amount_total": 100}, {"amount_total": 60000}, {"currency": "usd"}):
+        for overrides in ({"amount_total": 100}, {"amount_total": 60000}, {"currency": "gbp"}):
             with self.subTest(overrides=overrides), self.assertLogs(support.logger, level="ERROR"):
                 result = await self.deliver(paid_event(**overrides))
             self.assertEqual(result, {"received": True, "ignored": True})
         self.assertEqual(self.fake.calls, [])
+
+    async def test_session_created_before_the_dollar_switch_is_recorded_in_euros(self):
+        result = await self.deliver(paid_event(currency="eur"))
+
+        self.assertEqual(result, {"received": True})
+        insert_call = self.fake.calls[0]
+        self.assertEqual(insert_call[0], "insert_if_missing")
+        self.assertEqual(insert_call[2]["currency"], "eur")
 
     async def test_unpaid_session_is_ignored(self):
         result = await self.deliver(paid_event(payment_status="unpaid"))
@@ -138,6 +146,8 @@ class FakeStripeResponse:
 
 
 class FakeStripeClient:
+    last_content = ""
+
     def __init__(self, *args, **kwargs):
         pass
 
@@ -148,6 +158,7 @@ class FakeStripeClient:
         return False
 
     async def post(self, url, headers=None, content=None):
+        FakeStripeClient.last_content = content
         return FakeStripeResponse()
 
 
@@ -166,7 +177,24 @@ class CheckoutTests(unittest.IsolatedAsyncioTestCase):
             )
 
         self.assertEqual(result["checkout_url"], "https://checkout.stripe.test/cs_test_999")
+        self.assertEqual(result["amount"], "$5.00")
         self.assertTrue(any(call[0] == "insert" for call in fake.calls))
+
+    async def test_checkout_charges_and_records_in_dollars(self):
+        fake = FakeSupabase()
+        with (
+            patch.object(support, "supabase", fake),
+            patch.object(support.settings, "stripe_secret_key", "sk_test_x"),
+            patch.object(support.httpx, "AsyncClient", FakeStripeClient),
+        ):
+            await support.create_support_checkout(
+                support.SupportCheckoutRequest(story_id=uuid4(), amount_cents=500),
+                AuthenticatedUser(id=str(uuid4()), email=None, access_token="t"),
+            )
+
+        self.assertIn("price_data%5D%5Bcurrency%5D=usd", FakeStripeClient.last_content)
+        insert_call = next(call for call in fake.calls if call[0] == "insert")
+        self.assertEqual(insert_call[2]["currency"], "usd")
 
 
 if __name__ == "__main__":
