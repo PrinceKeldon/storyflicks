@@ -27,7 +27,7 @@ async def list_stories(
             params["or"] = (
                 f"(title.ilike.*{safe_query}*,"
                 f"tagline.ilike.*{safe_query}*,"
-                f"synopsis.ilike.*{safe_query}*)" 
+                f"synopsis.ilike.*{safe_query}*)"
             )
 
     if genre:
@@ -71,6 +71,40 @@ async def get_story(slug: str = Path(pattern=r"^[a-z0-9]+(-[a-z0-9]+)*$", max_le
             "order": "sequence_number.asc",
         },
     )
+
+    episode_ids = [episode["id"] for episode in episodes]
+    episode_assets = []
+    if episode_ids:
+        episode_assets = await supabase.admin_get(
+            "episode_assets",
+            {
+                "select": "id,episode_id,asset_type,storage_path,alt_text,position",
+                "episode_id": f"in.({','.join(episode_ids)})",
+                "order": "position.asc",
+            },
+        )
+
+    episode_image_by_id = {}
+    for asset in episode_assets:
+        if asset.get("asset_type") != "episode_image" or not asset.get("storage_path"):
+            continue
+        episode_image_by_id.setdefault(
+            str(asset["episode_id"]),
+            {
+                "url": public_storage_url(asset.get("storage_path")),
+                "alt_text": asset.get("alt_text"),
+            },
+        )
+
+    episodes = [
+        {
+            **episode,
+            "image_url": episode_image_by_id.get(str(episode["id"]), {}).get("url"),
+            "image_alt": episode_image_by_id.get(str(episode["id"]), {}).get("alt_text"),
+        }
+        for episode in episodes
+    ]
+
     materials = await supabase.admin_get(
         "story_material_sections",
         {

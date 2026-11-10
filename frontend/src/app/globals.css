@@ -1901,3 +1901,85 @@ html[data-theme="light"] .library-state .library-secondary-link { color: #435448
 .legal-footer a:hover,.legal-links a:hover{color:var(--mint)}
 .legal-links{margin-left:auto;font:10px 'DM Mono',monospace}
 @media(max-width:650px){.legal-shell{padding:0 20px}.legal-header{height:70px}.legal-document{padding:45px 0 65px;font-size:13px}.legal-document h2{font-size:21px;margin-top:34px}.legal-footer{align-items:flex-start;flex-direction:column}.legal-footer nav{gap:14px}.legal-links{margin-left:0;width:100%;gap:14px}}
+
+
+/* Episode artwork: compact, consistent thumbnails in the guide and reader heading. */
+.episode-row .episode-thumb {
+  display: block;
+  flex: 0 0 116px;
+  width: 116px;
+  height: 72px;
+  object-fit: cover;
+  border: 1px solid var(--line);
+  border-radius: 3px;
+  background: #171918;
+}
+.episode-row .episode-number {
+  flex: 0 0 28px;
+}
+.episode-copy {
+  min-width: 0;
+}
+.episode-copy p {
+  max-width: 720px;
+  line-height: 1.55;
+}
+.reading-episode-heading {
+  display: flex;
+  align-items: center;
+  gap: clamp(20px, 3vw, 34px);
+  width: 100%;
+  max-width: 790px;
+  margin: 24px auto 0;
+}
+.reading-episode-thumbnail {
+  display: block;
+  flex: 0 0 clamp(104px, 14vw, 142px);
+  width: clamp(104px, 14vw, 142px);
+  aspect-ratio: 2 / 3;
+  height: auto;
+  object-fit: cover;
+  border: 1px solid var(--line);
+  border-radius: 3px;
+  background: #171918;
+}
+.reading-episode-heading-copy {
+  flex: 1;
+  min-width: 0;
+}
+.reading-page .reading-episode-heading h1.reading-episode-title {
+  width: 100%;
+  margin: 0;
+  text-align: left !important;
+}
+.reading-episode-heading .reading-deck {
+  margin: 12px 0 0;
+  text-align: left;
+}
+@media(max-width:650px) {
+  .episode-row .episode-thumb {
+    flex-basis: 88px;
+    width: 88px;
+    height: 58px;
+  }
+  .episode-row {
+    gap: 10px;
+    padding: 16px 4px;
+  }
+  .episode-row .episode-number {
+    flex-basis: 22px;
+    font-size: 11px;
+  }
+  .reading-episode-heading {
+    gap: 15px;
+    margin-top: 18px;
+  }
+  .reading-episode-thumbnail {
+    flex-basis: 88px;
+    width: 88px;
+  }
+}
+@media(max-width:380px) {
+  .reading-episode-heading { gap: 12px; }
+  .reading-episode-thumbnail { flex-basis: 76px; width: 76px; }
+}
