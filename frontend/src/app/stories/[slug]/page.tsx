@@ -90,14 +90,14 @@ export default async function StoryDetailPage({ params }: { params: Promise<{ sl
           {episodes.map((episode) => (
             episode.id ? (
               <Link href={`/stories/${slug}/read/${episode.id}`} className={isChapterGuide ? "episode-row chapter-guide-row" : "episode-row"} key={episode.id}>
-                {episode.image_url && <img className="episode-thumb" src={episode.image_url} alt={episode.image_alt || `${episode.title} episode artwork`} />}
+                {episode.image_url && <img className="episode-thumb episode-thumb-portrait" src={episode.image_url} alt={episode.image_alt || `${episode.title} episode artwork`} />}
                 <span className="episode-number">{String(episode.sequence_number).padStart(2, "0")}</span>
                 <div className="episode-copy"><h3>{episode.title}</h3>{episode.synopsis?.trim() && <p>{episode.synopsis}</p>}</div>
                 {!isChapterGuide && <><span className="episode-status">PUBLISHED</span><span className="episode-arrow">↗</span></>}
               </Link>
             ) : (
               <article className={isChapterGuide ? "episode-row chapter-guide-row" : "episode-row"} key={episode.sequence_number}>
-                {episode.image_url && <img className="episode-thumb" src={episode.image_url} alt={episode.image_alt || `${episode.title} episode artwork`} />}
+                {episode.image_url && <img className="episode-thumb episode-thumb-portrait" src={episode.image_url} alt={episode.image_alt || `${episode.title} episode artwork`} />}
                 <span className="episode-number">{String(episode.sequence_number).padStart(2, "0")}</span>
                 <div className="episode-copy"><h3>{episode.title}</h3>{episode.synopsis?.trim() && <p>{episode.synopsis}</p>}</div>
                 {!isChapterGuide && <><span className="episode-status">PUBLISHED</span><span className="episode-arrow">↗</span></>}
