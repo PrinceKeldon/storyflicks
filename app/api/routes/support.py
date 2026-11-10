@@ -1,6 +1,7 @@
 import hashlib
 import hmac
 import json
+import logging
 from datetime import datetime, timezone
 import time
 from uuid import UUID, uuid4
@@ -14,7 +15,11 @@ from app.api.deps import get_current_user, supabase
 from app.core.config import settings
 from app.core.security import AuthenticatedUser
 
+logger = logging.getLogger(__name__)
+
 router = APIRouter()
+
+
 class SupportCheckoutRequest(BaseModel):
     story_id: UUID
     amount_cents: int = Field(ge=200, le=50000)
@@ -90,18 +95,59 @@ async def create_support_checkout(
     if not session.get("id") or not session.get("url"):
         raise HTTPException(502, "Stripe returned an incomplete checkout session.")
 
-    await supabase.admin_insert(
-        "reader_support_contributions",
-        {
-            "user_id": user.id,
-            "story_id": str(story["id"]),
-            "stripe_checkout_session_id": session["id"],
-            "amount_cents": submission.amount_cents,
-            "currency": "eur",
-            "status": "pending",
-        },
-    )
+    # The Checkout Session already exists at this point and the table needs its
+    # ID, so the pending record can only be written now. Do not fail the reader
+    # if that write fails: the session is live and they may pay, and the
+    # webhook records the contribution from the verified event either way.
+    try:
+        await supabase.admin_insert(
+            "reader_support_contributions",
+            {
+                "user_id": user.id,
+                "story_id": str(story["id"]),
+                "stripe_checkout_session_id": session["id"],
+                "amount_cents": submission.amount_cents,
+                "currency": "eur",
+                "status": "pending",
+            },
+        )
+    except (HTTPException, httpx.HTTPError):
+        logger.warning(
+            "Could not record the pending contribution for Checkout Session %s; "
+            "the webhook will record it if the payment completes.",
+            session["id"],
+        )
     return {"checkout_url": session["url"], "amount": amount_label}
+
+
+def _contribution_from_paid_session(session: dict) -> dict | None:
+    """Build a contribution row from a verified, paid Checkout Session.
+
+    Returns None when the session does not carry the data our checkout always
+    sets (valid user and story IDs, a euro amount within the allowed range).
+    """
+    metadata = session.get("metadata") or {}
+    try:
+        user_id = str(UUID(str(metadata.get("user_id"))))
+        story_id = str(UUID(str(metadata.get("story_id"))))
+    except ValueError:
+        return None
+    amount = session.get("amount_total")
+    if (
+        not isinstance(amount, int)
+        or isinstance(amount, bool)
+        or not 200 <= amount <= 50000
+        or str(session.get("currency", "")).lower() != "eur"
+    ):
+        return None
+    return {
+        "user_id": user_id,
+        "story_id": story_id,
+        "stripe_checkout_session_id": session["id"],
+        "amount_cents": amount,
+        "currency": "eur",
+        "status": "pending",
+    }
 
 
 def _verify_stripe_signature(payload: bytes, signature_header: str, secret: str) -> bool:
@@ -156,9 +202,29 @@ async def stripe_support_webhook(
         metadata = session.get("metadata") or {}
         if not session_id or metadata.get("purpose") != "reader_support":
             return {"received": True, "ignored": True}
+        contribution = _contribution_from_paid_session(session)
+        if contribution is None:
+            # Signed by Stripe but not shaped like one of our checkouts, so it
+            # cannot be recorded. Make it findable instead of dropping it silently.
+            logger.error(
+                "Paid Checkout Session %s has unusable metadata or amount; not recorded.",
+                session_id,
+            )
+            return {"received": True, "ignored": True}
+        # Make sure a row exists (the checkout request may have failed to write
+        # it), then mark it paid. Only rows not already paid are updated, so a
+        # repeated event keeps the original paid_at.
+        await supabase.admin_insert_if_missing(
+            "reader_support_contributions",
+            contribution,
+            on_conflict="stripe_checkout_session_id",
+        )
         await supabase.admin_patch(
             "reader_support_contributions",
-            {"stripe_checkout_session_id": f"eq.{session_id}"},
+            {
+                "stripe_checkout_session_id": f"eq.{session_id}",
+                "status": "neq.paid",
+            },
             {
                 "status": "paid",
                 "stripe_payment_intent_id": session.get("payment_intent"),
