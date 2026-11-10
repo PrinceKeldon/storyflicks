@@ -4,6 +4,7 @@ import Link from "next/link";
 import { useState } from "react";
 import type { FormEvent } from "react";
 import { getSupabaseBrowserClient } from "@/lib/supabase";
+import LegalLinks from "../legal-links";
 
 export default function SignInForm({ redirectTo, initialMode = "signin" }: { redirectTo: string; initialMode?: "signin" | "signup" }) {
   const [mode, setMode] = useState<"signin" | "signup">(initialMode);
@@ -54,7 +55,7 @@ export default function SignInForm({ redirectTo, initialMode = "signin" }: { red
         </form>
         <p className="auth-privacy">Your account keeps your reading progress, contributions and saved stories together.</p>
       </section>
-      <footer className="footer auth-footer"><span>© 2026 STORYFLICKS</span><span>Stories worth staying for.</span></footer>
+      <footer className="footer auth-footer"><span>© 2026 STORYFLICKS</span><span>Stories worth staying for.</span><LegalLinks /></footer>
     </main>
   );
 }
