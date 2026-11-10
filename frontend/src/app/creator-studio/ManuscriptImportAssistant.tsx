@@ -21,6 +21,7 @@ type Section = {
   kind: "episode" | "material";
   materialType: "dedication" | "foreword" | "preface" | "author_note" | "prologue" | "epilogue" | "afterword" | "acknowledgements" | "about_author" | "further_reading" | "other";
   placement: "front_matter" | "back_matter";
+  sourceSequenceNumber?: number;
 };
 type Props = {
   storyId: string;
@@ -109,18 +110,25 @@ function detectSections(blocks: Block[]): Section[] {
   const boundaries = blocks.map((block, index) => isChapterBoundary(block, chapterHeadingLevel) ? index : -1).filter(index => index >= 0);
   if (!boundaries.length) return [{ id: makeId(), title: "Complete manuscript", blocks, targetEpisodeId: "", include: true, saved: false, kind: "episode", materialType: "other", placement: "front_matter" }];
   const starts = [...boundaries];
-  if (boundaries[0] > 0 && wordCount(blocks.slice(0, boundaries[0])) > 0) starts.unshift(0);
+  const prefixBlocks = boundaries[0] > 0 ? blocks.slice(0, boundaries[0]) : [];
+  // Keep a word-bearing preface as its own material section. Blank paragraphs
+  // before the first episode belong to that episode and must not disappear.
+  if (prefixBlocks.length && wordCount(prefixBlocks) > 0) starts.unshift(0);
   return starts.map((start, index) => {
     const end = starts[index + 1] ?? blocks.length;
     const isHeadingStart = boundaries.includes(start);
     const heading = isHeadingStart ? blocks[start].text.trim() : "";
-    const bodyStart = isHeadingStart ? start + 1 : start;
-    const body = blocks.slice(bodyStart, end);
+    const bodyStart = start;
+    const leadingBlankParagraphs = index === 0 && isHeadingStart && prefixBlocks.length && wordCount(prefixBlocks) === 0 ? prefixBlocks : [];
+    const body = [...leadingBlankParagraphs, ...blocks.slice(bodyStart, end)].map((block, blockIndex) =>
+      isHeadingStart && blockIndex === leadingBlankParagraphs.length ? { ...block, sectionTitle: true } : block
+    );
     const title = isHeadingStart ? titleFromHeading(heading) : "Opening material";
     const classified = isHeadingStart ? classifyMaterial(title) : { kind: "material" as const, materialType: "other" as const, placement: "front_matter" as const };
     return {
       id: makeId(), title, blocks: body.length ? body : [{ type: "paragraph", text: "" }],
       targetEpisodeId: "", include: true, saved: false,
+      ...(heading.match(/^episode\s+(\d+)/i) ? { sourceSequenceNumber: Number(heading.match(/^episode\s+(\d+)/i)?.[1]) } : {}),
       ...(classified || { kind: "episode" as const, materialType: "other" as const, placement: "front_matter" as const }),
     };
   });
@@ -128,18 +136,20 @@ function detectSections(blocks: Block[]): Section[] {
 function blockPreview(block: Block, index: number) {
   if (block.type === "separator") return <div key={index} className="sf-manuscript-preview-break">Scene / section break</div>;
   if (block.type === "spacer") return <div key={index} className="sf-manuscript-preview-space" />;
-  const Tag = block.type === "heading" ? "h4" : block.type === "quote" ? "blockquote" : "p";
-  const legacyIndent = typeof block.indent === "number" ? Math.max(0, Math.min(8, block.indent)) * 0.75 : 0;
+  const Tag = block.type === "heading" || block.sectionTitle ? "h4" : block.type === "quote" ? "blockquote" : "p";
+  const legacyIndent = typeof block.indent === "number" ? block.indent * 0.75 : 0;
   const style = {
     marginLeft: typeof block.indentLeft === "number" ? String(block.indentLeft) + "em" : undefined,
+    marginRight: typeof block.indentRight === "number" ? String(block.indentRight) + "em" : undefined,
     textIndent: typeof block.indentFirstLine === "number" ? String(block.indentFirstLine) + "em" : typeof block.indentHanging === "number" ? "-" + String(block.indentHanging) + "em" : legacyIndent ? String(legacyIndent) + "em" : undefined,
-    textAlign: block.align || "left",
+    textAlign: block.align,
     marginTop: typeof block.spacingBefore === "number" ? String(block.spacingBefore) + "pt" : undefined,
     marginBottom: typeof block.spacingAfter === "number" ? String(block.spacingAfter) + "pt" : undefined,
-    lineHeight: typeof block.lineSpacing === "number" ? block.lineSpacingMode === "auto" ? block.lineSpacing : String(block.lineSpacing) + "pt" : undefined,
+    lineHeight: 1.6,
+    breakBefore: block.pageBreakBefore ? "page" : undefined,
   } as const;
   return <Tag key={index} className="sf-manuscript-preview-block" style={style}>
-    {block.runs?.length ? block.runs.map((run, runIndex) => <span key={runIndex} style={{ fontWeight: run.bold ? 700 : undefined, fontStyle: run.italic ? "italic" : undefined, textDecoration: [run.underline ? "underline" : "", run.strike ? "line-through" : ""].filter(Boolean).join(" ") || undefined }}>{run.superscript ? <sup>{run.text}</sup> : run.subscript ? <sub>{run.text}</sub> : run.text}</span>) : block.text}
+    {block.runs?.length ? block.runs.map((run, runIndex) => <span key={runIndex} style={{ fontWeight: run.bold ? 700 : undefined, fontStyle: run.italic ? "italic" : undefined, textDecoration: [run.underline ? "underline" : "", run.strike ? "line-through" : ""].filter(Boolean).join(" ") || undefined, color: run.formatting?.color, backgroundColor: run.formatting?.highlight?.toLowerCase(), fontSize: typeof run.formatting?.fontSizePt === "number" ? run.formatting.fontSizePt + "pt" : undefined, fontFamily: run.formatting?.fontFamily, fontVariant: run.formatting?.smallCaps ? "small-caps" : undefined, textTransform: run.formatting?.allCaps ? "uppercase" : undefined }}>{run.superscript ? <sup>{run.text}</sup> : run.subscript ? <sub>{run.text}</sub> : run.text}</span>) : block.text}
   </Tag>;
 }
 
@@ -202,7 +212,14 @@ export default function ManuscriptImportAssistant({ storyId, storyTitle, section
         flushParagraph();
       }
       if (!blocks.length || wordCount(blocks) === 0) throw new Error("No readable paragraphs were found in this file.");
-      const detected = detectSections(blocks);
+      const detected = detectSections(blocks).map((section) => {
+        if (section.kind !== "episode" || !section.sourceSequenceNumber) return section;
+        const exactDestination = orderedEpisodes.find((episode) =>
+          episode.sequence_number === section.sourceSequenceNumber &&
+          normaliseTitle(episode.title) === normaliseTitle(section.title)
+        );
+        return exactDestination ? { ...section, targetEpisodeId: exactDestination.id } : section;
+      });
       setSourceBlocks(blocks);
       const headings = blocks.filter(isChapterBoundary).length;
       const formattedRuns = blocks.reduce((sum, block) => sum + (block.runs?.filter(run => run.bold || run.italic || run.underline || run.strike).length || 0), 0);
@@ -210,7 +227,6 @@ export default function ManuscriptImportAssistant({ storyId, storyTitle, section
       if (!headings) warnings.push("No clear chapter headings were detected. The manuscript is kept as one section until you split it manually.");
       else if (headings === 1) warnings.push("Only one chapter heading was detected. Check whether additional chapter headings need to be added by splitting sections manually.");
       if (detected.some(section => wordCount(section.blocks) < 40)) warnings.push("One or more detected sections are very short. Check whether a subheading was mistaken for a chapter boundary.");
-      if (blocks.filter(block => block.type === "spacer").length > blocks.length * 0.2) warnings.push("The document contains many blank paragraphs. Review spacing before importing.");
       setSections(detected);
       setAnalysis({ paragraphs: blocks.length, words: wordCount(blocks), headings, formattedRuns, warnings });
       setFileName(file.name); setFileSize(file.size); setStage("review");
@@ -369,7 +385,7 @@ export default function ManuscriptImportAssistant({ storyId, storyTitle, section
         setError('“' + section.title + '” contains a paragraph or formatting run that exceeds the episode content limit. Split this section at a paragraph boundary before importing.');
         return;
       }
-      const payload = { blocks: section.blocks.filter(block => block.type === "separator" || block.type === "spacer" || block.text.trim()) };
+      const payload = { blocks: section.blocks };
       const bytes = new TextEncoder().encode(JSON.stringify(payload)).length;
       if (bytes > MAX_EPISODE_JSON_BYTES) {
         setError('“' + section.title + '” is ' + (bytes / (1024 * 1024)).toFixed(2) + ' MB. One episode is limited to 2 MB of content. Split this section into smaller chapters before importing.');
@@ -384,7 +400,7 @@ export default function ManuscriptImportAssistant({ storyId, storyTitle, section
       let backMatterPosition = 0;
       for (const section of sections) {
         if (!section.include || savedIds.has(section.id)) continue;
-        const content = { blocks: section.blocks.filter(block => block.type === "separator" || block.type === "spacer" || block.text.trim()) };
+        const content = { blocks: section.blocks };
         if (section.kind === "material") {
           await request("/creator/stories/" + storyId + "/materials", { method: "POST", body: JSON.stringify({
             title: section.title.trim(), section_type: section.materialType, placement: section.placement,
