@@ -1903,16 +1903,21 @@ html[data-theme="light"] .library-state .library-secondary-link { color: #435448
 @media(max-width:650px){.legal-shell{padding:0 20px}.legal-header{height:70px}.legal-document{padding:45px 0 65px;font-size:13px}.legal-document h2{font-size:21px;margin-top:34px}.legal-footer{align-items:flex-start;flex-direction:column}.legal-footer nav{gap:14px}.legal-links{margin-left:0;width:100%;gap:14px}}
 
 
-/* Episode artwork: compact, consistent thumbnails in the guide and reader heading. */
-.episode-row .episode-thumb {
+/* Episode artwork: preserve full portrait artwork in guides and keep the reader title centred. */
+.episode-row .episode-thumb.episode-thumb-portrait {
   display: block;
   flex: 0 0 116px;
   width: 116px;
-  height: 72px;
-  object-fit: cover;
+  height: auto;
+  aspect-ratio: 2 / 3;
+  object-fit: contain;
+  align-self: flex-start;
   border: 1px solid var(--line);
   border-radius: 3px;
   background: #171918;
+}
+.episode-row:has(.episode-thumb-portrait) {
+  align-items: flex-start;
 }
 .episode-row .episode-number {
   flex: 0 0 28px;
@@ -1923,44 +1928,51 @@ html[data-theme="light"] .library-state .library-secondary-link { color: #435448
 .episode-copy p {
   max-width: 720px;
   line-height: 1.55;
+  margin-top: 8px;
 }
 .reading-episode-heading {
+  position: relative;
   display: flex;
   align-items: center;
-  gap: clamp(20px, 3vw, 34px);
   width: 100%;
   max-width: 790px;
+  min-height: 174px;
   margin: 24px auto 0;
 }
 .reading-episode-thumbnail {
+  position: absolute;
   display: block;
-  flex: 0 0 clamp(92px, 12vw, 116px);
+  left: 0;
+  top: 50%;
+  transform: translateY(-50%);
   width: clamp(92px, 12vw, 116px);
-  aspect-ratio: 2 / 3;
   height: auto;
+  aspect-ratio: 2 / 3;
   object-fit: contain;
   border: 1px solid var(--line);
   border-radius: 3px;
   background: #171918;
 }
 .reading-episode-heading-copy {
-  flex: 1;
+  width: calc(100% - 150px);
+  max-width: 620px;
+  margin: 0 auto;
   min-width: 0;
+  text-align: center;
 }
 .reading-page .reading-episode-heading h1.reading-episode-title {
   width: 100%;
   margin: 0;
-  text-align: left !important;
+  text-align: center !important;
 }
 .reading-episode-heading .reading-deck {
-  margin: 12px 0 0;
-  text-align: left;
+  margin: 12px auto 0;
+  text-align: center;
 }
 @media(max-width:650px) {
-  .episode-row .episode-thumb {
+  .episode-row .episode-thumb.episode-thumb-portrait {
     flex-basis: 88px;
     width: 88px;
-    height: 58px;
   }
   .episode-row {
     gap: 10px;
@@ -1971,15 +1983,18 @@ html[data-theme="light"] .library-state .library-secondary-link { color: #435448
     font-size: 11px;
   }
   .reading-episode-heading {
-    gap: 15px;
+    min-height: 132px;
     margin-top: 18px;
   }
   .reading-episode-thumbnail {
-    flex-basis: 78px;
     width: 78px;
+  }
+  .reading-episode-heading-copy {
+    width: calc(100% - 100px);
   }
 }
 @media(max-width:380px) {
-  .reading-episode-heading { gap: 12px; }
-  .reading-episode-thumbnail { flex-basis: 70px; width: 70px; }
+  .reading-episode-heading { min-height: 118px; }
+  .reading-episode-thumbnail { width: 70px; }
+  .reading-episode-heading-copy { width: calc(100% - 88px); }
 }
