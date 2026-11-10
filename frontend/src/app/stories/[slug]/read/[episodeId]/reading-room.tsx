@@ -277,8 +277,19 @@ export default function ReadingRoom({ slug, episodeId }: { slug: string; episode
       <article className={`reading-page reading-width-${width}`}>
         <div className="reading-kicker">{payload.story.title} <span>·</span> {(payload.story.section_label || "Episode").toUpperCase()} {String(payload.episode.sequence_number).padStart(2, "0")}</div>
         {leadingBlocks.length > 0 && <div className="manuscript" style={{ fontSize: `${fontScale}%` }}>{leadingBlocks.map((block, index) => <p key={"leading-" + index} style={manuscriptBlockStyle(block)}>{renderRuns(block)}</p>)}</div>}
-        <h1 className="reading-episode-title" style={{ ...manuscriptBlockStyle(sourceTitleBlock || {}), fontWeight: sourceTitleBlock?.bold || (sourceTitleRuns.length > 0 && sourceTitleRuns.every((run) => run.bold)) ? 700 : 500, fontStyle: sourceTitleBlock?.italic || (sourceTitleRuns.length > 0 && sourceTitleRuns.every((run) => run.italic)) ? "italic" : undefined, textAlign: "center", fontFamily: "'Playfair Display', Georgia, serif", color: sourceTitleRunFormat?.color }}>{payload.episode.title}</h1>
-        {payload.episode.synopsis && <p className="reading-deck">{payload.episode.synopsis}</p>}
+        <div className="reading-episode-heading">
+          {payload.episode.assets?.find((asset) => asset.asset_type === "episode_image" && asset.public_url)?.public_url && (
+            <img
+              className="reading-episode-thumbnail"
+              src={payload.episode.assets.find((asset) => asset.asset_type === "episode_image" && asset.public_url)!.public_url!}
+              alt={payload.episode.assets.find((asset) => asset.asset_type === "episode_image" && asset.public_url)?.alt_text || `${payload.episode.title} episode artwork`}
+            />
+          )}
+          <div className="reading-episode-heading-copy">
+            <h1 className="reading-episode-title" style={{ ...manuscriptBlockStyle(sourceTitleBlock || {}), fontWeight: sourceTitleBlock?.bold || (sourceTitleRuns.length > 0 && sourceTitleRuns.every((run) => run.bold)) ? 700 : 500, fontStyle: sourceTitleBlock?.italic || (sourceTitleRuns.length > 0 && sourceTitleRuns.every((run) => run.italic)) ? "italic" : undefined, textAlign: "left", fontFamily: "'Playfair Display', Georgia, serif", color: sourceTitleRunFormat?.color }}>{payload.episode.title}</h1>
+            {payload.episode.synopsis && <p className="reading-deck">{payload.episode.synopsis}</p>}
+          </div>
+        </div>
         <div className="reading-rule"><span>✦</span></div>
         <div className="manuscript" style={{ fontSize: `${fontScale}%` }}>
           {blocks.map((block, index) => {
