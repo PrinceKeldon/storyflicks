@@ -1858,7 +1858,7 @@ html[data-theme="light"] .library-state .library-secondary-link { color: #435448
 }
 .manuscript p.has-drop-cap::first-letter {
   float: left;
-  margin: .08em .12em 0 0;
+  margin: .08em 0 0 0;
   color: #43b889;
   font-family: 'Playfair Display', Georgia, serif;
   font-size: 4.25em;
