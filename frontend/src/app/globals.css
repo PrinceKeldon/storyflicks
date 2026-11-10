@@ -1998,3 +1998,53 @@ html[data-theme="light"] .library-state .library-secondary-link { color: #435448
   .reading-episode-thumbnail { width: 70px; }
   .reading-episode-heading-copy { width: calc(100% - 88px); }
 }
+
+
+/* Site-wide readability baseline: keep interface copy comfortably legible. */
+html {
+  font-size: 16px;
+}
+body {
+  font-size: 16px;
+  line-height: 1.6;
+}
+body :is(p, li, a, button, label, input, textarea, select, small, summary, dt, dd, td, th) {
+  font-size: max(14px, 1em) !important;
+}
+body :is(.eyebrow, .feature-overline, .feature-kicker, .feature-meta, .art-caption, .art-index, .feature-index, .guide-count, .episode-number, .episode-status, .reading-kicker, .episode-note, .subtle-link, .nav-link, .account-actions, .footer > span, .footer p) {
+  font-size: max(14px, 1em) !important;
+  line-height: 1.45;
+}
+
+/* The episode guide must use the image's intrinsic portrait ratio.
+   No fixed height, landscape frame, clipping, or cover-fit is permitted. */
+.episode-row .episode-thumb.episode-thumb-portrait {
+  display: block !important;
+  flex: 0 0 116px !important;
+  width: 116px !important;
+  min-width: 116px !important;
+  max-width: 116px !important;
+  height: auto !important;
+  min-height: 0 !important;
+  max-height: none !important;
+  aspect-ratio: auto !important;
+  object-fit: contain !important;
+  object-position: center top !important;
+  overflow: visible !important;
+  clip-path: none !important;
+  align-self: flex-start !important;
+}
+.episode-row:has(.episode-thumb-portrait) {
+  align-items: flex-start !important;
+  height: auto !important;
+  min-height: 0 !important;
+  overflow: visible !important;
+}
+@media(max-width:650px) {
+  .episode-row .episode-thumb.episode-thumb-portrait {
+    flex-basis: 96px !important;
+    width: 96px !important;
+    min-width: 96px !important;
+    max-width: 96px !important;
+  }
+}
