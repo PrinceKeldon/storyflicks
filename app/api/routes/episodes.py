@@ -13,6 +13,34 @@ from app.services.storage import public_storage_url
 
 router = APIRouter()
 
+IN_FILTER_CHUNK_SIZE = 100
+
+
+async def admin_get_in(
+    table: str,
+    column: str,
+    values,
+    params: dict[str, str],
+) -> list[dict[str, Any]]:
+    """Fetch every row whose `column` is in `values`.
+
+    PostgREST receives filters in the URL query string, so one IN list holding
+    every ID eventually exceeds URL length limits. The list is split into
+    chunks, and each chunk is paged so PostgREST's per-request row cap cannot
+    silently truncate the result. Pass a stable `order` in `params`.
+    """
+    unique_values = list(dict.fromkeys(str(value) for value in values))
+    rows: list[dict[str, Any]] = []
+    for start in range(0, len(unique_values), IN_FILTER_CHUNK_SIZE):
+        chunk = unique_values[start:start + IN_FILTER_CHUNK_SIZE]
+        rows.extend(
+            await supabase.admin_get_all(
+                table,
+                {**params, column: f"in.({','.join(chunk)})"},
+            )
+        )
+    return rows
+
 
 class ReactionSubmission(BaseModel):
     reaction_codes: list[str] = Field(default_factory=list, max_length=8)
@@ -351,7 +379,7 @@ async def remove_review_helpful_vote(
 
 @router.get("/episodes/{episode_id}/review-room")
 async def get_review_room(
-    episode_id: str,
+    episode_id: UUID,
     user: AuthenticatedUser = Depends(get_current_user),
 ):
     episode, story = await get_episode_and_story(episode_id)
@@ -362,14 +390,14 @@ async def get_review_room(
             detail="You cannot view the Review Room for an episode you cannot access.",
         )
 
-    reviews = await supabase.admin_get(
+    reviews = await supabase.admin_get_all(
         "reviews",
         {
             "select": "id,user_id,episode_id,headline,body,submitted_at,created_at",
             "episode_id": f"eq.{episode_id}",
             "status": "eq.submitted",
             "visibility": "eq.public",
-            "order": "submitted_at.desc",
+            "order": "submitted_at.desc,id.desc",
         },
     )
 
@@ -382,11 +410,12 @@ async def get_review_room(
         },
     )
 
-    reader_reactions = await supabase.admin_get(
+    reader_reactions = await supabase.admin_get_all(
         "reader_reactions",
         {
             "select": "user_id,reaction_id",
             "episode_id": f"eq.{episode_id}",
+            "order": "user_id.asc,reaction_id.asc",
         },
     )
 
@@ -430,17 +459,17 @@ async def get_review_room(
     )
     author_notes = [
         note for note in author_notes
-        if note.get("episode_id") is None or note.get("episode_id") == episode_id
+        if note.get("episode_id") is None or note.get("episode_id") == str(episode_id)
     ]
 
     if review_ids:
-        review_filter = f"in.({','.join(review_ids)})"
-
-        votes = await supabase.admin_get(
+        votes = await admin_get_in(
             "review_helpful_votes",
+            "review_id",
+            review_ids,
             {
                 "select": "user_id,review_id",
-                "review_id": review_filter,
+                "order": "review_id.asc,user_id.asc",
             },
         )
 
@@ -449,13 +478,14 @@ async def get_review_room(
             if vote["user_id"] == user.id:
                 my_helpful_votes.add(vote["review_id"])
 
-        author_replies = await supabase.admin_get(
+        author_replies = await admin_get_in(
             "author_replies",
+            "review_id",
+            review_ids,
             {
                 "select": "id,review_id,creator_id,body,created_at",
-                "review_id": review_filter,
                 "status": "eq.published",
-                "order": "created_at.asc",
+                "order": "created_at.asc,id.asc",
             },
         )
 
@@ -472,11 +502,13 @@ async def get_review_room(
         }
 
     if profile_ids:
-        profiles = await supabase.admin_get(
+        profiles = await admin_get_in(
             "profiles",
+            "id",
+            profile_ids,
             {
                 "select": "id,username,display_name,avatar_path",
-                "id": f"in.({','.join(profile_ids)})",
+                "order": "id.asc",
             },
         )
 
@@ -537,9 +569,26 @@ async def get_review_room(
             "order": "sequence_number.asc",
         },
     )
+    # One entitlement query for the whole list instead of one per episode.
+    # The story and each episode are already known to be published here, so
+    # this mirrors reader_can_access without its per-episode round trip.
+    entitlement_rows = await admin_get_in(
+        "episode_entitlements",
+        "episode_id",
+        [item["id"] for item in available_episode_rows],
+        {
+            "select": "episode_id",
+            "user_id": f"eq.{user.id}",
+            "order": "episode_id.asc",
+        },
+    )
+    entitled_episode_ids = {row["episode_id"] for row in entitlement_rows}
     available_episodes = []
     for available_episode in available_episode_rows:
-        if await reader_can_access(user.id, available_episode, story):
+        is_free_opener = bool(
+            available_episode["sequence_number"] == 1 and story.get("first_episode_free")
+        )
+        if is_free_opener or available_episode["id"] in entitled_episode_ids:
             available_episodes.append({
                 "id": available_episode["id"],
                 "title": available_episode["title"],
