@@ -20,9 +20,9 @@ export default function SupportStoryButton({
   const [error, setError] = useState("");
 
   async function continueToCheckout() {
-    const euros = Number(amount);
-    if (!Number.isFinite(euros) || euros < 2 || euros > 500 || !Number.isInteger(euros)) {
-      setError("Choose a whole-euro amount between €2 and €500.");
+    const dollars = Number(amount);
+    if (!Number.isFinite(dollars) || dollars < 2 || dollars > 500 || !Number.isInteger(dollars)) {
+      setError("Choose a whole-dollar amount between $2 and $500.");
       return;
     }
     const supabase = getSupabaseBrowserClient();
@@ -46,7 +46,7 @@ export default function SupportStoryButton({
           Authorization: `Bearer ${session.access_token}`,
           "Content-Type": "application/json",
         },
-        body: JSON.stringify({ story_id: storyId, amount_cents: euros * 100 }),
+        body: JSON.stringify({ story_id: storyId, amount_cents: dollars * 100 }),
       });
       const result = await response.json().catch(() => ({})) as { checkout_url?: string; detail?: string };
       if (!response.ok || !result.checkout_url) {
@@ -73,10 +73,10 @@ export default function SupportStoryButton({
           <p>Your voluntary support helps make more independent storytelling possible. Reading always stays free.</p>
           <div className="support-amounts" aria-label="Choose a contribution amount">
             {suggestions.map((value) => (
-              <button key={value} type="button" className={amount === String(value) ? "selected" : ""} onClick={() => setAmount(String(value))}>€{value}</button>
+              <button key={value} type="button" className={amount === String(value) ? "selected" : ""} onClick={() => setAmount(String(value))}>${value}</button>
             ))}
-            <label className="support-custom-amount">Custom €
-              <input type="number" min="2" max="500" step="1" value={amount} onChange={(event) => setAmount(event.target.value)} aria-label="Custom whole-euro contribution amount" />
+            <label className="support-custom-amount">Custom $
+              <input type="number" min="2" max="500" step="1" value={amount} onChange={(event) => setAmount(event.target.value)} aria-label="Custom whole-dollar contribution amount" />
             </label>
           </div>
           {error && <p className="support-error" role="alert">{error}</p>}
