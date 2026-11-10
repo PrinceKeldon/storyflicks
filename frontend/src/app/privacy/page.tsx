@@ -67,7 +67,7 @@ export default function PrivacyPage() {
           <li><strong>Render:</strong> hosting of the application API and related backend processes.</li>
           <li><strong>Stripe:</strong> hosted checkout and payment processing for reader support. The production integration is currently configured for Stripe test mode; it is not intended to collect real customer payments at this time.</li>
           <li><strong>Google Fonts:</strong> delivery of typefaces used by the website. When the browser requests these fonts, Google may receive technical connection data such as your IP address.</li>
-          <li><strong>Google Gemini API:</strong> when a creator actively uses the manuscript-analysis or AI-assisted editing feature, the relevant text and instructions are sent to Google's AI service to provide the requested result.</li>
+          <li><strong>Google Gemini API:</strong> when a creator actively uses the manuscript-analysis or AI-assisted editing feature, the relevant text and instructions are sent to Google&apos;s AI service to provide the requested result.</li>
         </ul>
         <p>
           These providers process data under their own applicable privacy terms and, where they act
@@ -112,7 +112,7 @@ export default function PrivacyPage() {
           cycles and legal exceptions. Published content may remain visible while it is lawfully
           hosted or where continued retention is justified by the rights of others or another legal
           basis. Payment and accounting records may have to be retained for statutory periods.
-          Security and infrastructure logs are retained according to the relevant provider's
+          Security and infrastructure logs are retained according to the relevant provider&apos;s
           operational and security retention settings.
         </p>
 
