@@ -1,6 +1,7 @@
 import Link from "next/link";
 import BookmarkButton from "./bookmark-button";
 import SupportStoryButton from "./support-story-button";
+import LegalLinks from "../../legal-links";
 
 type Episode = {
   id: string;
@@ -103,7 +104,7 @@ export default async function StoryDetailPage({ params }: { params: Promise<{ sl
         <p className="episode-note">{story?.completion_status === "completed" ? "This story is complete. Enjoy the full journey." : "More episodes are in the works. Follow the story as it unfolds."}</p>
       </section>
       {backMatter.length>0&&<section className="episode-guide sf-reader-material-guide"><div className="section-heading"><div><p className="eyebrow">AFTER THE STORY</p><h2>Closing pages<span>.</span></h2></div><span className="guide-count">{backMatter.length} SECTIONS</span></div><div className="episode-list">{backMatter.map(item=><Link href={`/stories/${slug}/material/${item.id}`} className="episode-row chapter-guide-row" key={item.id}><span className="episode-number">·</span><div className="episode-copy"><h3>{item.title}</h3></div><span className="episode-arrow">↗</span></Link>)}</div></section>}
-      <footer className="footer"><Link className="wordmark" href="/">STORY<span>FLICKS</span><i>.</i></Link><p>Stories worth staying for.</p><span>© 2026 STORYFLICKS</span></footer>
+      <footer className="footer"><Link className="wordmark" href="/">STORY<span>FLICKS</span><i>.</i></Link><p>Stories worth staying for.</p><span>© 2026 STORYFLICKS</span><LegalLinks /></footer>
     </main>
   );
 }

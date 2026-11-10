@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import AccountNavigation from "@/app/account-navigation";
+import LegalLinks from "@/app/legal-links";
 import { useCallback, useEffect, useMemo, useState, type FormEvent, type ReactNode } from "react";
 import { getSupabaseBrowserClient } from "@/lib/supabase";
 import { importDocx, type ImportedManuscriptBlock } from "@/lib/docx-import";
@@ -366,6 +367,6 @@ export default function CreatorStudio(){
    <p className="studio-footnote">Headline contributor and response totals, episode metrics and the completion rate are lifetime totals; the selected chart window applies only to the activity timeline. Unique readers are deduplicated per episode across recorded progress, reactions and submitted reviews. Progress records are reader-and-episode entries, not repeated opens. The completion rate uses progress records as its denominator.</p>
   </section>}
   {tab==="settings"&&<section className="studio-content"><div className="studio-section-heading"><div><p className="eyebrow">YOUR CREATOR ACCOUNT</p><h2>Studio settings<span>.</span></h2><p className="studio-intro">Creator profile and account-level controls.</p></div></div><div className="studio-info-panel"><span>ACCOUNT STATUS</span><p>Your creator profile is active and can manage stories assigned to your account.</p></div><div className="studio-info-panel"><span>STORY ACCESS</span><p>Editing and publication permissions follow your role on each story. Owner, author and editor roles can manage story content.</p></div><div className="studio-info-panel studio-notification-settings"><span>READER & CREATOR NOTIFICATIONS</span><p>Choose which STORYFLICKS updates reach your account. These preferences also control the corresponding reader notifications where applicable.</p><div className="studio-preference-list">{[["new_episodes","New section releases"],["author_replies","Replies to my reviews"],["author_notes","Author notes"],["saved_story_updates","Updates to saved stories"]].map(([key,label])=><label key={key}><span>{label}</span><input type="checkbox" checked={notificationPrefs[key as keyof typeof notificationPrefs]} onChange={e=>setNotificationPrefs(v=>({...v,[key]:e.target.checked}))}/></label>)}</div><button className="studio-primary" disabled={!prefsLoaded||communityBusy} onClick={()=>void saveNotificationPrefs()}>{communityBusy?"Saving…":"Save notification preferences"}</button></div><div className="studio-info-panel"><span>NOT YET AVAILABLE</span><p>Profile editing, payout details and team invitations are not yet connected here. No changes to those settings are simulated.</p></div></section>}
-  <footer className="studio-footer"><Link className="wordmark" href="/">STORY<span>FLICKS</span><i>.</i></Link><span>YOUR STORIES. YOUR STUDIO.</span><Link href="/library">My Library ↗</Link></footer>
+  <footer className="studio-footer"><Link className="wordmark" href="/">STORY<span>FLICKS</span><i>.</i></Link><span>YOUR STORIES. YOUR STUDIO.</span><Link href="/library">My Library ↗</Link><LegalLinks /></footer>
  </main>;
 }

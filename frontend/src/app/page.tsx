@@ -2,6 +2,7 @@ import Link from "next/link";
 import PersonalisedShelf from "./personalised-shelf";
 import CreatorStudioNavLink from "./creator-studio-nav-link";
 import AccountNavigation from "./account-navigation";
+import LegalLinks from "./legal-links";
 
 type DiscoverStory = {
   id: string;
@@ -145,7 +146,7 @@ export default async function DiscoverPage() {
         <div className="genre-list"><Link href="/search?genre=Drama">Drama <span>↗</span></Link><Link href="/search?genre=Thriller">Thriller <span>↗</span></Link><Link href="/search?genre=Romance">Romance <span>↗</span></Link><Link href="/search?genre=Mystery">Mystery <span>↗</span></Link></div>
       </section>
 
-      <footer className="footer"><Link className="wordmark" href="/">STORY<span>FLICKS</span><i>.</i></Link><p>Stories worth staying for.</p><span>© 2026 STORYFLICKS</span></footer>
+      <footer className="footer"><Link className="wordmark" href="/">STORY<span>FLICKS</span><i>.</i></Link><p>Stories worth staying for.</p><span>© 2026 STORYFLICKS</span><LegalLinks /></footer>
     </main>
   );
 }
