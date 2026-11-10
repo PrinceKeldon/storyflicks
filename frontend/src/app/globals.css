@@ -1839,7 +1839,7 @@ html[data-theme="light"] .library-state .library-secondary-link { color: #435448
 /* Reading Room chapter-opening typography restored. These presentation styles
    do not alter imported manuscript paragraph formatting. */
 .reading-kicker {
-  font-size: 13px;
+  font-size: 14px;
   line-height: 1.5;
   letter-spacing: 1.8px;
   text-align: center;
@@ -1867,7 +1867,7 @@ html[data-theme="light"] .library-state .library-secondary-link { color: #435448
 }
 @media(max-width:650px) {
   .reading-kicker {
-    font-size: 11px;
+    font-size: 12px;
     letter-spacing: 1.15px;
   }
   .reading-page > h1.reading-episode-title {
