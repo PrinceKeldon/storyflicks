@@ -2009,7 +2009,7 @@ body {
   line-height: 1.6;
 }
 body :is(p, li, a, button, label, input, textarea, select, small, summary, dt, dd, td, th) {
-  font-size: max(14px, 1em) !important;
+  font-size: max(16px, 1em) !important;
 }
 body :is(.eyebrow, .feature-overline, .feature-kicker, .feature-meta, .art-caption, .art-index, .feature-index, .guide-count, .episode-number, .episode-status, .reading-kicker, .episode-note, .subtle-link, .nav-link, .account-actions, .footer > span, .footer p) {
   font-size: max(14px, 1em) !important;
@@ -2047,4 +2047,45 @@ body :is(.eyebrow, .feature-overline, .feature-kicker, .feature-meta, .art-capti
     min-width: 96px !important;
     max-width: 96px !important;
   }
+}
+
+
+/* App-wide typography and high-contrast text standard.
+   Existing larger display sizes remain unchanged; no interface text may render below 16px. */
+html body,
+html body * {
+  font-size: max(16px, 1em) !important;
+}
+html[data-theme="light"] {
+  --site-text-primary: #000000;
+}
+html[data-theme="dark"] {
+  --site-text-primary: #ffffff;
+}
+html[data-theme="light"] body :is(h1,h2,h3,h4,h5,h6,p,a,button,label,input,textarea,select,small,strong,em,span,li,summary,dt,dd,td,th,legend,figcaption,blockquote,time,output) {
+  color: #000000 !important;
+}
+html[data-theme="dark"] body :is(h1,h2,h3,h4,h5,h6,p,a,button,label,input,textarea,select,small,strong,em,span,li,summary,dt,dd,td,th,legend,figcaption,blockquote,time,output) {
+  color: #ffffff !important;
+}
+html[data-theme="light"] body :is(input,textarea,select)::placeholder {
+  color: #000000 !important;
+  opacity: 1;
+}
+html[data-theme="dark"] body :is(input,textarea,select)::placeholder {
+  color: #ffffff !important;
+  opacity: 1;
+}
+/* The reader has its own light/sepia/night appearance controls. */
+.reading-room {
+  --reader-ink: #000000;
+  --reader-muted: #000000;
+}
+.reading-room.theme-sepia {
+  --reader-ink: #000000;
+  --reader-muted: #000000;
+}
+.reading-room.theme-night {
+  --reader-ink: #ffffff;
+  --reader-muted: #ffffff;
 }
