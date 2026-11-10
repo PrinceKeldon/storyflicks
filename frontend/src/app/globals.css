@@ -1834,3 +1834,48 @@ html[data-theme="light"] .library-state .library-secondary-link { color: #435448
 .sf-ai-patch-preview{display:grid;gap:12px}
 .sf-ai-patch-rationale{font-size:14px;line-height:1.6;opacity:.82}
 @media(max-width:700px){.sf-trash-row{align-items:flex-start;flex-direction:column}.sf-trash-actions{width:100%}.sf-trash-actions button{min-height:40px}}
+
+
+/* Reading Room chapter-opening typography restored. These presentation styles
+   do not alter imported manuscript paragraph formatting. */
+.reading-kicker {
+  font-size: 13px;
+  line-height: 1.5;
+  letter-spacing: 1.8px;
+  text-align: center;
+}
+.reading-page > h1.reading-episode-title {
+  display: block;
+  width: 100%;
+  margin: 22px auto 0;
+  padding: 0;
+  font-family: 'Playfair Display', Georgia, serif;
+  font-size: clamp(2.25rem, 5vw, 3.15rem);
+  font-weight: 500;
+  line-height: 1.18;
+  letter-spacing: -.025em;
+  text-align: center !important;
+}
+.manuscript p.has-drop-cap::first-letter {
+  float: left;
+  margin: .08em .12em 0 0;
+  color: #43b889;
+  font-family: 'Playfair Display', Georgia, serif;
+  font-size: 4.25em;
+  font-weight: 500;
+  line-height: .78;
+}
+@media(max-width:650px) {
+  .reading-kicker {
+    font-size: 11px;
+    letter-spacing: 1.15px;
+  }
+  .reading-page > h1.reading-episode-title {
+    margin-top: 18px;
+    font-size: clamp(2rem, 8vw, 2.55rem);
+    line-height: 1.2;
+  }
+  .manuscript p.has-drop-cap::first-letter {
+    font-size: 3.7em;
+  }
+}
