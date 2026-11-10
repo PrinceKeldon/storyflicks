@@ -17,6 +17,11 @@ from app.core.security import AuthenticatedUser
 
 logger = logging.getLogger(__name__)
 
+SUPPORT_CURRENCY = "usd"
+# Checkout Sessions created while payments were still in euros can complete
+# after the switch, so the webhook keeps recording those as euro payments.
+RECORDABLE_CURRENCIES = {"usd", "eur"}
+
 router = APIRouter()
 
 
@@ -34,9 +39,9 @@ async def create_support_checkout(
         raise HTTPException(503, "Reader support sandbox payments are not configured yet.")
 
     if submission.amount_cents % 100 != 0:
-        raise HTTPException(422, "Choose a whole-euro contribution amount.")
+        raise HTTPException(422, "Choose a whole-dollar contribution amount.")
     if submission.amount_cents < 200 or submission.amount_cents > 50000:
-        raise HTTPException(422, "Contributions must be between €2 and €500.")
+        raise HTTPException(422, "Contributions must be between $2 and $500.")
 
     stories = await supabase.admin_get(
         "stories",
@@ -52,7 +57,7 @@ async def create_support_checkout(
 
     story = stories[0]
     base_url = settings.frontend_base_url.rstrip("/")
-    amount_label = f"€{submission.amount_cents / 100:.2f}"
+    amount_label = f"${submission.amount_cents / 100:.2f}"
     form = {
         "mode": "payment",
         "submit_type": "pay",
@@ -60,7 +65,7 @@ async def create_support_checkout(
         "cancel_url": f"{base_url}/stories/{story['slug']}?support=cancelled",
         "client_reference_id": user.id,
         "line_items[0][quantity]": "1",
-        "line_items[0][price_data][currency]": "eur",
+        "line_items[0][price_data][currency]": SUPPORT_CURRENCY,
         "line_items[0][price_data][unit_amount]": str(submission.amount_cents),
         "line_items[0][price_data][product_data][name]": f"Support for {story['title']}",
         "line_items[0][price_data][product_data][description]": "Voluntary reader support for independent storytelling.",
@@ -107,7 +112,7 @@ async def create_support_checkout(
                 "story_id": str(story["id"]),
                 "stripe_checkout_session_id": session["id"],
                 "amount_cents": submission.amount_cents,
-                "currency": "eur",
+                "currency": SUPPORT_CURRENCY,
                 "status": "pending",
             },
         )
@@ -124,7 +129,8 @@ def _contribution_from_paid_session(session: dict) -> dict | None:
     """Build a contribution row from a verified, paid Checkout Session.
 
     Returns None when the session does not carry the data our checkout always
-    sets (valid user and story IDs, a euro amount within the allowed range).
+    sets (valid user and story IDs, an amount within the allowed range in a
+    currency we have charged in).
     """
     metadata = session.get("metadata") or {}
     try:
@@ -133,11 +139,12 @@ def _contribution_from_paid_session(session: dict) -> dict | None:
     except ValueError:
         return None
     amount = session.get("amount_total")
+    currency = str(session.get("currency", "")).lower()
     if (
         not isinstance(amount, int)
         or isinstance(amount, bool)
         or not 200 <= amount <= 50000
-        or str(session.get("currency", "")).lower() != "eur"
+        or currency not in RECORDABLE_CURRENCIES
     ):
         return None
     return {
@@ -145,7 +152,7 @@ def _contribution_from_paid_session(session: dict) -> dict | None:
         "story_id": story_id,
         "stripe_checkout_session_id": session["id"],
         "amount_cents": amount,
-        "currency": "eur",
+        "currency": currency,
         "status": "pending",
     }
 
