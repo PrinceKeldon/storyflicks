@@ -164,7 +164,13 @@ export default function ReactionPanel({ slug, episodeId, presentation = "page", 
         <p className="eyebrow">{sectionLabel.toUpperCase()} {String(data.episode.sequence_number).padStart(2, "0")}</p>
         <h1>So, what did you think?</h1>
         <p className="contribution-deck">Every reader takes something different from a story. Tell us what stayed with you.</p>
-        <p className="contribution-rule">A reaction OR a review is enough to unlock the next {sectionLabel.toLowerCase()}. You can also do both, or skip and return later.</p>
+        <p className="contribution-rule">{data.has_qualified ? `You’ve already unlocked the next ${sectionLabel.toLowerCase()}. Adding or updating a reaction or review is optional.` : `A reaction OR a review is enough to unlock the next ${sectionLabel.toLowerCase()}. You can also do both, or skip and return later.`}</p>
+        {presentation === "modal" && data.has_qualified && data.next_episode?.unlocked && data.next_episode.publication_status === "published" && (
+          <div className="contribution-action-row contribution-continue-row">
+            <p>Your next {sectionLabel.toLowerCase()} is ready. You can continue now, or leave an optional response below.</p>
+            <button className="primary-button" type="button" onClick={() => onUnlocked?.(data.next_episode!.id)}>Continue to next {sectionLabel.toLowerCase()} <span>→</span></button>
+          </div>
+        )}
         {notice && <p className="contribution-notice contribution-notice-prominent" role="status">{notice}</p>}
 
         <section className="reaction-section">
@@ -180,7 +186,7 @@ export default function ReactionPanel({ slug, episodeId, presentation = "page", 
           </div>
           <div className="contribution-action-row">
             <p>{selected.length} selected <span>·</span> A reaction on its own unlocks the next {sectionLabel.toLowerCase()}.</p>
-            <button className="primary-button" type="button" disabled={busy !== null || selected.length === 0} onClick={() => void submitContribution("reaction")}>{busy === "reaction" ? "Submitting…" : presentation === "modal" ? "Submit reaction & continue" : "Save my reactions"} <span>→</span></button>
+            <button className="primary-button" type="button" disabled={busy !== null || selected.length === 0} onClick={() => void submitContribution("reaction")}>{busy === "reaction" ? "Submitting…" : presentation === "modal" && !data.has_qualified ? "Submit reaction & continue" : data.reaction_summary.some((item) => item.selected_by_me) ? "Update my reactions" : "Save my reactions"} <span>→</span></button>
           </div>
         </section>
 
@@ -199,8 +205,8 @@ export default function ReactionPanel({ slug, episodeId, presentation = "page", 
             <div className="visibility-options"><button type="button" className={visibility === "public" ? "selected" : ""} onClick={() => setVisibility("public")}>Public</button><button type="button" className={visibility === "private" ? "selected" : ""} onClick={() => setVisibility("private")}>Private</button></div>
           </div>
           <div className="contribution-action-row review-submit-row">
-            <p>A submitted review — public or private — also unlocks the next {sectionLabel.toLowerCase()}.</p>
-            <button className="primary-button" type="button" disabled={busy !== null || !body.trim()} onClick={() => void submitContribution("review")}>{busy === "review" ? "Submitting…" : presentation === "modal" ? (data.my_review ? "Update review & continue" : "Submit review & continue") : data.my_review ? "Update my review" : "Submit my review"} <span>→</span></button>
+            <p>{data.has_qualified ? "Your review is optional; your next section is already unlocked." : `A submitted review — public or private — also unlocks the next ${sectionLabel.toLowerCase()}.`}</p>
+            <button className="primary-button" type="button" disabled={busy !== null || !body.trim()} onClick={() => void submitContribution("review")}>{busy === "review" ? "Submitting…" : presentation === "modal" && !data.has_qualified ? (data.my_review ? "Update review & continue" : "Submit review & continue") : data.my_review ? "Update my review" : "Submit my review"} <span>→</span></button>
           </div>
         </section>
 
