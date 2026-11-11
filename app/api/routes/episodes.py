@@ -233,41 +233,38 @@ async def read_episode(
         for asset in asset_rows
     ]
 
-    # Resolve the next published episode independently of reader entitlements.
-    # The next button opens the existing reaction/review gate before navigation.
-    next_episodes = await supabase.admin_get(
+    # Load the published episode sequence once, then derive both directions.
+    # This avoids coupling navigation to a single-row filtered lookup.
+    navigation_episodes = await supabase.admin_get_all(
         "episodes",
         {
             "select": "id,title,sequence_number,publication_status",
             "story_id": f"eq.{story['id']}",
-            "sequence_number": f"gt.{episode['sequence_number']}",
             "publication_status": "eq.published",
             "deleted_at": "is.null",
             "order": "sequence_number.asc",
         },
     )
-    next_episode = next_episodes[0] if next_episodes else None
-    if next_episode:
+    next_candidates = [
+        item for item in navigation_episodes
+        if item["sequence_number"] > episode["sequence_number"]
+    ]
+    next_episode = None
+    if next_candidates:
+        next_item = next_candidates[0]
         next_episode = {
-            "id": next_episode["id"],
-            "title": next_episode["title"],
-            "sequence_number": next_episode["sequence_number"],
+            "id": next_item["id"],
+            "title": next_item["title"],
+            "sequence_number": next_item["sequence_number"],
         }
 
     # Offer the nearest earlier episode the reader is entitled to reopen.
-    previous_episodes = await supabase.admin_get(
-        "episodes",
-        {
-            "select": "id,title,sequence_number,publication_status",
-            "story_id": f"eq.{story['id']}",
-            "sequence_number": f"lt.{episode['sequence_number']}",
-            "publication_status": "eq.published",
-            "deleted_at": "is.null",
-            "order": "sequence_number.desc",
-        },
-    )
+    previous_candidates = [
+        item for item in navigation_episodes
+        if item["sequence_number"] < episode["sequence_number"]
+    ]
     previous_episode = None
-    for candidate in previous_episodes:
+    for candidate in reversed(previous_candidates):
         if await reader_can_access(user.id, candidate, story):
             previous_episode = {
                 "id": candidate["id"],
