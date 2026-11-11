@@ -12,7 +12,7 @@ type Source = { title: string; url: string };
 type Message = { id: string; role: "user" | "model"; content: string; tool_activity?: Activity[]; sources?: Source[]; proposals?: ProposalItem[] };
 type Props = {
   storyId: string;
-  storyTitle: string;
+  stories: { id: string; title: string }[];
   request: (path: string, init?: RequestInit) => Promise<unknown>;
   onApplied: () => void | Promise<void>;
 };
@@ -86,7 +86,9 @@ function ProposalCard({ proposal, request, onChange, onApplied }: {
   );
 }
 
-export default function AgentPanel({ storyId, storyTitle, request, onApplied }: Props) {
+export default function AgentPanel({ storyId, stories, request, onApplied }: Props) {
+  const [selectedTitleId, setSelectedTitleId] = useState(storyId || "general");
+  const selectedTitle = stories.find(story => story.id === selectedTitleId) ?? null;
   const [messages, setMessages] = useState<Message[]>([]);
   const [conversationId, setConversationId] = useState<string | null>(null);
   const [draft, setDraft] = useState("");
@@ -94,12 +96,12 @@ export default function AgentPanel({ storyId, storyTitle, request, onApplied }: 
   const [error, setError] = useState("");
   const endRef = useRef<HTMLDivElement>(null);
 
-  // A conversation belongs to the story it was started for.
+  // Each conversation is scoped to the selected title, or to the general workspace.
   useEffect(() => {
     setMessages([]);
     setConversationId(null);
     setError("");
-  }, [storyId]);
+  }, [selectedTitleId]);
 
   useEffect(() => {
     endRef.current?.scrollIntoView({ block: "end" });
@@ -121,7 +123,7 @@ export default function AgentPanel({ storyId, storyTitle, request, onApplied }: 
     try {
       const data = (await request("/creator/agent/chat", {
         method: "POST",
-        body: JSON.stringify({ message, story_id: storyId || null, conversation_id: conversationId }),
+        body: JSON.stringify({ message, story_id: selectedTitleId === "general" ? null : selectedTitleId, conversation_id: conversationId }),
       })) as { conversation_id: string; reply: string; tool_activity: Activity[]; sources: Source[]; proposals: ProposalItem[] };
       setConversationId(data.conversation_id);
       setMessages(current => [...current, {
@@ -143,10 +145,11 @@ export default function AgentPanel({ storyId, storyTitle, request, onApplied }: 
 
   return (
     <section className="studio-content sf-agent">
+      <div className="studio-workspace-select sf-agent-context"><label htmlFor="sf-agent-title">WORKING CONTEXT<select id="sf-agent-title" value={selectedTitleId} onChange={event => setSelectedTitleId(event.target.value)}><option value="general">General — all titles / uncategorised</option>{stories.map(story => <option key={story.id} value={story.id}>{story.title}</option>)}</select></label><small>{selectedTitle ? `Focused on ${selectedTitle.title}` : "General workspace context"}</small></div>
       <div className="studio-section-heading"><div>
         <p className="eyebrow">YOUR EDITOR AND ASSISTANT</p>
         <h2>Studio assistant<span>.</span></h2>
-        <p className="studio-intro">Ask about “{storyTitle || "your stories"}”: statistics, reviews, continuity, research, or edits. It never changes a chapter on its own — every edit is shown here first, and saved as a new draft only when you approve it.</p>
+        <p className="studio-intro">{selectedTitle ? <>Ask about “{selectedTitle.title}”: statistics, reviews, continuity, research, or edits.</> : <>Ask general questions across your creator workspace, or choose a title above for title-specific statistics, reviews, continuity, research, and edits.</>} It never changes a chapter on its own — every edit is shown here first, and saved as a new draft only when you approve it.</p>
       </div></div>
 
       <div className="sf-agent-thread" aria-live="polite">
