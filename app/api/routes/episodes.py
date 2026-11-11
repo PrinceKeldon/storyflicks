@@ -233,6 +233,20 @@ async def read_episode(
         for asset in asset_rows
     ]
 
+    next_episodes = await supabase.admin_get(
+        "episodes",
+        {
+            "select": "id,title,sequence_number",
+            "story_id": f"eq.{story['id']}",
+            "sequence_number": f"gt.{episode['sequence_number']}",
+            "publication_status": "eq.published",
+            "deleted_at": "is.null",
+            "order": "sequence_number.asc",
+            "limit": "1",
+        },
+    )
+    next_episode = next_episodes[0] if next_episodes else None
+
     return {
         "story": {
             "id": story["id"],
@@ -249,6 +263,7 @@ async def read_episode(
             "content": episode["content"],
             "assets": assets,
         },
+        "next_episode": next_episode,
         "reading_progress": reading_progress,
     }
 
