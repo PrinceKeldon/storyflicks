@@ -1,0 +1,190 @@
+"use client";
+
+import { useCallback, useEffect, useRef, useState, type FormEvent } from "react";
+
+type Edit = { block_index: number; old_text: string; new_text: string; reason?: string; context_before?: string; context_after?: string };
+type ProposalItem = {
+  id: string; status: string; title: string; rationale: string; episode_id: string; error?: string | null;
+  payload: { chapter_title?: string; sequence_number?: number; edits?: Edit[] };
+};
+type Activity = { tool: string; summary: string };
+type Source = { title: string; url: string };
+type Message = { id: string; role: "user" | "model"; content: string; tool_activity?: Activity[]; sources?: Source[]; proposals?: ProposalItem[] };
+type Props = {
+  storyId: string;
+  storyTitle: string;
+  request: (path: string, init?: RequestInit) => Promise<unknown>;
+  onApplied: () => void | Promise<void>;
+};
+
+const SUGGESTIONS = [
+  "Give me an overview of how this story is doing.",
+  "Check chapter 1 for typos and awkward sentences, and propose fixes.",
+  "Summarise what readers are saying in recent reviews.",
+  "Search the manuscript for inconsistencies in character names.",
+];
+
+function EditDiff({ edit }: { edit: Edit }) {
+  return (
+    <div className="sf-agent-edit">
+      <small>BLOCK {edit.block_index + 1}{edit.reason ? ` · ${edit.reason}` : ""}</small>
+      <p>
+        {edit.context_before}
+        {edit.old_text && <del>{edit.old_text}</del>}
+        {edit.new_text && <ins>{edit.new_text}</ins>}
+        {edit.context_after}
+      </p>
+    </div>
+  );
+}
+
+function ProposalCard({ proposal, request, onChange, onApplied }: {
+  proposal: ProposalItem; request: Props["request"];
+  onChange: (id: string, patch: Partial<ProposalItem>) => void; onApplied: Props["onApplied"];
+}) {
+  const [busy, setBusy] = useState("");
+  const [error, setError] = useState("");
+  const [note, setNote] = useState("");
+  const edits = proposal.payload.edits ?? [];
+
+  async function decide(kind: "approve" | "reject") {
+    setBusy(kind);
+    setError("");
+    try {
+      const result = (await request(`/creator/agent/proposals/${proposal.id}/${kind}`, { method: "POST" })) as { status: string; message?: string };
+      onChange(proposal.id, { status: result.status });
+      if (result.message) setNote(result.message);
+      if (kind === "approve") await onApplied();
+    } catch (err) {
+      const message = err instanceof Error ? err.message : "Something went wrong.";
+      setError(message);
+      if (/changed since|already|no longer/i.test(message)) onChange(proposal.id, { status: /changed since/i.test(message) ? "stale" : proposal.status });
+    } finally {
+      setBusy("");
+    }
+  }
+
+  return (
+    <article className={`sf-agent-proposal sf-agent-proposal-${proposal.status}`}>
+      <header>
+        <strong>{proposal.title}</strong>
+        <small>{proposal.payload.sequence_number ? `CHAPTER ${proposal.payload.sequence_number} · ` : ""}{(proposal.payload.chapter_title ?? "").toUpperCase()} · {proposal.status.toUpperCase()}</small>
+      </header>
+      {proposal.rationale && <p className="sf-agent-rationale">{proposal.rationale}</p>}
+      {edits.map((edit, index) => <EditDiff key={index} edit={edit} />)}
+      {proposal.status === "pending" && (
+        <div className="studio-form-actions">
+          <button type="button" className="studio-primary" disabled={!!busy} onClick={() => decide("approve")}>{busy === "approve" ? "Saving…" : `Approve ${edits.length} change${edits.length === 1 ? "" : "s"} · save as draft`}</button>
+          <button type="button" className="studio-text-action" disabled={!!busy} onClick={() => decide("reject")}>{busy === "reject" ? "Rejecting…" : "Reject"}</button>
+        </div>
+      )}
+      {proposal.status === "applied" && <p className="studio-notice">{note || "Saved as a new draft revision."}</p>}
+      {proposal.status === "stale" && <p className="studio-alert">The chapter changed after this was proposed, so nothing was applied. Ask the assistant to propose it again.</p>}
+      {proposal.status === "failed" && <p className="studio-alert">{proposal.error || "This could not be applied."}</p>}
+      {error && <p className="studio-alert" role="alert">{error}</p>}
+    </article>
+  );
+}
+
+export default function AgentPanel({ storyId, storyTitle, request, onApplied }: Props) {
+  const [messages, setMessages] = useState<Message[]>([]);
+  const [conversationId, setConversationId] = useState<string | null>(null);
+  const [draft, setDraft] = useState("");
+  const [busy, setBusy] = useState(false);
+  const [error, setError] = useState("");
+  const endRef = useRef<HTMLDivElement>(null);
+
+  // A conversation belongs to the story it was started for.
+  useEffect(() => {
+    setMessages([]);
+    setConversationId(null);
+    setError("");
+  }, [storyId]);
+
+  useEffect(() => {
+    endRef.current?.scrollIntoView({ block: "end" });
+  }, [messages, busy]);
+
+  const updateProposal = useCallback((id: string, patch: Partial<ProposalItem>) => {
+    setMessages(current => current.map(message => message.proposals
+      ? { ...message, proposals: message.proposals.map(p => (p.id === id ? { ...p, ...patch } : p)) }
+      : message));
+  }, []);
+
+  async function send(text: string) {
+    const message = text.trim();
+    if (!message || busy) return;
+    setBusy(true);
+    setError("");
+    setDraft("");
+    setMessages(current => [...current, { id: `u-${Date.now()}`, role: "user", content: message }]);
+    try {
+      const data = (await request("/creator/agent/chat", {
+        method: "POST",
+        body: JSON.stringify({ message, story_id: storyId || null, conversation_id: conversationId }),
+      })) as { conversation_id: string; reply: string; tool_activity: Activity[]; sources: Source[]; proposals: ProposalItem[] };
+      setConversationId(data.conversation_id);
+      setMessages(current => [...current, {
+        id: `m-${Date.now()}`, role: "model", content: data.reply,
+        tool_activity: data.tool_activity, sources: data.sources, proposals: data.proposals,
+      }]);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "The assistant could not answer.");
+      setDraft(message);
+    } finally {
+      setBusy(false);
+    }
+  }
+
+  function submit(event: FormEvent) {
+    event.preventDefault();
+    void send(draft);
+  }
+
+  return (
+    <section className="studio-content sf-agent">
+      <div className="studio-section-heading"><div>
+        <p className="eyebrow">YOUR EDITOR AND ASSISTANT</p>
+        <h2>Studio assistant<span>.</span></h2>
+        <p className="studio-intro">Ask about “{storyTitle || "your stories"}”: statistics, reviews, continuity, research, or edits. It never changes a chapter on its own — every edit is shown here first, and saved as a new draft only when you approve it.</p>
+      </div></div>
+
+      <div className="sf-agent-thread" aria-live="polite">
+        {!messages.length && (
+          <div className="sf-agent-suggestions">
+            {SUGGESTIONS.map(text => <button key={text} type="button" className="studio-text-action" onClick={() => void send(text)} disabled={busy}>{text}</button>)}
+          </div>
+        )}
+        {messages.map(message => (
+          <div key={message.id} className={`sf-agent-message sf-agent-${message.role}`}>
+            <small>{message.role === "user" ? "YOU" : "ASSISTANT"}</small>
+            <p>{message.content}</p>
+            {!!message.tool_activity?.length && (
+              <details><summary>What the assistant did ({message.tool_activity.length})</summary>
+                <ul>{message.tool_activity.map((a, i) => <li key={i}>{a.summary}</li>)}</ul>
+              </details>
+            )}
+            {!!message.sources?.length && (
+              <div className="sf-agent-sources"><small>WEB SOURCES</small>
+                <ul>{message.sources.map(s => <li key={s.url}><a href={s.url} target="_blank" rel="noopener noreferrer">{s.title}</a></li>)}</ul>
+              </div>
+            )}
+            {message.proposals?.map(p => <ProposalCard key={p.id} proposal={p} request={request} onChange={updateProposal} onApplied={onApplied} />)}
+          </div>
+        ))}
+        {busy && <p className="studio-sidebar-empty">The assistant is working — reading, searching and checking. This can take a minute…</p>}
+        <div ref={endRef} />
+      </div>
+
+      {error && <p className="studio-alert" role="alert">{error}</p>}
+      <form className="sf-agent-form" onSubmit={submit}>
+        <textarea value={draft} maxLength={4000} rows={3} placeholder="Ask a question or give an instruction…" onChange={e => setDraft(e.target.value)}
+          onKeyDown={e => { if (e.key === "Enter" && (e.metaKey || e.ctrlKey)) { e.preventDefault(); void send(draft); } }} />
+        <div className="studio-form-actions">
+          <button type="submit" className="studio-primary" disabled={busy || !draft.trim()}>{busy ? "Working…" : "Send ↗"}</button>
+          <small>Ctrl/⌘ + Enter to send</small>
+        </div>
+      </form>
+    </section>
+  );
+}
