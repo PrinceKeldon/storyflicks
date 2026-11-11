@@ -12,7 +12,6 @@ type Source = { title: string; url: string };
 type Message = { id: string; role: "user" | "model"; content: string; tool_activity?: Activity[]; sources?: Source[]; proposals?: ProposalItem[] };
 type Props = {
   storyId: string;
-  storyTitle: string;
   stories: { id: string; title: string }[];
   request: (path: string, init?: RequestInit) => Promise<unknown>;
   onApplied: () => void | Promise<void>;
@@ -87,7 +86,7 @@ function ProposalCard({ proposal, request, onChange, onApplied }: {
   );
 }
 
-export default function AgentPanel({ storyId, storyTitle, stories, request, onApplied }: Props) {
+export default function AgentPanel({ storyId, stories, request, onApplied }: Props) {
   const [selectedTitleId, setSelectedTitleId] = useState(storyId || "general");
   const selectedTitle = stories.find(story => story.id === selectedTitleId) ?? null;
   const [messages, setMessages] = useState<Message[]>([]);
