@@ -2131,3 +2131,19 @@ html[data-theme="dark"] body :is(input,textarea,select)::placeholder {
 @media(max-width:390px){
   .reading-room .reader-episode-back{padding:7px 8px;font-size:16px}
 }
+
+/* Studio assistant */
+.sf-agent-thread{display:grid;gap:16px;margin:20px 0}
+.sf-agent-suggestions{display:flex;flex-wrap:wrap;gap:10px}
+.sf-agent-message{padding:16px;border:1px solid var(--studio-border,rgba(128,128,128,.25));border-radius:12px;display:grid;gap:10px;overflow-wrap:anywhere}
+.sf-agent-message>small,.sf-agent-sources small,.sf-agent-edit small,.sf-agent-proposal header small{font-size:14px;letter-spacing:.12em;opacity:.7}
+.sf-agent-message>p{white-space:pre-wrap;margin:0}
+.sf-agent-user{background:var(--studio-soft,rgba(128,128,128,.08))}
+.sf-agent-proposal{padding:14px;border-radius:10px;border:1px solid var(--studio-border,rgba(128,128,128,.35));display:grid;gap:10px}
+.sf-agent-proposal header{display:grid;gap:4px}
+.sf-agent-edit{padding:10px;border-radius:8px;background:var(--studio-soft,rgba(128,128,128,.08))}
+.sf-agent-edit p{margin:6px 0 0;white-space:pre-wrap}
+.sf-agent-edit del{background:rgba(220,60,60,.18);text-decoration:line-through}
+.sf-agent-edit ins{background:rgba(60,170,90,.22);text-decoration:none}
+.sf-agent-form{display:grid;gap:10px}
+.sf-agent-form textarea{width:100%;resize:vertical}

@@ -305,3 +305,60 @@ async def propose_manuscript_patch(
         "rationale": str(rationale)[:2000],
         "model": settings.gemini_model,
     }
+
+
+async def generate_content(payload: dict[str, Any], *, purpose: str, model: str | None = None, timeout: float = 90.0) -> dict[str, Any]:
+    """POST one generateContent request and return the parsed response body.
+
+    Shared by the Studio assistant. Provider response bodies are never exposed
+    to the caller or logged, because they can contain request details.
+    """
+    api_key = settings.gemini_api_key.strip()
+    if not api_key:
+        raise HTTPException(
+            status_code=503,
+            detail="The Studio assistant is not configured yet. Add GEMINI_API_KEY to the backend environment.",
+        )
+    chosen_model = model or settings.gemini_agent_model.strip() or settings.gemini_model
+    try:
+        async with httpx.AsyncClient(timeout=httpx.Timeout(timeout, connect=10.0)) as client:
+            response = await client.post(
+                GEMINI_ENDPOINT.format(model=chosen_model),
+                headers={"x-goog-api-key": api_key},
+                json=payload,
+            )
+    except httpx.TimeoutException as exc:
+        raise HTTPException(status_code=504, detail="Gemini took too long to respond. Please try again.") from exc
+    except httpx.HTTPError as exc:
+        logger.warning("Gemini %s request failed: %s", purpose, type(exc).__name__)
+        raise HTTPException(status_code=502, detail="Gemini could not be reached. Please try again.") from exc
+
+    if response.status_code == 429:
+        raise HTTPException(status_code=429, detail="Gemini is temporarily rate-limiting requests. Please wait and try again.")
+    if response.status_code >= 500:
+        raise HTTPException(status_code=502, detail="Gemini is temporarily unavailable. Please try again.")
+    if not response.is_success:
+        logger.warning("Gemini rejected %s request: status=%s", purpose, response.status_code)
+        raise HTTPException(status_code=502, detail="Gemini rejected the request. Check the backend Gemini configuration and that the model supports tools.")
+    try:
+        data = response.json()
+    except ValueError as exc:
+        raise HTTPException(status_code=502, detail="Gemini returned an unreadable reply. Please try again.") from exc
+    if not isinstance(data, dict):
+        raise HTTPException(status_code=502, detail="Gemini returned an unreadable reply. Please try again.")
+    data["_model"] = chosen_model
+    return data
+
+
+def candidate_parts(data: dict[str, Any]) -> list[dict[str, Any]]:
+    """Return the first candidate's content parts, or [] if there are none."""
+    try:
+        parts = data["candidates"][0]["content"]["parts"]
+    except (KeyError, IndexError, TypeError):
+        return []
+    return [part for part in parts if isinstance(part, dict)] if isinstance(parts, list) else []
+
+
+def parts_text(parts: list[dict[str, Any]]) -> str:
+    """Join the visible (non-thought) text of content parts."""
+    return "".join(part.get("text", "") for part in parts if isinstance(part.get("text"), str) and not part.get("thought"))

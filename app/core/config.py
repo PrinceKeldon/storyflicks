@@ -18,6 +18,11 @@ class Settings(BaseSettings):
     # pydantic-settings loads .env itself and does not export it to os.environ.
     gemini_api_key: str = ""
     gemini_model: str = "gemini-3.5-flash-lite"
+    # Studio assistant (tool calling + Google Search grounding). Leave empty to
+    # use gemini_model; set it if the default model does not support tools.
+    gemini_agent_model: str = ""
+    agent_daily_message_limit: int = 200
+    agent_max_tool_rounds: int = 8
     frontend_base_url: str = "http://localhost:3000"
     story_assets_bucket: str = "story-assets"
     cors_origins: list[str] = ["http://localhost:3000"]

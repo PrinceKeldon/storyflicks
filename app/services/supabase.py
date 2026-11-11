@@ -71,6 +71,25 @@ class SupabaseService:
             )
         self._raise_for_supabase(response)
 
+    async def admin_patch_returning(
+        self, table: str, params: dict[str, str], payload: dict[str, Any]
+    ) -> list[dict[str, Any]]:
+        """Update matching rows and return them.
+
+        Used to claim a row atomically: filter on the expected current status,
+        and an empty result means another request got there first.
+        """
+        async with httpx.AsyncClient(timeout=20.0) as client:
+            response = await client.patch(
+                f"{settings.supabase_rest_url}/{table}",
+                headers={**self._admin_headers(), "Prefer": "return=representation"},
+                params=params,
+                json=payload,
+            )
+        self._raise_for_supabase(response)
+        data = response.json() if response.content else []
+        return data if isinstance(data, list) else []
+
     async def admin_patch(
         self, table: str, params: dict[str, str], payload: dict[str, Any]
     ) -> Any:
