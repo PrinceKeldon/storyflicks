@@ -31,6 +31,11 @@ class CreatorRequestValidationTests(unittest.TestCase):
             {"type": "paragraph", "text": "Hello"}
         ]}}
         self.assertEqual(CreatorEpisodeSubmission(**valid).title, "Pilot")
+        # These legacy types are still rendered by the Reading Room and must remain importable.
+        for block_type in ("dialogue", "emphasis", "title", "divider", "scene_break"):
+            with self.subTest(block_type=block_type):
+                legacy = {**valid, "content": {"blocks": [{"type": block_type, "text": "Legacy"}]}}
+                CreatorEpisodeSubmission(**legacy)
         with self.assertRaises(ValidationError):
             CreatorEpisodeSubmission(**{
                 **valid, "content": {"blocks": [{"type": "script", "text": "No"}]}
