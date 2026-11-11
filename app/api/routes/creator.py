@@ -404,6 +404,59 @@ async def update_creator_episode_title(
     return {"episode_id": str(episode_id), "title": submission.title}
 
 
+
+class CreatorEpisodeSynopsisSubmission(BaseModel):
+    synopsis: str | None = Field(default=None, max_length=10000)
+
+
+@router.patch("/creator/stories/{story_id}/episodes/{episode_id}/synopsis")
+async def save_creator_episode_synopsis(
+    story_id: UUID,
+    episode_id: UUID,
+    submission: CreatorEpisodeSynopsisSubmission,
+    user: AuthenticatedUser = Depends(get_current_user),
+):
+    await require_story_editor(story_id, user)
+    episodes = await supabase.admin_get(
+        "episodes",
+        {
+            "id": f"eq.{episode_id}",
+            "story_id": f"eq.{story_id}",
+            "deleted_at": "is.null",
+            "select": "id",
+            "limit": "1",
+        },
+    )
+    if not episodes:
+        raise HTTPException(404, "Section not found in this story.")
+
+    synopsis = submission.synopsis.strip() if submission.synopsis else None
+    await supabase.admin_patch(
+        "episodes",
+        {"id": f"eq.{episode_id}", "story_id": f"eq.{story_id}"},
+        {"synopsis": synopsis, "updated_at": datetime.now().astimezone().isoformat()},
+    )
+    # Keep the latest editable draft's metadata aligned without creating a
+    # manuscript revision or changing any published revision.
+    drafts = await supabase.admin_get(
+        "episode_revisions",
+        {
+            "episode_id": f"eq.{episode_id}",
+            "revision_status": "eq.draft",
+            "select": "id",
+            "order": "revision_number.desc",
+            "limit": "1",
+        },
+    )
+    if drafts:
+        await supabase.admin_patch(
+            "episode_revisions",
+            {"id": f"eq.{drafts[0]['id']}", "episode_id": f"eq.{episode_id}"},
+            {"synopsis": synopsis},
+        )
+    return {"episode_id": str(episode_id), "synopsis": synopsis}
+
+
 @router.post("/creator/stories/{story_id}/episodes")
 async def create_creator_episode(
     story_id: UUID,
