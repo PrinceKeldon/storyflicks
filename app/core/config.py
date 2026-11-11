@@ -14,6 +14,10 @@ class Settings(BaseSettings):
     scheduler_secret: str = ""
     stripe_secret_key: str = ""
     stripe_webhook_secret: str = ""
+    # Read through Settings (not os.getenv) so values in .env are picked up:
+    # pydantic-settings loads .env itself and does not export it to os.environ.
+    gemini_api_key: str = ""
+    gemini_model: str = "gemini-3.5-flash-lite"
     frontend_base_url: str = "http://localhost:3000"
     story_assets_bucket: str = "story-assets"
     cors_origins: list[str] = ["http://localhost:3000"]

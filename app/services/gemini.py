@@ -1,19 +1,19 @@
 import json
 import logging
-import os
 from typing import Any
 
 import httpx
 from fastapi import HTTPException
 
+from app.core.config import settings
+
 logger = logging.getLogger(__name__)
 
-GEMINI_MODEL = os.getenv("GEMINI_MODEL", "gemini-3.5-flash-lite")
 GEMINI_ENDPOINT = "https://generativelanguage.googleapis.com/v1beta/models/{model}:generateContent"
 
 
 async def analyse_manuscript_structure(blocks: list[dict[str, Any]], story_title: str, author_instructions: str = "") -> dict[str, Any]:
-    api_key = os.getenv("GEMINI_API_KEY", "").strip()
+    api_key = settings.gemini_api_key.strip()
     if not api_key:
         raise HTTPException(
             status_code=503,
@@ -76,7 +76,7 @@ async def analyse_manuscript_structure(blocks: list[dict[str, Any]], story_title
     try:
         async with httpx.AsyncClient(timeout=httpx.Timeout(60.0, connect=10.0)) as client:
             response = await client.post(
-                GEMINI_ENDPOINT.format(model=GEMINI_MODEL),
+                GEMINI_ENDPOINT.format(model=settings.gemini_model),
                 headers={"x-goog-api-key": api_key},
                 json=payload,
             )
@@ -136,7 +136,7 @@ async def analyse_manuscript_structure(blocks: list[dict[str, Any]], story_title
         raise HTTPException(status_code=502, detail="Gemini did not return complete, continuous chapter boundaries. Your existing analysis is unchanged.")
 
     warnings = [str(item)[:500] for item in result.get("warnings", []) if isinstance(item, str)][:20]
-    return {"sections": validated, "warnings": warnings, "model": GEMINI_MODEL}
+    return {"sections": validated, "warnings": warnings, "model": settings.gemini_model}
 
 
 async def chat_about_manuscript(
@@ -145,7 +145,7 @@ async def chat_about_manuscript(
     blocks: list[dict[str, Any]],
     history: list[dict[str, str]],
 ) -> dict[str, str]:
-    api_key = os.getenv("GEMINI_API_KEY", "").strip()
+    api_key = settings.gemini_api_key.strip()
     if not api_key:
         raise HTTPException(
             status_code=503,
@@ -185,7 +185,7 @@ async def chat_about_manuscript(
     try:
         async with httpx.AsyncClient(timeout=httpx.Timeout(60.0, connect=10.0)) as client:
             response = await client.post(
-                GEMINI_ENDPOINT.format(model=GEMINI_MODEL),
+                GEMINI_ENDPOINT.format(model=settings.gemini_model),
                 headers={"x-goog-api-key": api_key},
                 json=payload,
             )
@@ -212,7 +212,7 @@ async def chat_about_manuscript(
 
     if not answer:
         raise HTTPException(status_code=502, detail="Gemini returned an empty reply. Please try again.")
-    return {"reply": answer[:12000], "model": GEMINI_MODEL}
+    return {"reply": answer[:12000], "model": settings.gemini_model}
 
 
 async def propose_manuscript_patch(
@@ -224,7 +224,7 @@ async def propose_manuscript_patch(
     after_context: str = "",
 ) -> dict[str, str]:
     """Return a proposed replacement for one exact text range; never write content."""
-    api_key = os.getenv("GEMINI_API_KEY", "").strip()
+    api_key = settings.gemini_api_key.strip()
     if not api_key:
         raise HTTPException(status_code=503, detail="AI manuscript editing is not configured.")
 
@@ -268,7 +268,7 @@ async def propose_manuscript_patch(
     try:
         async with httpx.AsyncClient(timeout=httpx.Timeout(60.0, connect=10.0)) as client:
             response = await client.post(
-                GEMINI_ENDPOINT.format(model=GEMINI_MODEL),
+                GEMINI_ENDPOINT.format(model=settings.gemini_model),
                 headers={"x-goog-api-key": api_key},
                 json=payload,
             )
@@ -303,5 +303,5 @@ async def propose_manuscript_patch(
     return {
         "replacement": replacement,
         "rationale": str(rationale)[:2000],
-        "model": GEMINI_MODEL,
+        "model": settings.gemini_model,
     }
