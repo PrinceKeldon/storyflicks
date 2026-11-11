@@ -42,6 +42,18 @@ class SupabaseService:
         return data if isinstance(data, list) else []
 
 
+    async def admin_delete(
+        self, table: str, params: dict[str, str]
+    ) -> None:
+        async with httpx.AsyncClient(timeout=20.0) as client:
+            response = await client.delete(
+                f"{settings.supabase_rest_url}/{table}",
+                headers={**self._admin_headers(), "Prefer": "return=minimal"},
+                params=params,
+            )
+        self._raise_for_supabase(response)
+
+
     async def admin_insert(self, table: str, payload: dict[str, Any]) -> Any:
         async with httpx.AsyncClient(timeout=20.0) as client:
             response = await client.post(
@@ -176,6 +188,22 @@ class SupabaseService:
                 detail="Storage returned invalid object metadata.",
             )
         return payload
+
+    async def delete_storage_object(
+        self, bucket: str, storage_path: str
+    ) -> None:
+        encoded_path = quote(storage_path, safe="/")
+        endpoint = (
+            f"{settings.supabase_url.rstrip('/')}/storage/v1/object/"
+            f"{quote(bucket, safe='')}/{encoded_path}"
+        )
+        async with httpx.AsyncClient(timeout=30.0) as client:
+            response = await client.delete(
+                endpoint,
+                headers=self._admin_headers(),
+            )
+        self._raise_for_supabase(response)
+
 
     async def create_signed_upload_url(self, bucket: str, storage_path: str) -> dict[str, Any]:
         encoded_path = quote(storage_path, safe="/")
