@@ -63,7 +63,7 @@ export default function SupportStoryButton({
     <div className={compact ? "support-story support-story-compact" : "support-story"}>
       {!expanded ? (
         <div className="support-story-intro">
-          <p>Enjoying this story? Support the author as they bring this book to publication. Your contribution helps keep it free to read while reader reactions, early reviews and ideas help shape the manuscript.</p>
+          <p>Enjoying this title? Support the author as they bring it to publication. Your contribution helps keep it free to read while reader reactions, early reviews and ideas help shape the title.</p>
           <button type="button" className="support-story-trigger" onClick={() => setExpanded(true)}>
             Buy the author a coffee
           </button>
@@ -73,7 +73,7 @@ export default function SupportStoryButton({
         <section className="support-story-panel" aria-label="Make a donation">
           <button className="support-story-close" type="button" onClick={() => { setExpanded(false); setError(""); }} aria-label="Close donation options">×</button>
           <h3>Support the author</h3>
-          <p>Your contribution helps the author develop this manuscript with reader reactions, early reviews and ideas, while keeping it free to read.</p>
+          <p>Your contribution helps the author develop this title with reader reactions, early reviews and ideas, while keeping it free to read.</p>
           <div className="support-amounts" aria-label="Choose a contribution amount">
             {suggestions.map((value) => (
               <button key={value} type="button" className={amount === String(value) ? "selected" : ""} onClick={() => setAmount(String(value))}>${value}</button>

@@ -2098,3 +2098,36 @@ html[data-theme="dark"] body :is(input,textarea,select)::placeholder {
   --reader-ink: #ffffff;
   --reader-muted: #ffffff;
 }
+
+
+/* Previous-episode navigation stays inside the Reading Room. */
+.reading-room .reader-episode-back{
+  display:inline-flex;
+  align-items:center;
+  justify-content:center;
+  min-height:38px;
+  padding:7px 11px;
+  border:1px solid color-mix(in srgb,var(--reader-ink) 26%,transparent);
+  border-radius:5px;
+  color:var(--reader-ink);
+  background:transparent;
+  font-size:16px;
+  font-weight:600;
+  white-space:nowrap;
+  text-decoration:none;
+}
+.reading-room .reader-episode-back:hover{
+  border-color:color-mix(in srgb,var(--reader-ink) 55%,transparent);
+  background:color-mix(in srgb,var(--reader-ink) 5%,transparent);
+}
+.reading-room .reader-episode-back:focus-visible{
+  outline:2px solid #23845f;
+  outline-offset:3px;
+}
+.reading-room.theme-night .reader-episode-back{
+  color:#f1f3ef;
+  border-color:#69737a;
+}
+@media(max-width:390px){
+  .reading-room .reader-episode-back{padding:7px 8px;font-size:16px}
+}
