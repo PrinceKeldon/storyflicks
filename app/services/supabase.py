@@ -192,15 +192,15 @@ class SupabaseService:
     async def delete_storage_object(
         self, bucket: str, storage_path: str
     ) -> None:
-        encoded_path = quote(storage_path, safe="/")
         endpoint = (
             f"{settings.supabase_url.rstrip('/')}/storage/v1/object/"
-            f"{quote(bucket, safe='')}/{encoded_path}"
+            f"{quote(bucket, safe='')}"
         )
         async with httpx.AsyncClient(timeout=30.0) as client:
             response = await client.delete(
                 endpoint,
                 headers=self._admin_headers(),
+                json={"prefixes": [storage_path]},
             )
         self._raise_for_supabase(response)
 
