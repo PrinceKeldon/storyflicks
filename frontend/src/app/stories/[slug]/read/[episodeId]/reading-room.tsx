@@ -21,6 +21,7 @@ type EpisodeAccessGate = {
 type EpisodePayload = {
   story: { id: string; slug: string; title: string; section_label?: string; section_label_plural?: string };
   episode: { id: string; sequence_number: number; title: string; synopsis?: string | null; content: unknown; assets?: { id: string; asset_type: string; public_url?: string | null; alt_text?: string | null; position: number }[] };
+  next_episode?: { id: string; title: string; sequence_number: number } | null;
   reading_progress?: { progress_percent?: number; last_position?: { scrollY?: number } | null } | null;
 };
 
@@ -277,9 +278,7 @@ export default function ReadingRoom({ slug, episodeId }: { slug: string; episode
         <div><span>READING WIDTH</span><div className="setting-options"><button className={width === "comfortable" ? "selected" : ""} onClick={() => setWidth("comfortable")}>Comfortable</button><button className={width === "wide" ? "selected" : ""} onClick={() => setWidth("wide")}>Wide</button></div></div>
       </section>}
       <article className={`reading-page reading-width-${width}`}>
-        <div className="reading-kicker">{payload.story.title} <span>·</span> {(payload.story.section_label || "Episode").toUpperCase()} {String(payload.episode.sequence_number).padStart(2, "0")}</div>
-        {leadingBlocks.length > 0 && <div className="manuscript" style={{ fontSize: `${fontScale}%` }}>{leadingBlocks.map((block, index) => <p key={"leading-" + index} style={manuscriptBlockStyle(block)}>{renderRuns(block)}</p>)}</div>}
-        <div className="reading-episode-heading">
+        <div className="reading-episode-heading reading-episode-heading-stacked">
           {episodeArtwork?.public_url && (
             <img
               className="reading-episode-thumbnail"
@@ -287,11 +286,10 @@ export default function ReadingRoom({ slug, episodeId }: { slug: string; episode
               alt={episodeArtwork.alt_text || `${payload.episode.title} episode artwork`}
             />
           )}
-          <div className="reading-episode-heading-copy">
-            <h1 className="reading-episode-title" style={{ ...manuscriptBlockStyle(sourceTitleBlock || {}), fontWeight: sourceTitleBlock?.bold || (sourceTitleRuns.length > 0 && sourceTitleRuns.every((run) => run.bold)) ? 700 : 500, fontStyle: sourceTitleBlock?.italic || (sourceTitleRuns.length > 0 && sourceTitleRuns.every((run) => run.italic)) ? "italic" : undefined, textAlign: "center", fontFamily: "'Playfair Display', Georgia, serif", color: sourceTitleRunFormat?.color }}>{payload.episode.title}</h1>
-            {payload.episode.synopsis && <p className="reading-deck">{payload.episode.synopsis}</p>}
-          </div>
+          <div className="reading-kicker">{payload.story.title} <span>·</span> {(payload.story.section_label || "Episode").toUpperCase()} {String(payload.episode.sequence_number).padStart(2, "0")}</div>
+          <h1 className="reading-episode-title" style={{ ...manuscriptBlockStyle(sourceTitleBlock || {}), fontWeight: sourceTitleBlock?.bold || (sourceTitleRuns.length > 0 && sourceTitleRuns.every((run) => run.bold)) ? 700 : 500, fontStyle: sourceTitleBlock?.italic || (sourceTitleRuns.length > 0 && sourceTitleRuns.every((run) => run.italic)) ? "italic" : undefined, textAlign: "center", fontFamily: "'Playfair Display', Georgia, serif", color: sourceTitleRunFormat?.color }}>{payload.episode.title}</h1>
         </div>
+        {leadingBlocks.length > 0 && <div className="manuscript" style={{ fontSize: `${fontScale}%` }}>{leadingBlocks.map((block, index) => <p key={"leading-" + index} style={manuscriptBlockStyle(block)}>{renderRuns(block)}</p>)}</div>}
         <div className="reading-rule"><span>✦</span></div>
         <div className="manuscript" style={{ fontSize: `${fontScale}%` }}>
           {blocks.map((block, index) => {
@@ -313,11 +311,13 @@ export default function ReadingRoom({ slug, episodeId }: { slug: string; episode
         </div>
         {bodyAssets.map((asset) => <figure className="reading-asset" key={asset.id}><img src={asset.public_url!} alt={asset.alt_text || "Story illustration"} /></figure>)}
         <footer className="reading-end">
-          <span>END OF {(payload.story.section_label || "Episode").toUpperCase()} {String(payload.episode.sequence_number).padStart(2, "0")}</span>
-          <h2>Let that one settle.</h2>
-          <p>Take a moment to react or write a review. Either one unlocks what comes next.</p>
-          <div className="reading-end-actions">
-            <button type="button" className="primary-button" onClick={() => setShowContribution(true)}>Share your take <span>→</span></button>
+          {payload.next_episode && (
+            <button type="button" className="reading-next-episode" onClick={() => setShowContribution(true)}>
+              Episode {payload.next_episode.sequence_number}. {payload.next_episode.title}
+              <span aria-hidden="true">→</span>
+            </button>
+          )}
+          <div className="reading-donation-area">
             <SupportStoryButton storyId={payload.story.id} slug={slug} compact />
           </div>
         </footer>
