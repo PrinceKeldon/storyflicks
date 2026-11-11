@@ -63,17 +63,17 @@ export default function SupportStoryButton({
     <div className={compact ? "support-story support-story-compact" : "support-story"}>
       {!expanded ? (
         <div className="support-story-intro">
-          <p>Enjoyed this story? Help fund more original stories. Reading remains free.</p>
+          <p>Enjoying this story? Support the author as they bring this book to publication. Your contribution helps keep it free to read while reader reactions, early reviews and ideas help shape the manuscript.</p>
           <button type="button" className="support-story-trigger" onClick={() => setExpanded(true)}>
-            Make a donation
+            Buy the author a coffee
           </button>
           <small>Optional · Secure checkout</small>
         </div>
       ) : (
         <section className="support-story-panel" aria-label="Make a donation">
           <button className="support-story-close" type="button" onClick={() => { setExpanded(false); setError(""); }} aria-label="Close donation options">×</button>
-          <h3>Choose your donation</h3>
-          <p>Your one-time contribution helps fund more original stories. Reading remains free.</p>
+          <h3>Support the author</h3>
+          <p>Your contribution helps the author develop this manuscript with reader reactions, early reviews and ideas, while keeping it free to read.</p>
           <div className="support-amounts" aria-label="Choose a contribution amount">
             {suggestions.map((value) => (
               <button key={value} type="button" className={amount === String(value) ? "selected" : ""} onClick={() => setAmount(String(value))}>${value}</button>
@@ -86,7 +86,7 @@ export default function SupportStoryButton({
           <button type="button" className="primary-button support-checkout" disabled={busy} onClick={() => void continueToCheckout()}>
             {busy ? "Opening secure checkout…" : "Continue to secure checkout"} <span>↗</span>
           </button>
-          <small>Optional · One-time payment · Securely processed by Stripe</small>
+          <small>Optional · Secure checkout</small>
         </section>
       )}
     </div>
