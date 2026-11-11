@@ -2147,3 +2147,11 @@ html[data-theme="dark"] body :is(input,textarea,select)::placeholder {
 .sf-agent-edit ins{background:rgba(60,170,90,.22);text-decoration:none}
 .sf-agent-form{display:grid;gap:10px}
 .sf-agent-form textarea{width:100%;resize:vertical}
+
+
+/* Independent section metadata and artwork controls */
+.studio-field-hint{display:block;margin-top:7px;color:var(--muted);font-size:14px;line-height:1.5}
+.studio-field-save{justify-self:start;margin-top:8px}
+.studio-episode-assets .studio-image-save{align-self:flex-start}
+.studio-asset-strip figure figcaption{display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap}
+.studio-asset-strip figure .sf-danger-action{font-size:13px}

@@ -260,6 +260,51 @@ async def complete_creator_asset_upload(
 
 
 
+
+@router.delete("/creator/stories/{story_id}/assets/{asset_id}")
+async def delete_creator_episode_asset(
+    story_id: UUID,
+    asset_id: UUID,
+    user: AuthenticatedUser = Depends(get_current_user),
+):
+    await require_story_editor(story_id, user)
+    rows = await supabase.admin_get(
+        "episode_assets",
+        {
+            "id": f"eq.{asset_id}",
+            "select": "id,episode_id,asset_type,storage_path",
+            "limit": "1",
+        },
+    )
+    if not rows:
+        raise HTTPException(404, "Episode image not found.")
+    asset = rows[0]
+    if asset.get("asset_type") != "inline_image" or not asset.get("episode_id"):
+        raise HTTPException(422, "Only episode guide images can be deleted here.")
+    episodes = await supabase.admin_get(
+        "episodes",
+        {
+            "id": f"eq.{asset['episode_id']}",
+            "story_id": f"eq.{story_id}",
+            "deleted_at": "is.null",
+            "select": "id",
+            "limit": "1",
+        },
+    )
+    if not episodes:
+        raise HTTPException(404, "Episode image not found in this story.")
+
+    await supabase.delete_storage_object(
+        settings.story_assets_bucket,
+        asset["storage_path"],
+    )
+    await supabase.admin_delete(
+        "episode_assets",
+        {"id": f"eq.{asset_id}", "episode_id": f"eq.{asset['episode_id']}"},
+    )
+    return {"asset_id": str(asset_id), "deleted": True}
+
+
 @router.get("/creator/stories/{story_id}/assets")
 async def list_creator_story_assets(
     story_id: UUID,

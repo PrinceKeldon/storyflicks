@@ -116,6 +116,8 @@ The API validates the access token with Supabase Auth. Reader/creator RPC calls 
 - `POST /api/creator/stories/{story_id}/assets/upload-url`
 - `POST /api/creator/stories/{story_id}/assets/complete`
 - `GET /api/creator/stories/{story_id}/assets`
+- `DELETE /api/creator/stories/{story_id}/assets/{asset_id}` — removes an episode guide image from `episode_assets` and its `story-assets` storage object.
+- `PATCH /api/creator/stories/{story_id}/episodes/{episode_id}/synopsis` — saves only the episode/chapter guide synopsis to `episodes.synopsis` and synchronises the latest draft revision metadata without creating a manuscript revision or changing published manuscript content.
 - `GET /api/creator/episodes/{episode_id}/revisions`
 - `DELETE /api/creator/episodes/{episode_id}/revisions/{revision_id}` — permanently removes an eligible draft revision only.
 - `DELETE /api/creator/stories/{story_id}` — moves a story to recoverable Trash and cancels queued chapter releases.
