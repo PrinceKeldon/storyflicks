@@ -62,15 +62,18 @@ export default function SupportStoryButton({
   return (
     <div className={compact ? "support-story support-story-compact" : "support-story"}>
       {!expanded ? (
-        <button type="button" className="support-story-trigger" onClick={() => setExpanded(true)}>
-          <span>♡</span> Support this story
-        </button>
+        <div className="support-story-intro">
+          <p>Enjoyed this story? Help fund more original stories. Reading remains free.</p>
+          <button type="button" className="support-story-trigger" onClick={() => setExpanded(true)}>
+            Make a donation
+          </button>
+          <small>Optional · Secure checkout</small>
+        </div>
       ) : (
-        <section className="support-story-panel" aria-label="Support this story">
-          <button className="support-story-close" type="button" onClick={() => { setExpanded(false); setError(""); }} aria-label="Close support options">×</button>
-          <p className="eyebrow">KEEP THE STORIES COMING</p>
-          <h3>Enjoying the story?</h3>
-          <p>Your voluntary support helps make more independent storytelling possible. Reading always stays free.</p>
+        <section className="support-story-panel" aria-label="Make a donation">
+          <button className="support-story-close" type="button" onClick={() => { setExpanded(false); setError(""); }} aria-label="Close donation options">×</button>
+          <h3>Choose your donation</h3>
+          <p>Your one-time contribution helps fund more original stories. Reading remains free.</p>
           <div className="support-amounts" aria-label="Choose a contribution amount">
             {suggestions.map((value) => (
               <button key={value} type="button" className={amount === String(value) ? "selected" : ""} onClick={() => setAmount(String(value))}>${value}</button>
@@ -83,7 +86,7 @@ export default function SupportStoryButton({
           <button type="button" className="primary-button support-checkout" disabled={busy} onClick={() => void continueToCheckout()}>
             {busy ? "Opening secure checkout…" : "Continue to secure checkout"} <span>↗</span>
           </button>
-          <small>One-time payment · Securely processed by Stripe · No subscription</small>
+          <small>Optional · One-time payment · Securely processed by Stripe</small>
         </section>
       )}
     </div>
