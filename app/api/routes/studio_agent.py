@@ -215,12 +215,24 @@ async def _apply_renumber(pid: str, story_id: str, payload: dict) -> dict:
             raise HTTPException(
                 409, "Chapter numbers have changed since this was proposed, so nothing was renumbered. Ask the assistant to propose it again."
             )
-        await supabase.admin_rpc(
+        result = await supabase.admin_rpc(
             "apply_agent_chapter_renumber",
             {"p_story_id": story_id, "p_moves": [
-                {"episode_id": change["episode_id"], "sequence_number": change["to_number"]} for change in changes
+                {
+                    "episode_id": change["episode_id"],
+                    "from_sequence_number": change["from_number"],
+                    "sequence_number": change["to_number"],
+                }
+                for change in changes
             ]},
         )
+        # The SQL function repeats the stale check after locking the story's
+        # episodes, closing the gap between this API pre-check and the update.
+        if result == -1:
+            await _finish(pid, "stale", error="Chapter numbers changed after this was proposed.")
+            raise HTTPException(
+                409, "Chapter numbers have changed since this was proposed, so nothing was renumbered. Ask the assistant to propose it again."
+            )
     except HTTPException as exc:
         if exc.status_code != 409:
             await _finish(pid, "failed", error=str(exc.detail)[:900])
