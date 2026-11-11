@@ -374,7 +374,25 @@ class ReplyAndRenumberTests(Base):
         self.assertEqual(out["status"], "applied")
         [(name, payload)] = self.rpcs
         self.assertEqual(name, "apply_agent_chapter_renumber")
-        self.assertEqual({m["episode_id"]: m["sequence_number"] for m in payload["p_moves"]}, {EP: 2, EP2: 1})
+        self.assertEqual(
+            {m["episode_id"]: (m["from_sequence_number"], m["sequence_number"]) for m in payload["p_moves"]},
+            {EP: (1, 2), EP2: (2, 1)},
+        )
+
+    def test_database_recheck_can_reject_a_stale_renumber_atomically(self):
+        self.swap()
+        pid = self.db.tables["studio_agent_proposals"][0]["id"]
+
+        async def stale_rpc(name, payload):
+            self.rpcs.append((name, payload))
+            return -1  # SQL detected a changed number after taking row locks.
+
+        self.db.admin_rpc = stale_rpc
+        with self.assertRaises(HTTPException) as cm:
+            run(studio_agent.approve_proposal(pid, USER))
+        self.assertEqual(cm.exception.status_code, 409)
+        self.assertEqual(self.db.tables["studio_agent_proposals"][0]["status"], "stale")
+        self.assertEqual(self.rpcs[0][1]["p_moves"][0]["from_sequence_number"], 2)
 
     def test_renumber_goes_stale_if_numbers_changed(self):
         self.swap()
