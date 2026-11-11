@@ -303,8 +303,16 @@ class CreatorEpisodeSubmission(BaseModel):
                 if not isinstance(block, dict):
                     raise ValueError("Each episode content block must be an object.")
                 block_type = block.get("type")
-                if not isinstance(block_type, str) or not block_type.strip() or len(block_type) > 50:
-                    raise ValueError("Each content block must retain a non-empty block type of 50 characters or fewer.")
+                supported_block_types = {
+                    "paragraph", "heading", "quote", "separator", "spacer",
+                    # Legacy reader-rendered types retained for existing manuscripts.
+                    "dialogue", "emphasis", "title", "divider", "scene_break",
+                }
+                if (
+                    not isinstance(block_type, str)
+                    or block_type.strip().lower() not in supported_block_types
+                ):
+                    raise ValueError("Each content block must use a supported manuscript block type.")
                 if not isinstance(block.get("text"), str) or len(block["text"]) > 100000:
                     raise ValueError("Each content block must contain text of 100,000 characters or fewer.")
                 runs = block.get("runs")
@@ -430,7 +438,7 @@ async def save_creator_episode_synopsis(
     if not episodes:
         raise HTTPException(404, "Section not found in this story.")
 
-    synopsis = submission.synopsis.strip() if submission.synopsis else None
+    synopsis = (submission.synopsis or "").strip() or None
     await supabase.admin_patch(
         "episodes",
         {"id": f"eq.{episode_id}", "story_id": f"eq.{story_id}"},

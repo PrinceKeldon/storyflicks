@@ -3,9 +3,13 @@
 import { useCallback, useEffect, useRef, useState, type FormEvent } from "react";
 
 type Edit = { block_index: number; old_text: string; new_text: string; reason?: string; context_before?: string; context_after?: string };
+type Change = { episode_id: string; title: string; from_number: number; to_number: number };
 type ProposalItem = {
-  id: string; status: string; title: string; rationale: string; episode_id: string; error?: string | null;
-  payload: { chapter_title?: string; sequence_number?: number; edits?: Edit[] };
+  id: string; kind: string; status: string; title: string; rationale: string; episode_id: string | null; error?: string | null;
+  payload: {
+    chapter_title?: string; sequence_number?: number; edits?: Edit[];
+    review_headline?: string; review_excerpt?: string; body?: string; changes?: Change[];
+  };
 };
 type Activity = { tool: string; summary: string };
 type Source = { title: string; url: string };
@@ -20,6 +24,8 @@ type Props = {
 const SUGGESTIONS = [
   "Give me an overview of how this story is doing.",
   "Check chapter 1 for typos and awkward sentences, and propose fixes.",
+  "Draft replies to my newest reader reviews.",
+  "Check my chapter numbering for gaps or duplicates and propose a fix.",
   "Summarise what readers are saying in recent reviews.",
   "Search the manuscript for inconsistencies in character names.",
 ];
@@ -46,6 +52,11 @@ function ProposalCard({ proposal, request, onChange, onApplied }: {
   const [error, setError] = useState("");
   const [note, setNote] = useState("");
   const edits = proposal.payload.edits ?? [];
+  const changes = proposal.payload.changes ?? [];
+  const approveLabel = proposal.kind === "review_reply" ? "Approve and post this reply"
+    : proposal.kind === "chapter_renumber" ? `Approve ${changes.length} renumbering${changes.length === 1 ? "" : "s"}`
+    : `Approve ${edits.length} change${edits.length === 1 ? "" : "s"} · save as draft`;
+  const savedLabel = proposal.kind === "review_reply" ? "Reply posted." : proposal.kind === "chapter_renumber" ? "Chapters renumbered." : "Saved as a new draft revision.";
 
   async function decide(kind: "approve" | "reject") {
     setBusy(kind);
@@ -54,7 +65,7 @@ function ProposalCard({ proposal, request, onChange, onApplied }: {
       const result = (await request(`/creator/agent/proposals/${proposal.id}/${kind}`, { method: "POST" })) as { status: string; message?: string };
       onChange(proposal.id, { status: result.status });
       if (result.message) setNote(result.message);
-      if (kind === "approve") await onApplied();
+      if (kind === "approve" && proposal.kind !== "review_reply") await onApplied();
     } catch (err) {
       const message = err instanceof Error ? err.message : "Something went wrong.";
       setError(message);
@@ -68,18 +79,31 @@ function ProposalCard({ proposal, request, onChange, onApplied }: {
     <article className={`sf-agent-proposal sf-agent-proposal-${proposal.status}`}>
       <header>
         <strong>{proposal.title}</strong>
-        <small>{proposal.payload.sequence_number ? `CHAPTER ${proposal.payload.sequence_number} · ` : ""}{(proposal.payload.chapter_title ?? "").toUpperCase()} · {proposal.status.toUpperCase()}</small>
+        <small>{proposal.kind === "chapter_renumber" ? "CHAPTER NUMBERS" : `${proposal.payload.sequence_number ? `CHAPTER ${proposal.payload.sequence_number} · ` : ""}${(proposal.payload.chapter_title ?? "").toUpperCase()}`} · {proposal.status.toUpperCase()}</small>
       </header>
       {proposal.rationale && <p className="sf-agent-rationale">{proposal.rationale}</p>}
       {edits.map((edit, index) => <EditDiff key={index} edit={edit} />)}
+      {proposal.kind === "review_reply" && (
+        <div className="sf-agent-edit">
+          <small>READER REVIEW{proposal.payload.review_headline ? ` · ${proposal.payload.review_headline}` : ""}</small>
+          <p>{proposal.payload.review_excerpt}</p>
+          <small>YOUR REPLY</small>
+          <p><ins>{proposal.payload.body}</ins></p>
+        </div>
+      )}
+      {changes.map(change => (
+        <div className="sf-agent-edit" key={change.episode_id}>
+          <p><del>{change.from_number}</del> <ins>{change.to_number}</ins> · {change.title}</p>
+        </div>
+      ))}
       {proposal.status === "pending" && (
         <div className="studio-form-actions">
-          <button type="button" className="studio-primary" disabled={!!busy} onClick={() => decide("approve")}>{busy === "approve" ? "Saving…" : `Approve ${edits.length} change${edits.length === 1 ? "" : "s"} · save as draft`}</button>
+          <button type="button" className="studio-primary" disabled={!!busy} onClick={() => decide("approve")}>{busy === "approve" ? "Working…" : approveLabel}</button>
           <button type="button" className="studio-text-action" disabled={!!busy} onClick={() => decide("reject")}>{busy === "reject" ? "Rejecting…" : "Reject"}</button>
         </div>
       )}
-      {proposal.status === "applied" && <p className="studio-notice">{note || "Saved as a new draft revision."}</p>}
-      {proposal.status === "stale" && <p className="studio-alert">The chapter changed after this was proposed, so nothing was applied. Ask the assistant to propose it again.</p>}
+      {proposal.status === "applied" && <p className="studio-notice">{note || savedLabel}</p>}
+      {proposal.status === "stale" && <p className="studio-alert">Things changed after this was proposed, so nothing was applied. Ask the assistant to propose it again.</p>}
       {proposal.status === "failed" && <p className="studio-alert">{proposal.error || "This could not be applied."}</p>}
       {error && <p className="studio-alert" role="alert">{error}</p>}
     </article>
