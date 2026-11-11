@@ -179,6 +179,59 @@ async def _finish(proposal_id: str, status: str, **extra) -> None:
     )
 
 
+async def _apply_review_reply(pid: str, payload: dict, user: AuthenticatedUser) -> dict:
+    try:
+        # The database function re-checks that this creator may reply to this review.
+        await supabase.user_rpc(
+            "publish_author_reply",
+            {"p_review_id": payload.get("review_id"), "p_body": payload.get("body", "")},
+            user.access_token,
+        )
+    except HTTPException as exc:
+        await _finish(pid, "failed", error=str(exc.detail)[:900])
+        raise
+    except Exception:
+        await _finish(pid, "failed", error="Unexpected error while posting.")
+        raise
+    await _finish(pid, "applied")
+    return {"status": "applied", "message": "Your reply was posted on the review."}
+
+
+async def _apply_renumber(pid: str, story_id: str, payload: dict) -> dict:
+    changes = payload.get("changes") or []
+    try:
+        ids = [change["episode_id"] for change in changes]
+        rows = await supabase.admin_get(
+            "episodes", {"id": f"in.({','.join(ids)})", "story_id": f"eq.{story_id}", "select": "id,sequence_number,deleted_at"}
+        )
+        current = {row["id"]: row for row in rows}
+        if any(
+            change["episode_id"] not in current
+            or current[change["episode_id"]].get("deleted_at")
+            or current[change["episode_id"]]["sequence_number"] != change["from_number"]
+            for change in changes
+        ):
+            await _finish(pid, "stale", error="Chapter numbers changed after this was proposed.")
+            raise HTTPException(
+                409, "Chapter numbers have changed since this was proposed, so nothing was renumbered. Ask the assistant to propose it again."
+            )
+        await supabase.admin_rpc(
+            "apply_agent_chapter_renumber",
+            {"p_story_id": story_id, "p_moves": [
+                {"episode_id": change["episode_id"], "sequence_number": change["to_number"]} for change in changes
+            ]},
+        )
+    except HTTPException as exc:
+        if exc.status_code != 409:
+            await _finish(pid, "failed", error=str(exc.detail)[:900])
+        raise
+    except Exception:
+        await _finish(pid, "failed", error="Unexpected error while renumbering.")
+        raise
+    await _finish(pid, "applied")
+    return {"status": "applied", "message": f"Renumbered {len(changes)} chapter{'s' if len(changes) != 1 else ''}. Titles and text are unchanged."}
+
+
 @router.post("/creator/agent/proposals/{proposal_id}/approve")
 async def approve_proposal(proposal_id: UUID, user: AuthenticatedUser = Depends(get_current_user)):
     proposal = await _own_proposal(proposal_id, user)
@@ -197,6 +250,10 @@ async def approve_proposal(proposal_id: UUID, user: AuthenticatedUser = Depends(
 
     pid = str(proposal_id)
     payload = proposal.get("payload") or {}
+    if proposal["kind"] == "review_reply":
+        return await _apply_review_reply(pid, payload, user)
+    if proposal["kind"] == "chapter_renumber":
+        return await _apply_renumber(pid, proposal["story_id"], payload)
     try:
         episodes = await supabase.admin_get(
             "episodes",

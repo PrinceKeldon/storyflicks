@@ -265,6 +265,7 @@ async def get_reviews(ctx: AgentContext, args: dict[str, Any]) -> dict[str, Any]
     reviews = []
     for review in data.get("reviews", [])[:limit]:
         reviews.append({
+            "review_id": review.get("id"),
             "story": (review.get("story") or {}).get("title"),
             "chapter": (review.get("episode") or {}).get("title"),
             "sequence_number": (review.get("episode") or {}).get("sequence_number"),
@@ -366,6 +367,120 @@ async def propose_episode_edit(ctx: AgentContext, args: dict[str, Any]) -> dict[
     }
 
 
+async def propose_review_reply(ctx: AgentContext, args: dict[str, Any]) -> dict[str, Any]:
+    if len(ctx.proposals) >= MAX_PROPOSALS_PER_TURN:
+        raise ToolError("Too many proposals in one reply. Summarise the rest for the author instead.")
+    review_id = _uuid(args.get("review_id"), "review_id")
+    body = _clip(args.get("body"), 10000).strip()
+    if not body:
+        raise ToolError("body must not be empty.")
+    reviews = await supabase.admin_get(
+        "reviews",
+        {"id": f"eq.{review_id}", "status": "eq.submitted", "visibility": "eq.public",
+         "select": "id,episode_id,headline,body", "limit": "1"},
+    )
+    episode = await ctx.require_episode(reviews[0]["episode_id"]) if reviews else None
+    if not reviews or episode is None:
+        raise ToolError("That review was not found among the public reviews of the author's stories.")
+    review = reviews[0]
+    proposal = {
+        "id": str(uuid4()),
+        "conversation_id": ctx.conversation_id,
+        "creator_id": ctx.user.id,
+        "story_id": episode["story_id"],
+        "episode_id": episode["id"],
+        "kind": "review_reply",
+        "status": "pending",
+        "title": _clip(args.get("title"), 200).strip() or "Reply to a reader review",
+        "rationale": _clip(args.get("rationale"), 4000),
+        "payload": {
+            "review_id": review_id,
+            "review_headline": _clip(review.get("headline"), 200),
+            "review_excerpt": _clip(review.get("body"), 600),
+            "chapter_title": episode["title"],
+            "sequence_number": episode["sequence_number"],
+            "body": body,
+        },
+        "created_at": datetime.now(timezone.utc).isoformat(),
+    }
+    await supabase.admin_insert("studio_agent_proposals", proposal)
+    ctx.proposals.append(proposal)
+    return {
+        "proposal_id": proposal["id"],
+        "status": "pending_author_approval",
+        "note": "Nothing has been posted. The author must approve the reply before readers can see it.",
+    }
+
+
+async def propose_chapter_renumber(ctx: AgentContext, args: dict[str, Any]) -> dict[str, Any]:
+    if len(ctx.proposals) >= MAX_PROPOSALS_PER_TURN:
+        raise ToolError("Too many proposals in one reply. Summarise the rest for the author instead.")
+    story_id = await ctx.require_story(args.get("story_id"))
+    raw = args.get("moves")
+    if not isinstance(raw, list) or not raw or len(raw) > 200:
+        raise ToolError("moves must be a list of 1 to 200 items with episode_id and new_sequence_number.")
+    moves: dict[str, int] = {}
+    for item in raw:
+        if not isinstance(item, dict):
+            raise ToolError("Each move must be an object.")
+        episode_id = _uuid(item.get("episode_id"), "episode_id")
+        number = item.get("new_sequence_number")
+        if isinstance(number, bool) or not isinstance(number, int) or not 1 <= number <= 100000:
+            raise ToolError("new_sequence_number must be a whole number from 1 to 100000.")
+        if episode_id in moves:
+            raise ToolError("Each chapter may appear only once.")
+        moves[episode_id] = number
+    if len(set(moves.values())) != len(moves):
+        raise ToolError("Two chapters cannot be given the same number.")
+
+    rows = await supabase.admin_get_all(
+        "episodes",
+        {"story_id": f"eq.{story_id}", "select": "id,sequence_number,title,deleted_at", "order": "sequence_number.asc"},
+    )
+    by_id = {row["id"]: row for row in rows}
+    for episode_id in moves:
+        row = by_id.get(episode_id)
+        if row is None or row.get("deleted_at"):
+            raise ToolError("Every chapter must belong to this story and not be in the trash.")
+    taken = {row["sequence_number"]: row for row in rows if row["id"] not in moves}
+    for episode_id, number in moves.items():
+        if number in taken:
+            other = taken[number]
+            raise ToolError(
+                f"Number {number} is already used by chapter “{other['title']}”"
+                f"{' (in the trash)' if other.get('deleted_at') else ''}. Include it in the moves or pick another number."
+            )
+    changes = [
+        {"episode_id": episode_id, "title": by_id[episode_id]["title"],
+         "from_number": by_id[episode_id]["sequence_number"], "to_number": number}
+        for episode_id, number in moves.items() if by_id[episode_id]["sequence_number"] != number
+    ]
+    if not changes:
+        raise ToolError("These moves would not change any chapter number.")
+    changes.sort(key=lambda change: change["to_number"])
+
+    proposal = {
+        "id": str(uuid4()),
+        "conversation_id": ctx.conversation_id,
+        "creator_id": ctx.user.id,
+        "story_id": story_id,
+        "episode_id": None,
+        "kind": "chapter_renumber",
+        "status": "pending",
+        "title": _clip(args.get("title"), 200).strip() or "Renumber chapters",
+        "rationale": _clip(args.get("rationale"), 4000),
+        "payload": {"changes": changes},
+        "created_at": datetime.now(timezone.utc).isoformat(),
+    }
+    await supabase.admin_insert("studio_agent_proposals", proposal)
+    ctx.proposals.append(proposal)
+    return {
+        "proposal_id": proposal["id"],
+        "status": "pending_author_approval",
+        "note": "Nothing has been renumbered. The author must approve it. Only chapter numbers change, not titles or text.",
+    }
+
+
 # --------------------------------------------------------------------------
 # Declarations and dispatch
 # --------------------------------------------------------------------------
@@ -428,6 +543,37 @@ DECLARATIONS: list[dict[str, Any]] = [
         "parameters": _obj({"query": {"type": "STRING"}}, ["query"]),
     },
     {
+        "name": "propose_review_reply",
+        "description": (
+            "Draft a public reply from the author to a reader review, for the author to approve. Nothing is posted until they do. "
+            "Use review_id from get_reviews. Write in the author's voice: warm, brief, honest; thank the reader, "
+            "never argue, and never reveal plot points the reader has not reached."
+        ),
+        "parameters": _obj({
+            "review_id": {"type": "STRING"},
+            "body": {"type": "STRING", "description": "The reply text."},
+            "title": {"type": "STRING"},
+            "rationale": {"type": "STRING"},
+        }, ["review_id", "body"]),
+    },
+    {
+        "name": "propose_chapter_renumber",
+        "description": (
+            "Propose new chapter numbers for a story (reordering or fixing gaps and duplicates) for the author to approve. "
+            "Only numbers change, never titles or text. Include every chapter that moves; numbers must end up unique, "
+            "and a swap needs both chapters listed. Use get_story_overview to see the current numbers first."
+        ),
+        "parameters": _obj({
+            "story_id": {"type": "STRING"},
+            "moves": {"type": "ARRAY", "items": _obj({
+                "episode_id": {"type": "STRING"},
+                "new_sequence_number": {"type": "INTEGER"},
+            }, ["episode_id", "new_sequence_number"])},
+            "title": {"type": "STRING"},
+            "rationale": {"type": "STRING"},
+        }, ["story_id", "moves"]),
+    },
+    {
         "name": "propose_episode_edit",
         "description": (
             "Propose exact-text edits to one chapter for the author to review. This changes nothing by itself: "
@@ -461,6 +607,8 @@ HANDLERS = {
     "get_reviews": get_reviews,
     "web_research": web_research,
     "propose_episode_edit": propose_episode_edit,
+    "propose_review_reply": propose_review_reply,
+    "propose_chapter_renumber": propose_chapter_renumber,
 }
 
 
@@ -484,6 +632,10 @@ def _describe(name: str, args: dict[str, Any], result: dict[str, Any]) -> str:
         return f"Searched the web: “{_clip(args.get('query'), 80)}”"
     if name == "propose_episode_edit":
         return f"Proposed edits for your approval: {_clip(args.get('title'), 80)}"
+    if name == "propose_review_reply":
+        return f"Drafted a reply for your approval: {_clip(args.get('title'), 80) or 'review reply'}"
+    if name == "propose_chapter_renumber":
+        return f"Proposed new chapter numbers for your approval: {_clip(args.get('title'), 80) or 'renumber'}"
     return name
 
 

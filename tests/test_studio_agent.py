@@ -91,6 +91,8 @@ class FakeDB:
 
     async def user_rpc(self, name, payload, token):
         self.rpc_calls.append((name, payload))
+        if name != "save_creator_episode":
+            return {}
         revs = self.tables["episode_revisions"]
         revs.append({"id": str(uuid4()), "episode_id": payload["p_episode_id"],
                      "revision_number": max(r["revision_number"] for r in revs) + 1,
@@ -286,6 +288,103 @@ class ChatTests(Base):
         with self.assertRaises(HTTPException) as cm:
             run(studio_agent.agent_chat(body, USER))
         self.assertEqual(cm.exception.status_code, 403)
+
+
+EP2, REVIEW = str(uuid4()), str(uuid4())
+
+
+class ReplyAndRenumberTests(Base):
+    def setUp(self):
+        super().setUp()
+        self.db.tables["episodes"].append(
+            {"id": EP2, "story_id": STORY, "season_id": None, "sequence_number": 2, "title": "Two",
+             "publication_status": "draft", "deleted_at": None})
+        self.db.tables["reviews"] = [
+            {"id": REVIEW, "episode_id": EP, "status": "submitted", "visibility": "public",
+             "headline": "Great", "body": "Loved it."},
+            {"id": str(uuid4()), "episode_id": OTHER_EP, "status": "submitted", "visibility": "public",
+             "headline": "x", "body": "y"},
+        ]
+        self.rpcs = []
+
+        async def admin_rpc(name, payload):
+            self.rpcs.append((name, payload))
+            return 2
+        self.db.admin_rpc = admin_rpc
+        p = patch.object(studio_agent, "require_story_editor", self._ok)
+        p.start()
+        self.addCleanup(p.stop)
+
+    async def _ok(self, story_id, user):
+        return None
+
+    def tool(self, name, args):
+        return run(agent_tools.run_tool(self.ctx, name, args))
+
+    def swap(self, **over):
+        return self.tool("propose_chapter_renumber", {"story_id": STORY, "moves": [
+            {"episode_id": EP, "new_sequence_number": 2}, {"episode_id": EP2, "new_sequence_number": 1}], **over})
+
+    def test_reply_is_a_pending_proposal_and_posts_nothing(self):
+        result = self.tool("propose_review_reply", {"review_id": REVIEW, "body": "Thank you!"})
+        self.assertEqual(result["status"], "pending_author_approval")
+        [row] = self.db.tables["studio_agent_proposals"]
+        self.assertEqual((row["kind"], row["status"], row["payload"]["body"]), ("review_reply", "pending", "Thank you!"))
+        self.assertEqual(self.db.rpc_calls, [])
+
+    def test_reply_to_a_foreign_or_missing_review_is_refused(self):
+        foreign = self.db.tables["reviews"][1]["id"]
+        self.assertIn("error", self.tool("propose_review_reply", {"review_id": foreign, "body": "hi"}))
+        self.assertIn("error", self.tool("propose_review_reply", {"review_id": str(uuid4()), "body": "hi"}))
+        self.assertIn("error", self.tool("propose_review_reply", {"review_id": REVIEW, "body": "  "}))
+        self.assertEqual(self.db.tables["studio_agent_proposals"], [])
+
+    def test_approving_a_reply_posts_it_with_the_users_token(self):
+        self.tool("propose_review_reply", {"review_id": REVIEW, "body": "Thank you!"})
+        pid = self.db.tables["studio_agent_proposals"][0]["id"]
+        out = run(studio_agent.approve_proposal(pid, USER))
+        self.assertEqual(out["status"], "applied")
+        self.assertEqual(self.db.rpc_calls, [("publish_author_reply", {"p_review_id": REVIEW, "p_body": "Thank you!"})])
+
+    def test_swap_is_proposed_with_both_chapters(self):
+        self.assertEqual(self.swap()["status"], "pending_author_approval")
+        [row] = self.db.tables["studio_agent_proposals"]
+        self.assertEqual([(c["from_number"], c["to_number"]) for c in row["payload"]["changes"]], [(2, 1), (1, 2)])
+        self.assertIsNone(row["episode_id"])
+        self.assertEqual(self.rpcs, [])
+
+    def test_bad_renumbers_are_refused(self):
+        cases = [
+            [{"episode_id": EP, "new_sequence_number": 2}],  # collides with chapter two
+            [{"episode_id": EP, "new_sequence_number": 5}, {"episode_id": EP2, "new_sequence_number": 5}],
+            [{"episode_id": EP, "new_sequence_number": 0}],
+            [{"episode_id": EP, "new_sequence_number": 1}],  # no change
+            [{"episode_id": OTHER_EP, "new_sequence_number": 9}],  # someone else's chapter
+            [{"episode_id": EP, "new_sequence_number": 3}, {"episode_id": EP, "new_sequence_number": 4}],
+        ]
+        for moves in cases:
+            with self.subTest(moves=moves):
+                self.assertIn("error", self.tool("propose_chapter_renumber", {"story_id": STORY, "moves": moves}))
+        self.assertEqual(self.db.tables["studio_agent_proposals"], [])
+
+    def test_approving_a_renumber_calls_the_atomic_function(self):
+        self.swap()
+        pid = self.db.tables["studio_agent_proposals"][0]["id"]
+        out = run(studio_agent.approve_proposal(pid, USER))
+        self.assertEqual(out["status"], "applied")
+        [(name, payload)] = self.rpcs
+        self.assertEqual(name, "apply_agent_chapter_renumber")
+        self.assertEqual({m["episode_id"]: m["sequence_number"] for m in payload["p_moves"]}, {EP: 2, EP2: 1})
+
+    def test_renumber_goes_stale_if_numbers_changed(self):
+        self.swap()
+        pid = self.db.tables["studio_agent_proposals"][0]["id"]
+        next(e for e in self.db.tables["episodes"] if e["id"] == EP2).update(sequence_number=7)  # EP2 renumbered meanwhile
+        with self.assertRaises(HTTPException) as cm:
+            run(studio_agent.approve_proposal(pid, USER))
+        self.assertEqual(cm.exception.status_code, 409)
+        self.assertEqual(self.db.tables["studio_agent_proposals"][0]["status"], "stale")
+        self.assertEqual(self.rpcs, [])
 
 
 if __name__ == "__main__":
