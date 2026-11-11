@@ -272,7 +272,7 @@ export default function ReadingRoom({ slug, episodeId }: { slug: string; episode
             <Link
               className="reader-episode-back"
               href={`/stories/${slug}/read/${payload.previous_episode.id}`}
-              aria-label={`Go to previous episode ${payload.previous_episode.sequence_number}: ${payload.previous_episode.title}`}
+              aria-label={`Go to previous ${payload.story.section_label || "section"} ${payload.previous_episode.sequence_number}: ${payload.previous_episode.title}`}
             >
               ← Previous
             </Link>
@@ -293,7 +293,7 @@ export default function ReadingRoom({ slug, episodeId }: { slug: string; episode
             <img
               className="reading-episode-thumbnail"
               src={episodeArtwork.public_url}
-              alt={episodeArtwork.alt_text || `${payload.episode.title} episode artwork`}
+              alt={episodeArtwork.alt_text || `${payload.episode.title} ${String(payload.story.section_label || "section").toLowerCase()} artwork`}
             />
           )}
           <div className="reading-kicker">{payload.story.title} <span>·</span> {(payload.story.section_label || "Episode").toUpperCase()} {String(payload.episode.sequence_number).padStart(2, "0")}</div>
@@ -323,7 +323,7 @@ export default function ReadingRoom({ slug, episodeId }: { slug: string; episode
         <footer className="reading-end">
           {payload.next_episode && (
             <button type="button" className="reading-next-episode" onClick={() => setShowContribution(true)}>
-              Episode {payload.next_episode.sequence_number}. {payload.next_episode.title}
+              {payload.story.section_label || "Episode"} {payload.next_episode.sequence_number}. {payload.next_episode.title}
               <span aria-hidden="true">→</span>
             </button>
           )}
