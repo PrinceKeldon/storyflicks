@@ -97,7 +97,7 @@ export default async function StoryDetailPage({ params }: { params: Promise<{ sl
               </Link>
             ) : (
               <article className={isChapterGuide ? "episode-row chapter-guide-row" : "episode-row"} key={episode.sequence_number}>
-                {episode.image_url && <img className="episode-thumb episode-thumb-portrait" src={episode.image_url} alt={episode.image_alt || `${episode.title} episode artwork`} />}
+                {episode.image_url && <img className="episode-thumb episode-thumb-portrait" src={episode.image_url} alt={episode.image_alt || `${episode.title} ${sectionLabel.toLowerCase()} artwork`} />}
                 <span className="episode-number">{String(episode.sequence_number).padStart(2, "0")}</span>
                 <div className="episode-copy"><h3>{episode.title}</h3>{episode.synopsis?.trim() && <p>{episode.synopsis}</p>}</div>
                 {!isChapterGuide && <><span className="episode-status">PUBLISHED</span><span className="episode-arrow">↗</span></>}
@@ -105,7 +105,7 @@ export default async function StoryDetailPage({ params }: { params: Promise<{ sl
             )
           ))}
         </div>
-        <p className="episode-note">{story?.completion_status === "completed" ? "This story is complete. Enjoy the full journey." : "More ${sectionLabelPlural.toLowerCase()} are in the works. Follow the story as it unfolds."}</p>
+        <p className="episode-note">{story?.completion_status === "completed" ? "This story is complete. Enjoy the full journey." : `More ${sectionLabelPlural.toLowerCase()} are in the works. Follow the story as it unfolds.`}</p>
       </section>
       {backMatter.length>0&&<section className="episode-guide sf-reader-material-guide"><div className="section-heading"><div><p className="eyebrow">AFTER THE STORY</p><h2>Closing pages<span>.</span></h2></div><span className="guide-count">{backMatter.length} SECTIONS</span></div><div className="episode-list">{backMatter.map(item=><Link href={`/stories/${slug}/material/${item.id}`} className="episode-row chapter-guide-row" key={item.id}><span className="episode-number">·</span><div className="episode-copy"><h3>{item.title}</h3></div><span className="episode-arrow">↗</span></Link>)}</div></section>}
       <footer className="footer"><Link className="wordmark" href="/">STORY<span>FLICKS</span><i>.</i></Link><p>Stories worth staying for.</p><span>© 2026 STORYFLICKS</span><LegalLinks /></footer>
