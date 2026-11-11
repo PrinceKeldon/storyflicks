@@ -1930,35 +1930,41 @@ html[data-theme="light"] .library-state .library-secondary-link { color: #435448
   line-height: 1.55;
   margin-top: 8px;
 }
-/* Artwork occupies its own left-hand lane. The title and synopsis are
-   confined to the remaining lane, so neither can sit beneath or wrap around it. */
+/* Reader episode identity is a centred vertical stack: artwork, story/episode label, title. */
 .reading-episode-heading {
-  position: relative;
   display: flex;
+  flex-direction: column;
   align-items: center;
+  justify-content: center;
   width: 100%;
   max-width: 790px;
-  min-height: 198px;
   margin: 24px auto 0;
+  text-align: center;
+  gap: 16px;
 }
 .reading-episode-thumbnail {
-  position: absolute;
+  position: static;
   display: block;
-  left: 0;
-  top: 50%;
-  transform: translateY(-50%);
+  flex: 0 0 auto;
   width: 132px;
   height: auto;
   aspect-ratio: 2 / 3;
   object-fit: contain;
+  margin: 0 auto;
+  transform: none;
   border: 1px solid var(--line);
   border-radius: 3px;
   background: #171918;
 }
+.reading-episode-heading .reading-kicker {
+  width: 100%;
+  margin: 0;
+  text-align: center;
+}
 .reading-episode-heading-copy {
-  width: calc(100% - 164px);
-  max-width: 620px;
-  margin: 0 0 0 164px;
+  width: 100%;
+  max-width: 790px;
+  margin: 0 auto;
   min-width: 0;
   text-align: center;
 }
@@ -1967,46 +1973,18 @@ html[data-theme="light"] .library-state .library-secondary-link { color: #435448
   margin: 0;
   text-align: center !important;
 }
-.reading-episode-heading .reading-deck {
-  width: 100%;
-  max-width: none;
-  margin: 12px auto 0;
-  text-align: center;
-}
 @media(max-width:650px) {
-  .episode-row .episode-thumb.episode-thumb-portrait {
-    flex-basis: 88px;
-    width: 88px;
-  }
-  .episode-row {
-    gap: 10px;
-    padding: 16px 4px;
-  }
-  .episode-row .episode-number {
-    flex-basis: 22px;
-    font-size: 16px;
-  }
   .reading-episode-heading {
-    min-height: 150px;
     margin-top: 18px;
+    gap: 13px;
   }
   .reading-episode-thumbnail {
     width: 96px;
   }
-  .reading-episode-heading-copy {
-    width: calc(100% - 112px);
-    margin-left: 112px;
-  }
 }
 @media(max-width:380px) {
-  .reading-episode-heading { min-height: 132px; }
   .reading-episode-thumbnail { width: 84px; }
-  .reading-episode-heading-copy {
-    width: calc(100% - 96px);
-    margin-left: 96px;
-  }
 }
-
 
 /* Site-wide readability baseline: keep interface copy comfortably legible. */
 html {
