@@ -22,6 +22,7 @@ type EpisodePayload = {
   story: { id: string; slug: string; title: string; section_label?: string; section_label_plural?: string };
   episode: { id: string; sequence_number: number; title: string; synopsis?: string | null; content: unknown; assets?: { id: string; asset_type: string; public_url?: string | null; alt_text?: string | null; position: number }[] };
   next_episode?: { id: string; title: string; sequence_number: number } | null;
+  previous_episode?: { id: string; title: string; sequence_number: number } | null;
   reading_progress?: { progress_percent?: number; last_position?: { scrollY?: number } | null } | null;
 };
 
@@ -267,6 +268,15 @@ export default function ReadingRoom({ slug, episodeId }: { slug: string; episode
         <Link className="reader-brand" href="/">STORY<span>FLICKS</span><i>.</i></Link>
         <div className="reader-location"><Link href={`/stories/${slug}`}>{payload.story.title}</Link><span>/</span><span>{(payload.story.section_label || "Episode").toUpperCase()} {String(payload.episode.sequence_number).padStart(2, "0")}</span></div>
         <div className="reader-tools">
+          {payload.previous_episode && (
+            <Link
+              className="reader-episode-back"
+              href={`/stories/${slug}/read/${payload.previous_episode.id}`}
+              aria-label={`Go to previous episode ${payload.previous_episode.sequence_number}: ${payload.previous_episode.title}`}
+            >
+              ← Previous
+            </Link>
+          )}
           <span className="reader-progress-label">{progress}%</span>
           <button className="reader-tool-button" onClick={() => setShowSettings((value) => !value)} aria-expanded={showSettings}>Aa <span>Reading settings</span></button>
           <Link className="reader-exit" href={`/stories/${slug}`}>Exit</Link>
