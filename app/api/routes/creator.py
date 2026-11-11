@@ -434,7 +434,7 @@ async def save_creator_episode_synopsis(
     await supabase.admin_patch(
         "episodes",
         {"id": f"eq.{episode_id}", "story_id": f"eq.{story_id}"},
-        {"synopsis": synopsis, "updated_at": datetime.now().astimezone().isoformat()},
+        {"synopsis": synopsis, "updated_at": datetime.now(timezone.utc).isoformat()},
     )
     # Keep the latest editable draft's metadata aligned without creating a
     # manuscript revision or changing any published revision.
