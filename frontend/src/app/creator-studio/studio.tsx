@@ -152,7 +152,9 @@ export default function CreatorStudio(){
  const loadRevisions=useCallback(async(id:string)=>{
   if(!id||!token){setRevisions([]);return;}
   try{const data=await request("/creator/episodes/"+id+"/revisions") as {revisions:Revision[];episode:Episode};setRevisions(data.revisions||[]);
-   // The revision list is ordered newest first. Always reopen the newest revision,\n   // regardless of status: a superseded draft must not mask the revision just published.\n   const chosen=(data.revisions||[])[0];setRevisionId(chosen?.id||"");
+   // The revision list is ordered newest first. Always reopen the newest revision,
+   // regardless of status: a superseded draft must not mask the revision just published.
+   const chosen=(data.revisions||[])[0];setRevisionId(chosen?.id||"");
    if(chosen){setEpisode({sequence_number:data.episode.sequence_number,title:chosen.title,synopsis:data.episode.synopsis??chosen.synopsis??""});const b=blocksFrom(chosen.content);setBlocks(b.length?b:[{type:"paragraph",text:""}]);}
   }catch(e){setError(message(e,"Could not load revision history."));}
  },[request,token]);
