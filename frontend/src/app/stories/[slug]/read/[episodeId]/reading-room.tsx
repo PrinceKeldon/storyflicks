@@ -81,7 +81,7 @@ function manuscriptBlockStyle(block: ContentBlock) {
     textAlign: block.align || undefined,
     marginTop: typeof block.spacingBefore === "number" ? String(block.spacingBefore) + "pt" : undefined,
     marginBottom: typeof block.spacingAfter === "number" ? String(block.spacingAfter) + "pt" : undefined,
-    lineHeight: 1.6,
+    lineHeight: "var(--manuscript-line-height, 1.6)",
     breakBefore: block.pageBreakBefore ? "page" as const : undefined,
   };
 }
@@ -95,7 +95,10 @@ export default function ReadingRoom({ slug, episodeId }: { slug: string; episode
   const [error, setError] = useState("");
   const [theme, setTheme] = useState<"paper" | "sepia" | "night">("paper");
   const [fontScale, setFontScale] = useState(100);
-  const [width, setWidth] = useState<"comfortable" | "wide">("comfortable");
+  const [width, setWidth] = useState<"narrow" | "comfortable" | "wide">("comfortable");
+  // Device-only reading preferences. Defaults match the original look.
+  const [typeface, setTypeface] = useState<"classic" | "modern" | "sans" | "dyslexia">("classic");
+  const [spacing, setSpacing] = useState<"comfortable" | "relaxed">("comfortable");
   const [progress, setProgress] = useState(0);
   const [showSettings, setShowSettings] = useState(false);
   const saveTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -119,7 +122,7 @@ export default function ReadingRoom({ slug, episodeId }: { slug: string; episode
         const preferences = await preferencesResponse.json() as { theme?: "paper" | "sepia" | "night"; text_size?: "small" | "comfortable" | "large"; reading_width?: "narrow" | "standard" | "wide" };
         if (preferences.theme) setTheme(preferences.theme);
         if (preferences.text_size) setFontScale(preferences.text_size === "small" ? 90 : preferences.text_size === "large" ? 115 : 100);
-        if (preferences.reading_width) setWidth(preferences.reading_width === "wide" ? "wide" : "comfortable");
+        if (preferences.reading_width) setWidth(preferences.reading_width === "wide" ? "wide" : preferences.reading_width === "narrow" ? "narrow" : "comfortable");
       }
       const response = await fetch(`${apiUrl}/episodes/${episodeId}`, { headers: { Authorization: `Bearer ${session.access_token}` }, cache: "no-store" });
       if (response.status === 401) { setStatus("signed-out"); return; }
@@ -185,11 +188,29 @@ export default function ReadingRoom({ slug, episodeId }: { slug: string; episode
       void fetch(`${apiUrl}/library/preferences`, {
         method: "PUT",
         headers: { "Content-Type": "application/json", Authorization: `Bearer ${tokenRef.current}` },
-        body: JSON.stringify({ theme, text_size: textSize, reading_width: width === "wide" ? "wide" : "standard" }),
+        body: JSON.stringify({ theme, text_size: textSize, reading_width: width === "wide" ? "wide" : width === "narrow" ? "narrow" : "standard" }),
       }).catch(() => undefined);
     }, 700);
     return () => { if (preferencesTimer.current) clearTimeout(preferencesTimer.current); };
   }, [apiUrl, fontScale, status, theme, width]);
+
+  useEffect(() => {
+    try {
+      const saved = JSON.parse(window.localStorage.getItem("storyflicks-reader-display") || "{}") as { typeface?: string; spacing?: string };
+      if (saved.typeface === "modern" || saved.typeface === "sans" || saved.typeface === "dyslexia") setTypeface(saved.typeface);
+      if (saved.spacing === "relaxed") setSpacing("relaxed");
+    } catch {
+      // Storage can be unavailable; the defaults still work.
+    }
+  }, []);
+
+  useEffect(() => {
+    try {
+      window.localStorage.setItem("storyflicks-reader-display", JSON.stringify({ typeface, spacing }));
+    } catch {
+      // Preferences simply last for this visit when storage is unavailable.
+    }
+  }, [typeface, spacing]);
 
   useEffect(() => {
     if (status !== "ready") return;
@@ -284,10 +305,12 @@ export default function ReadingRoom({ slug, episodeId }: { slug: string; episode
       </header>
       {showSettings && <section className="reader-settings" aria-label="Reading settings">
         <div><span>APPEARANCE</span><div className="setting-options">{(["paper", "sepia", "night"] as const).map((value) => <button key={value} className={theme === value ? "selected" : ""} onClick={() => setTheme(value)}>{value}</button>)}</div></div>
-        <div><span>TEXT SIZE</span><div className="setting-options"><button onClick={() => setFontScale((v) => Math.max(85, v - 5))}>A−</button><strong>{fontScale}%</strong><button onClick={() => setFontScale((v) => Math.min(130, v + 5))}>A+</button></div></div>
-        <div><span>READING WIDTH</span><div className="setting-options"><button className={width === "comfortable" ? "selected" : ""} onClick={() => setWidth("comfortable")}>Comfortable</button><button className={width === "wide" ? "selected" : ""} onClick={() => setWidth("wide")}>Wide</button></div></div>
+        <div><span>TYPEFACE</span><div className="setting-options">{([["classic", "Classic"], ["modern", "Modern"], ["sans", "Sans"], ["dyslexia", "Dyslexia-friendly"]] as const).map(([value, label]) => <button key={value} className={typeface === value ? "selected" : ""} onClick={() => setTypeface(value)}>{label}</button>)}</div></div>
+        <div><span>TEXT SIZE</span><div className="setting-options"><button onClick={() => setFontScale((v) => Math.max(85, v - 5))} aria-label="Smaller text">A−</button><strong>{fontScale}%</strong><button onClick={() => setFontScale((v) => Math.min(130, v + 5))} aria-label="Larger text">A+</button></div></div>
+        <div><span>LINE SPACING</span><div className="setting-options"><button className={spacing === "comfortable" ? "selected" : ""} onClick={() => setSpacing("comfortable")}>Comfortable</button><button className={spacing === "relaxed" ? "selected" : ""} onClick={() => setSpacing("relaxed")}>Relaxed</button></div></div>
+        <div><span>READING WIDTH</span><div className="setting-options"><button className={width === "narrow" ? "selected" : ""} onClick={() => setWidth("narrow")}>Narrow</button><button className={width === "comfortable" ? "selected" : ""} onClick={() => setWidth("comfortable")}>Comfortable</button><button className={width === "wide" ? "selected" : ""} onClick={() => setWidth("wide")}>Wide</button></div></div>
       </section>}
-      <article className={`reading-page reading-width-${width}`}>
+      <article className={`reading-page reading-width-${width} reading-spacing-${spacing}`} data-font={typeface}>
         <div className="reading-episode-heading reading-episode-heading-stacked">
           {episodeArtwork?.public_url && (
             <img

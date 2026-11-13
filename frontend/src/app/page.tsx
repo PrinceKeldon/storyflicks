@@ -122,7 +122,7 @@ export default async function DiscoverPage() {
             <div><p className="eyebrow">MORE TO GET INTO</p><h2>Explore the catalogue<span>.</span></h2></div>
             <Link href="/search" className="subtle-link">All stories <span>→</span></Link>
           </div>
-          <div className="search-results">
+          <div className="search-results catalogue-rail">
             {moreStories.slice(0, 6).map((story) => (
               <Link key={story.id || story.slug} className="search-result-card" href={"/stories/" + story.slug}>
                 <div className={story.cover_url ? "search-result-art has-cover" : "search-result-art"} role="img" aria-label={story.title + " book cover artwork"}>
