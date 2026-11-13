@@ -1,0 +1,182 @@
+/*
+ * STORYFLICKS visual system — foundation
+ *
+ * Reference: "StoryFlicks Home and Reader Mock – Book detail.html"
+ * This layer establishes reusable design tokens and shared interface patterns.
+ * It intentionally does not replace authored manuscript typography or the
+ * Reading Room's independent paper/sepia/night reading themes.
+ */
+
+html[data-theme="dark"] {
+  color-scheme: dark;
+
+  /* Core palette from the approved visual direction. */
+  --sf-black: #000000;
+  --sf-surface: #0d0d0d;
+  --sf-surface-raised: #151515;
+  --sf-line: #2a2a2a;
+  --sf-white: #ffffff;
+  --sf-muted: #b3b3b3;
+  --sf-yellow: #ffd60a;
+  --sf-turquoise: #19e3c8;
+  --sf-coral: #ff4136;
+
+  /* Typography */
+  --sf-font-display: "Playfair Display", Georgia, serif;
+  --sf-font-body: "DM Sans", Arial, sans-serif;
+  --sf-font-label: "DM Mono", ui-monospace, monospace;
+
+  /* Compatibility bridge for existing page styles. */
+  --ink: var(--sf-black);
+  --slate: var(--sf-surface);
+  --paper: var(--sf-white);
+  --muted: var(--sf-muted);
+  --mint: var(--sf-turquoise);
+  --amber: var(--sf-yellow);
+  --line: var(--sf-line);
+}
+
+/* Shared site chrome */
+html[data-theme="dark"] body {
+  background: var(--sf-black);
+  color: var(--sf-white);
+  font-family: var(--sf-font-body);
+}
+
+html[data-theme="dark"] :is(.wordmark, .reader-brand, .legal-header .wordmark) {
+  color: var(--sf-white);
+}
+
+html[data-theme="dark"] :is(.wordmark i, .reader-brand i) {
+  color: var(--sf-yellow);
+}
+
+html[data-theme="dark"] :is(.topbar, .detail-top, .legal-header, .library-header,
+  .library-tabs, .library-footer, .footer, .episode-list, .episode-row) {
+  border-color: var(--sf-line);
+}
+
+html[data-theme="dark"] :is(.nav-link, .library-header nav a, .library-tabs button) {
+  color: var(--sf-muted);
+}
+
+html[data-theme="dark"] :is(.nav-link.active, .library-header nav a.active,
+  .library-tabs button.active) {
+  color: var(--sf-white);
+}
+
+html[data-theme="dark"] .nav-link.active::after {
+  background: var(--sf-yellow);
+}
+
+/* Primary action = yellow; secondary action = outlined white.
+   Turquoise is reserved for active states, links and keyboard focus. */
+html[data-theme="dark"] :is(.join-button, .primary-button) {
+  background: var(--sf-yellow);
+  color: var(--sf-black);
+  border-color: var(--sf-yellow);
+}
+
+html[data-theme="dark"] :is(.join-button, .primary-button):hover {
+  background: var(--sf-white);
+  border-color: var(--sf-white);
+  color: var(--sf-black);
+}
+
+html[data-theme="dark"] :is(.outline-button, .ghost) {
+  border-color: var(--sf-white);
+  color: var(--sf-white);
+}
+
+html[data-theme="dark"] :is(.outline-button, .ghost):hover {
+  border-color: var(--sf-turquoise);
+  color: var(--sf-turquoise);
+}
+
+html[data-theme="dark"] :is(.text-button, .subtle-link, .back-link,
+  .legal-back, .legal-footer a, .legal-links a):hover {
+  color: var(--sf-turquoise);
+}
+
+html[data-theme="dark"] :is(.feature-kicker, .eyebrow, .episode-number,
+  .episode-arrow, .reading-kicker span, .art-index, .feature-index span) {
+  color: var(--sf-turquoise);
+}
+
+/* Shared content surfaces and chapter rows */
+html[data-theme="dark"] :is(.featured, .empty-shelf, .library-story-card,
+  .library-contribution-card, .library-reaction-row, .sf-trash-group,
+  .sf-ai-patch, .sf-agent-message, .sf-agent-proposal) {
+  background-color: var(--sf-surface);
+  border-color: var(--sf-line);
+}
+
+html[data-theme="dark"] :is(.episode-row, .row) {
+  border-color: var(--sf-line);
+}
+
+html[data-theme="dark"] :is(.episode-row, .row):hover {
+  background: var(--sf-surface);
+}
+
+html[data-theme="dark"] .episode-number {
+  color: var(--sf-yellow);
+}
+
+html[data-theme="dark"] :is(.episode-arrow, .episode-row a:hover) {
+  color: var(--sf-turquoise);
+}
+
+/* The detail page uses the mock's editorial hierarchy. */
+html[data-theme="dark"] :is(.welcome-row h1, .featured h2, .section-heading h2,
+  .browse-row h2, .story-info h1, .episode-copy h3, .legal-document h1,
+  .legal-document h2, .library-shelf-heading h2, .library-story-info h3) {
+  font-family: var(--sf-font-display);
+}
+
+html[data-theme="dark"] :is(.feature-overline, .feature-kicker, .feature-meta,
+  .art-caption, .art-index, .feature-index, .detail-label, .guide-count,
+  .episode-number, .episode-status, .reading-kicker, .legal-updated) {
+  font-family: var(--sf-font-label);
+}
+
+html[data-theme="dark"] :is(.welcome-note, .feature-meta, .subtle-link,
+  .episode-copy p, .episode-note, .footer p, .footer > span) {
+  color: var(--sf-muted);
+}
+
+/* Clear keyboard focus, matching the turquoise focus ring in the reference. */
+html[data-theme="dark"] :is(a, button, input, textarea, select, summary):focus-visible {
+  outline: 3px solid var(--sf-turquoise);
+  outline-offset: 3px;
+}
+
+/* Keep the reading canvas and manuscript styles independent from site chrome. */
+html[data-theme="dark"] .reading-room {
+  --reader-bg: #e8e3d9;
+  --reader-ink: #292823;
+  --reader-muted: #77736a;
+}
+
+html[data-theme="dark"] .reading-room.theme-sepia {
+  --reader-bg: #e7d6b8;
+  --reader-ink: #392e21;
+  --reader-muted: #81715c;
+}
+
+html[data-theme="dark"] .reading-room.theme-night {
+  --reader-bg: #17191c;
+  --reader-ink: #d9d6cf;
+  --reader-muted: #96958f;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  html[data-theme="dark"] *,
+  html[data-theme="dark"] *::before,
+  html[data-theme="dark"] *::after {
+    scroll-behavior: auto !important;
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+}
