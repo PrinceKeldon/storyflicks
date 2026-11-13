@@ -1,0 +1,247 @@
+/*
+ * STORYFLICKS visual refresh: a pitch-black stage with a bright colour layer.
+ * Appearance only. Markup, routes and behaviour are unchanged.
+ *
+ * Text stays high-contrast and at least 16px, per the app's existing standard,
+ * so colour rules below use !important to out-rank the global text-colour rule.
+ * Colour rules apply to the default dark theme (html[data-theme="dark"]); the
+ * light theme keeps its existing styles. Reader themes (paper / sepia / night)
+ * are handled separately below and work under either app theme.
+ */
+
+:root {
+  --sf-black: #000000;
+  --sf-card: #0d0d0d;
+  --sf-line: #2a2a2a;
+  --sf-white: #f4f0e6;
+  --sf-muted: #b3b3b3;
+  --sf-yellow: #ffd60a;
+  --sf-red: #ff4136;
+  --sf-turquoise: #19e3c8;
+}
+
+/* ---------- Tokens: re-point the existing variables ---------- */
+html[data-theme="dark"] {
+  --ink: var(--sf-black);
+  --slate: var(--sf-card);
+  --paper: var(--sf-white);
+  --muted: var(--sf-muted);
+  --mint: var(--sf-turquoise);
+  --amber: var(--sf-yellow);
+  --line: var(--sf-line);
+}
+html[data-theme="dark"],
+html[data-theme="dark"] body { background: var(--sf-black); }
+
+/* ---------- Navigation and buttons ---------- */
+html[data-theme="dark"] body .wordmark i,
+html[data-theme="dark"] body .reader-brand i { color: var(--sf-yellow) !important; }
+html[data-theme="dark"] body .nav-link { color: var(--sf-muted) !important; }
+html[data-theme="dark"] body .nav-link.active { color: #fff !important; }
+html[data-theme="dark"] body .nav-link.active:after { height: 3px; background: var(--sf-yellow); }
+html[data-theme="dark"] body .sign-in { color: #fff !important; }
+html[data-theme="dark"] body .join-button,
+html[data-theme="dark"] body .primary-button {
+  background: var(--sf-yellow);
+  color: #000 !important;
+  border-radius: 999px;
+  font-weight: 700;
+}
+html[data-theme="dark"] body :is(.join-button, .primary-button) span { color: #000 !important; }
+html[data-theme="dark"] body .featured .primary-button span { color: #fff !important; }
+html[data-theme="dark"] body .join-button:hover,
+html[data-theme="dark"] body .primary-button:hover { background: #fff; }
+html[data-theme="dark"] body .outline-button { border: 1.5px solid #fff; border-radius: 999px; color: #fff !important; }
+html[data-theme="dark"] body .outline-button:hover { border-color: var(--sf-turquoise); color: var(--sf-turquoise) !important; }
+html[data-theme="dark"] body .eyebrow { color: var(--sf-turquoise) !important; }
+html[data-theme="dark"] body .welcome-row h1 em,
+html[data-theme="dark"] body .section-heading h2 span { color: var(--sf-yellow) !important; }
+html[data-theme="dark"] body .welcome-note,
+html[data-theme="dark"] body .subtle-link { color: var(--sf-muted) !important; }
+html[data-theme="dark"] body .subtle-link span { color: var(--sf-turquoise) !important; }
+
+/* ---------- Home: featured story is a solid yellow slab ---------- */
+html[data-theme="dark"] body .featured { background: var(--sf-yellow); color: #000 !important; }
+html[data-theme="dark"] body .featured :is(.feature-kicker, .feature-overline, .feature-meta, .feature-meta b, .feature-tagline, .feature-author-byline, .feature-index, .feature-index span, .text-button, .text-button span) { color: #000 !important; }
+html[data-theme="dark"] body .featured .live-dot { background: #000; box-shadow: none; }
+html[data-theme="dark"] body .featured h2,
+html[data-theme="dark"] body .featured h2 span { color: #000 !important; font-weight: 700; }
+html[data-theme="dark"] body .featured .feature-index i { background: #000; }
+html[data-theme="dark"] body .featured .primary-button { background: #000; color: #fff !important; }
+html[data-theme="dark"] body .featured .primary-button:hover { background: var(--sf-red); color: #000 !important; }
+html[data-theme="dark"] body .featured .text-button { text-decoration: underline; text-underline-offset: 4px; font-weight: 600; }
+html[data-theme="dark"] body .feature-art { background: var(--sf-red); border: 3px solid #000; }
+html[data-theme="dark"] body .feature-art.has-cover { background: #000; }
+html[data-theme="dark"] body .art-grain { display: none; }
+html[data-theme="dark"] body .art-cross,
+html[data-theme="dark"] body .art-cross:after { background: #000; width: 2px; }
+html[data-theme="dark"] body .art-cross:after { width: 80px; height: 2px; }
+html[data-theme="dark"] body .art-title,
+html[data-theme="dark"] body .art-title strong,
+html[data-theme="dark"] body .art-caption,
+html[data-theme="dark"] body .art-index { color: #000 !important; text-shadow: none; }
+
+/* ---------- Home: "your story continues" card ---------- */
+html[data-theme="dark"] body .empty-shelf { border: 1px solid var(--sf-line); background: var(--sf-card); }
+html[data-theme="dark"] body .empty-mark { border: 1.5px solid var(--sf-turquoise); color: var(--sf-turquoise) !important; }
+html[data-theme="dark"] body .empty-shelf p { color: var(--sf-muted) !important; }
+html[data-theme="dark"] body .personalised-story-card { background: var(--sf-card); border: 1px solid var(--sf-line); }
+html[data-theme="dark"] body .personalised-story-art:not(.has-cover) { background: var(--sf-turquoise); border: 0; }
+html[data-theme="dark"] body .personalised-story-art:before { display: none; }
+html[data-theme="dark"] body .personalised-story-art:not(.has-cover) :is(span, strong, i) { color: #000 !important; text-shadow: none; }
+html[data-theme="dark"] body .personalised-progress-track { height: 5px; background: var(--sf-line); }
+html[data-theme="dark"] body .personalised-progress-track span { background: var(--sf-turquoise); }
+html[data-theme="dark"] body .personalised-story-copy > p:not(.eyebrow) { color: #d6d3ca !important; }
+html[data-theme="dark"] body .personalised-story-footer a { color: #000 !important; background: var(--sf-yellow); padding: 10px 18px; border-radius: 999px; font-weight: 700; }
+html[data-theme="dark"] body .personalised-story-footer a span { color: #000 !important; }
+html[data-theme="dark"] body .personalised-story-footer a:hover { background: #fff; }
+
+/* ---------- Home: catalogue as a cover-first rail (Home only) ---------- */
+.catalogue-rail {
+  display: flex;
+  gap: 22px;
+  overflow-x: auto;
+  scroll-snap-type: x proximity;
+  padding: 8px 4px 22px;
+  scrollbar-width: none;
+}
+.catalogue-rail::-webkit-scrollbar { display: none; }
+.catalogue-rail .search-result-card {
+  flex: 0 0 200px;
+  display: block;
+  scroll-snap-align: start;
+  padding: 0;
+  border: 0;
+  background: none;
+  box-shadow: none;
+}
+.catalogue-rail .search-result-art {
+  aspect-ratio: 2 / 3;
+  min-height: 0;
+  width: 100%;
+  position: relative;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  padding: 0 16px;
+}
+.catalogue-rail .search-result-art:before { display: none; }
+.catalogue-rail .search-result-art span { font: 700 26px/.95 'Playfair Display', Georgia, serif; }
+.catalogue-rail .search-result-art small { display: none; }
+.catalogue-rail .search-result-art .catalogue-cover-image { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; }
+.catalogue-rail .search-result-copy { padding: 12px 0 0; }
+.catalogue-rail .search-result-copy .eyebrow { font: 500 16px 'DM Mono', monospace; letter-spacing: .6px; margin: 0 0 8px; }
+.catalogue-rail .search-result-copy h3 { font: 700 19px/1.25 'Playfair Display', Georgia, serif; margin: 0; }
+.catalogue-rail .catalogue-author-byline { font-size: 16px; margin: 4px 0 0; }
+.catalogue-rail .search-result-copy > p:not([class]),
+.catalogue-rail .search-result-copy .text-button { display: none; }
+
+html[data-theme="dark"] body .catalogue-rail .search-result-art { border: 2px solid var(--sf-yellow); background: var(--sf-yellow); color: #000 !important; }
+html[data-theme="dark"] body .catalogue-rail .search-result-art :is(span, small) { color: inherit !important; }
+html[data-theme="dark"] body .catalogue-rail .search-result-card:nth-child(6n+2) .search-result-art { background: #000; border-color: var(--sf-turquoise); color: var(--sf-turquoise) !important; }
+html[data-theme="dark"] body .catalogue-rail .search-result-card:nth-child(6n+3) .search-result-art { background: var(--sf-red); border-color: var(--sf-red); }
+html[data-theme="dark"] body .catalogue-rail .search-result-card:nth-child(6n+4) .search-result-art { background: var(--sf-white); border-color: var(--sf-white); }
+html[data-theme="dark"] body .catalogue-rail .search-result-card:nth-child(6n+5) .search-result-art { background: var(--sf-turquoise); border-color: var(--sf-turquoise); }
+html[data-theme="dark"] body .catalogue-rail .search-result-card:nth-child(6n+6) .search-result-art { background: #000; border-color: var(--sf-yellow); color: var(--sf-yellow) !important; }
+html[data-theme="dark"] body .catalogue-rail .search-result-art.has-cover { background: #000; }
+html[data-theme="dark"] body .catalogue-rail .search-result-copy .eyebrow { color: var(--sf-yellow) !important; }
+html[data-theme="dark"] body .catalogue-rail .search-result-copy h3 { color: #fff !important; }
+html[data-theme="dark"] body .catalogue-rail .catalogue-author-byline { color: var(--sf-muted) !important; }
+html[data-theme="dark"] body .catalogue-rail .search-result-card:hover { border: 0; }
+
+html[data-theme="dark"] body .genre-list a { border: 1.5px solid #fff; border-radius: 999px; color: #fff !important; }
+html[data-theme="dark"] body .genre-list a span { color: var(--sf-turquoise) !important; }
+html[data-theme="dark"] body .genre-list a:hover { background: var(--sf-turquoise); border-color: var(--sf-turquoise); color: #000 !important; }
+html[data-theme="dark"] body .genre-list a:hover span { color: #000 !important; }
+html[data-theme="dark"] body .footer p,
+html[data-theme="dark"] body .footer > span { color: var(--sf-muted) !important; }
+
+/* ---------- Book detail ---------- */
+html[data-theme="dark"] body .story-poster:not(.has-cover) { background: var(--sf-red); border: 3px solid var(--sf-red); box-shadow: none; }
+html[data-theme="dark"] body .story-poster:not(.has-cover):before,
+html[data-theme="dark"] body .story-poster:not(.has-cover):after { background: #000; }
+html[data-theme="dark"] body .story-poster:not(.has-cover):before { width: 2px; }
+html[data-theme="dark"] body .story-poster:not(.has-cover):after { height: 2px; }
+html[data-theme="dark"] body .poster-kicker,
+html[data-theme="dark"] body .poster-foot,
+html[data-theme="dark"] body .poster-title,
+html[data-theme="dark"] body .poster-title strong { color: #000 !important; text-shadow: none; }
+html[data-theme="dark"] body .story-poster.has-cover { box-shadow: none; }
+html[data-theme="dark"] body .story-info h1 { font-weight: 700; color: #fff !important; }
+html[data-theme="dark"] body .story-tagline { color: var(--sf-yellow) !important; }
+html[data-theme="dark"] body .story-synopsis { color: #d6d3ca !important; }
+html[data-theme="dark"] body .story-facts { color: var(--sf-muted) !important; }
+html[data-theme="dark"] body .story-facts span+span:before { color: var(--sf-red) !important; }
+html[data-theme="dark"] body .story-author-byline { color: var(--sf-muted) !important; }
+html[data-theme="dark"] body .episode-guide .section-heading h2 span { color: var(--sf-red) !important; }
+html[data-theme="dark"] body .episode-number { color: var(--sf-yellow) !important; }
+html[data-theme="dark"] body .episode-copy p,
+html[data-theme="dark"] body .episode-status,
+html[data-theme="dark"] body .episode-note,
+html[data-theme="dark"] body .guide-count,
+html[data-theme="dark"] body .detail-label { color: var(--sf-muted) !important; }
+html[data-theme="dark"] body a.episode-row:hover { background: var(--sf-card); }
+html[data-theme="dark"] body .episode-arrow { color: var(--sf-turquoise) !important; }
+.story-primary-actions { display: flex; flex-wrap: wrap; align-items: center; gap: 12px; }
+
+/* ---------- Small motion: lift on hover, calm everywhere else ---------- */
+@media (prefers-reduced-motion: no-preference) {
+  .catalogue-rail .search-result-art { transition: transform .2s ease; }
+  .catalogue-rail .search-result-card:hover .search-result-art,
+  .catalogue-rail .search-result-card:focus-visible .search-result-art { transform: translateY(-8px); }
+}
+.catalogue-rail .search-result-card:focus-visible { outline: 3px solid var(--sf-turquoise); outline-offset: 4px; }
+
+/* ---------- Reading Room ---------- */
+.reading-room { --reader-accent: #0b7a6c; --reader-chrome: #f5f0e4; }
+.reading-room { --reader-bg: #efe9db; }
+.reading-room.theme-sepia { --reader-bg: #e8d8ba; --reader-chrome: #efe2c8; }
+.reading-room.theme-night { --reader-bg: #000000; --reader-accent: #19e3c8; --reader-chrome: #0a0a0a; }
+.reader-progress-track span { background: var(--reader-accent); }
+.reading-kicker span,
+.reading-rule { color: var(--reader-accent); }
+.reader-brand i { color: var(--reader-accent); }
+.setting-options button.selected { border-color: var(--reader-accent); color: var(--reader-accent); font-weight: 700; }
+.reader-tool-button,
+.reader-exit,
+.setting-options button { min-height: 44px; }
+
+/* Settings open as a sheet rising from the bottom edge. */
+.reader-settings {
+  position: fixed;
+  top: auto;
+  left: 50%;
+  bottom: 16px;
+  transform: translateX(-50%);
+  z-index: 60;
+  width: min(780px, calc(100% - 24px));
+  box-sizing: border-box;
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(210px, 1fr));
+  justify-content: stretch;
+  gap: 20px 28px;
+  padding: 22px 26px 26px;
+  border: 1px solid color-mix(in srgb, var(--reader-ink) 22%, transparent);
+  border-radius: 18px;
+  background: var(--reader-chrome);
+  box-shadow: 0 -16px 48px rgba(0, 0, 0, .28);
+  max-height: calc(100vh - 32px);
+  overflow-y: auto;
+}
+.reader-settings > div > span { margin-bottom: 10px; }
+.setting-options { flex-wrap: wrap; }
+@media (prefers-reduced-motion: no-preference) {
+  .reader-settings { animation: sf-sheet-rise .24s ease-out; }
+  @keyframes sf-sheet-rise { from { opacity: 0; transform: translate(-50%, 16px); } to { opacity: 1; transform: translate(-50%, 0); } }
+}
+
+/* New reading preferences. Defaults match the previous look exactly. */
+.reading-page.reading-width-narrow { width: min(100% - 40px, 580px); }
+.reading-page { --manuscript-line-height: 1.6; }
+.reading-page.reading-spacing-relaxed { --manuscript-line-height: 1.9; }
+.reading-page[data-font="modern"] .manuscript { font-family: 'Source Serif 4', Georgia, serif; }
+.reading-page[data-font="sans"] .manuscript { font-family: 'DM Sans', Arial, sans-serif; }
+.reading-page[data-font="dyslexia"] .manuscript { font-family: 'Atkinson Hyperlegible', Arial, sans-serif; letter-spacing: .01em; }
