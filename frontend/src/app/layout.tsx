@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import "./globals.css";
 import "./storyflicks-design-system.css";
 import "./redesign.css";
+import "./redesign-pages.css";
 import ThemeProvider from "./theme-provider";
 
 export const metadata: Metadata = {
