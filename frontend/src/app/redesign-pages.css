@@ -1,0 +1,423 @@
+/*
+ * STORYFLICKS visual refresh, part 2: the colour layer on every section and in
+ * the light theme. Appearance only. Markup, routes and behaviour are unchanged.
+ *
+ * Dark theme: pitch black with yellow / turquoise / red / white.
+ * Light theme: warm paper with the same accents used as solid fills, black ink,
+ * and bold black outlines. Text stays black on light and white on dark, at 16px or
+ * more, per the app's existing high-contrast standard, so colour is carried by
+ * fills, borders and large decorative marks rather than small coloured text.
+ *
+ * Rules use `html[data-theme] body …` (specificity above the global text-colour
+ * rule) and !important only where an existing rule already uses it.
+ */
+
+html[data-theme="dark"] {
+  --p-bg: #000000;
+  --p-card: #0d0d0d;
+  --p-line: #2a2a2a;
+  --p-strong: #ffffff;
+  --p-shadow: none;
+  --p-hover: #161616;
+  --p-underline: var(--sf-yellow);
+  --p-field: #000000;
+  --p-field-line: #4a4a4a;
+}
+html[data-theme="light"] {
+  --p-bg: #fbf6e9;
+  --p-card: #fffdf6;
+  --p-line: #111111;
+  --p-strong: #000000;
+  --p-shadow: 4px 4px 0 #000000;
+  --p-hover: #fff0a8;
+  --p-underline: var(--sf-red);
+  --p-field: #ffffff;
+  --p-field-line: #111111;
+}
+html[data-theme="light"],
+html[data-theme="light"] body { background: #fbf6e9 !important; }
+html[data-theme="dark"],
+html[data-theme="dark"] body { background: #000000 !important; }
+
+/* ---------- Surfaces ---------- */
+html[data-theme] body :is(.library-shell, .library-state, .studio-shell, .contribution-shell,
+  .review-room-shell, .auth-shell, .user-settings-shell, .legal-shell, .app-shell, .detail-shell) {
+  background: var(--p-bg) !important;
+}
+
+/* Header and footer rules */
+html[data-theme] body :is(.topbar, .detail-top, .library-header, .studio-header, .auth-header,
+  .legal-header, .user-settings-header) { border-bottom-color: var(--p-line) !important; }
+html[data-theme] body :is(.footer, .library-footer, .studio-footer, .legal-footer, .auth-footer,
+  .user-settings-footer) { border-top-color: var(--p-line) !important; }
+html[data-theme="light"] body :is(.topbar, .detail-top, .library-header, .studio-header,
+  .auth-header, .legal-header, .user-settings-header) { border-bottom-width: 2px !important; }
+html[data-theme="light"] body :is(.footer, .library-footer, .studio-footer, .legal-footer,
+  .auth-footer, .user-settings-footer) { border-top-width: 2px !important; }
+
+/* Wordmark dot, active navigation underline */
+html[data-theme="dark"] body :is(.wordmark i, .reader-brand i) { color: var(--sf-yellow) !important; }
+html[data-theme="light"] body :is(.wordmark i, .reader-brand i) { color: var(--sf-red) !important; }
+html[data-theme] body :is(.nav-link.active, .library-header nav a.active, .studio-header nav a.active)::after {
+  height: 3px;
+  background: var(--p-underline) !important;
+}
+html[data-theme="light"] body :is(.nav-link, .nav-link.active, .library-header nav a, .library-header nav a.active, .studio-header nav a, .studio-header nav a.active) { color: #000 !important; }
+html[data-theme="light"] body :is(.nav-link:not(.active), .library-header nav a:not(.active), .studio-header nav a:not(.active)) { opacity: .72; }
+html[data-theme="light"] body :is(.nav-link:hover, .library-header nav a:hover, .studio-header nav a:hover) { opacity: 1; }
+
+/* ---------- Primary actions: yellow pills ---------- */
+html[data-theme] body :is(.join-button, .primary-button, .studio-primary, .auth-submit,
+  .library-empty-large a, .library-card-footer a, .support-checkout, .library-header-link.primary) {
+  background: var(--sf-yellow) !important;
+  color: #000 !important;
+  border: 2px solid var(--sf-yellow) !important;
+  border-radius: 999px;
+  font-weight: 700;
+}
+html[data-theme] body :is(.join-button, .primary-button, .studio-primary, .auth-submit,
+  .library-empty-large a, .library-card-footer a, .support-checkout) :is(span, i) { color: #000 !important; }
+html[data-theme="light"] body :is(.join-button, .primary-button, .studio-primary, .auth-submit,
+  .library-empty-large a, .library-card-footer a, .support-checkout) {
+  border-color: #000 !important;
+  box-shadow: 3px 3px 0 #000;
+}
+html[data-theme] body :is(.join-button, .primary-button, .studio-primary, .auth-submit,
+  .library-empty-large a, .library-card-footer a, .support-checkout):hover { background: var(--sf-turquoise) !important; border-color: var(--sf-turquoise) !important; }
+html[data-theme="light"] body :is(.join-button, .primary-button, .studio-primary, .auth-submit,
+  .library-empty-large a, .library-card-footer a, .support-checkout):hover { border-color: #000 !important; }
+html[data-theme="light"] body :is(.join-button, .primary-button, .studio-primary, .auth-submit,
+  .library-empty-large a, .library-card-footer a, .support-checkout):active { transform: translate(2px, 2px); box-shadow: 1px 1px 0 #000; }
+html[data-theme] body .featured .primary-button { background: #000 !important; border-color: #000 !important; }
+html[data-theme] body .featured .primary-button,
+html[data-theme] body .featured .primary-button span { color: #fff !important; }
+html[data-theme] body .featured .primary-button:hover { background: var(--sf-red) !important; border-color: var(--sf-red) !important; }
+html[data-theme] body .featured .primary-button:hover,
+html[data-theme] body .featured .primary-button:hover span { color: #000 !important; }
+html[data-theme="light"] body .featured .primary-button { box-shadow: none; }
+
+/* Secondary actions: outlined pills */
+html[data-theme] body :is(.outline-button, .library-secondary-link, .studio-outline-action, .studio-text-action) {
+  border: 2px solid var(--p-strong) !important;
+  border-radius: 999px;
+  background: transparent !important;
+}
+html[data-theme] body :is(.outline-button, .library-secondary-link, .studio-outline-action, .studio-text-action):hover {
+  background: var(--sf-turquoise) !important;
+  border-color: var(--sf-turquoise) !important;
+  color: #000 !important;
+}
+html[data-theme="light"] body :is(.outline-button, .library-secondary-link, .studio-outline-action, .studio-text-action):hover { border-color: #000 !important; }
+
+/* ---------- Labels and headings ---------- */
+html[data-theme="light"] body .eyebrow {
+  display: block;
+  width: fit-content;
+  max-width: 100%;
+  padding: 3px 10px;
+  border-radius: 4px;
+  background: var(--sf-turquoise);
+  color: #000 !important;
+}
+html[data-theme="dark"] body :is(.library-shelf-heading h2 span, .studio-section-heading h2 span, .library-hero h1 em, .library-count i) { color: var(--sf-yellow) !important; }
+html[data-theme="light"] body :is(.section-heading h2 span, .library-shelf-heading h2 span, .studio-section-heading h2 span, .browse-row h2 span, .auth-panel h1 span, .library-state h1 span) { color: var(--sf-red) !important; }
+html[data-theme="light"] body :is(.welcome-row h1 em, .library-hero h1 em, .featured h2 span) {
+  background: var(--sf-yellow);
+  padding: 0 .12em;
+  color: #000 !important;
+  font-style: italic;
+}
+html[data-theme="light"] body .featured h2 span { background: none; padding: 0; }
+html[data-theme="light"] body :is(.welcome-note, .subtle-link, .welcome-row p) { color: #000 !important; }
+html[data-theme="light"] body .subtle-link span { color: #000 !important; }
+html[data-theme="light"] body .subtle-link { border-bottom: 3px solid var(--sf-turquoise); padding-bottom: 2px; }
+
+/* ---------- Light theme: Home ---------- */
+html[data-theme="light"] body .featured { background: var(--sf-yellow); border: 2px solid #000; box-shadow: 6px 6px 0 #000; }
+html[data-theme="light"] body .featured :is(.feature-kicker, .feature-overline, .feature-meta, .feature-meta b, .feature-tagline, .feature-author-byline, .feature-index, .feature-index span, .text-button, .text-button span, h2) { color: #000 !important; }
+html[data-theme="light"] body .featured .live-dot { background: #000; box-shadow: none; }
+html[data-theme="light"] body .featured .feature-index i { background: #000; }
+html[data-theme="light"] body .featured .text-button { text-decoration: underline; text-underline-offset: 4px; font-weight: 600; }
+html[data-theme="light"] body .feature-art { background: var(--sf-red); border: 2px solid #000; }
+html[data-theme="light"] body .feature-art.has-cover { background: #000; }
+html[data-theme="light"] body .art-grain { display: none; }
+html[data-theme="light"] body .art-cross,
+html[data-theme="light"] body .art-cross::after { background: #000; width: 2px; }
+html[data-theme="light"] body .art-cross::after { width: 80px; height: 2px; }
+html[data-theme="light"] body :is(.art-title, .art-title strong, .art-caption, .art-index) { color: #000 !important; text-shadow: none; }
+
+html[data-theme="light"] body :is(.empty-shelf, .personalised-story-card) { background: var(--p-card); border: 2px solid #000; box-shadow: var(--p-shadow); }
+html[data-theme="light"] body .empty-mark { background: var(--sf-turquoise); border: 2px solid #000; }
+html[data-theme="light"] body .personalised-story-art:not(.has-cover) { background: var(--sf-turquoise); border: 2px solid #000; }
+html[data-theme="light"] body .personalised-story-art::before { display: none; }
+html[data-theme="light"] body .personalised-story-art:not(.has-cover) :is(span, strong, i) { color: #000 !important; text-shadow: none; }
+html[data-theme="light"] body .personalised-progress-track { height: 10px; background: #fff; border: 2px solid #000; border-radius: 999px; overflow: hidden; }
+html[data-theme="light"] body .personalised-progress-track span { background: var(--sf-turquoise); height: 100%; }
+html[data-theme="light"] body .personalised-story-footer a { background: var(--sf-yellow); border: 2px solid #000; box-shadow: 3px 3px 0 #000; padding: 10px 18px; border-radius: 999px; font-weight: 700; }
+html[data-theme="light"] body .personalised-story-footer a:hover { background: var(--sf-turquoise); }
+
+html[data-theme="light"] body .genre-list a { border: 2px solid #000; border-radius: 999px; background: #fff; }
+html[data-theme="light"] body .genre-list a:hover { background: var(--sf-turquoise); }
+html[data-theme="light"] body .genre-list a:nth-child(3n+1):hover { background: var(--sf-yellow); }
+html[data-theme="light"] body .genre-list a:nth-child(3n+2):hover { background: var(--sf-red); }
+
+/* Cover colour cycling, shared by the Home rail, Search results and Library cards */
+html[data-theme="light"] body .catalogue-rail .search-result-art { border: 2px solid #000; background: var(--sf-yellow); color: #000 !important; box-shadow: 4px 4px 0 #000; }
+html[data-theme="light"] body .catalogue-rail .search-result-art :is(span, small) { color: inherit !important; }
+html[data-theme="light"] body .catalogue-rail .search-result-card:nth-child(4n+2) .search-result-art { background: var(--sf-turquoise); }
+html[data-theme="light"] body .catalogue-rail .search-result-card:nth-child(4n+3) .search-result-art { background: var(--sf-red); }
+html[data-theme="light"] body .catalogue-rail .search-result-card:nth-child(4n+4) .search-result-art { background: #000; color: var(--sf-yellow) !important; }
+html[data-theme="light"] body .catalogue-rail .search-result-art.has-cover { background: #000; }
+html[data-theme="light"] body .catalogue-rail .search-result-copy h3 { color: #000 !important; }
+html[data-theme="light"] body .catalogue-rail .catalogue-author-byline { color: #000 !important; }
+html[data-theme="light"] body .catalogue-rail .search-result-card:hover { border: 0; box-shadow: none; }
+
+/* ---------- Book detail ---------- */
+html[data-theme="light"] body .story-poster:not(.has-cover) { background: var(--sf-red); border: 2px solid #000; box-shadow: 6px 6px 0 #000; }
+html[data-theme="light"] body .story-poster:not(.has-cover)::before,
+html[data-theme="light"] body .story-poster:not(.has-cover)::after { background: #000; }
+html[data-theme="light"] body .story-poster:not(.has-cover)::before { width: 2px; }
+html[data-theme="light"] body .story-poster:not(.has-cover)::after { height: 2px; }
+html[data-theme="light"] body :is(.poster-kicker, .poster-foot, .poster-title, .poster-title strong) { color: #000 !important; text-shadow: none; }
+html[data-theme="light"] body .story-poster.has-cover { border: 2px solid #000; box-shadow: 6px 6px 0 #000; }
+html[data-theme="light"] body .story-tagline { display: inline; background: var(--sf-yellow); padding: 2px 8px; box-decoration-break: clone; -webkit-box-decoration-break: clone; line-height: 1.8; }
+html[data-theme="light"] body .story-facts span + span::before { color: var(--sf-red) !important; }
+html[data-theme="light"] body .episode-guide .section-heading h2 span { color: var(--sf-red) !important; }
+html[data-theme="light"] body .episode-number { display: inline-block; background: var(--sf-yellow); padding: 2px 8px; border: 2px solid #000; border-radius: 4px; }
+html[data-theme="light"] body a.episode-row:hover { background: var(--p-hover); }
+html[data-theme="dark"] body .episode-number { color: var(--sf-yellow) !important; }
+html[data-theme] body :is(.story-save-button, .support-story-trigger) {
+  border: 2px solid var(--p-strong) !important;
+  border-radius: 999px;
+  background: transparent !important;
+}
+html[data-theme] body :is(.story-save-button, .support-story-trigger):hover { background: var(--sf-turquoise) !important; border-color: var(--sf-turquoise) !important; color: #000 !important; }
+html[data-theme="light"] body :is(.story-save-button, .support-story-trigger):hover { border-color: #000 !important; }
+html[data-theme] body .support-story-panel { background: var(--p-card) !important; border: 2px solid var(--p-line) !important; box-shadow: var(--p-shadow); }
+html[data-theme] body .support-amounts button { border: 2px solid var(--p-strong) !important; border-radius: 999px; background: transparent !important; }
+html[data-theme] body .support-amounts button:is(.selected, [aria-pressed="true"]) { background: var(--sf-yellow) !important; color: #000 !important; border-color: #000 !important; }
+
+/* ---------- Cards, shared by Library, Studio, Settings, reviews ---------- */
+html[data-theme] body :is(.library-story-card, .library-contribution-card, .library-reaction-row,
+  .studio-catalogue-card, .studio-form, .studio-metric, .studio-info-panel, .studio-community-card,
+  .studio-revision-panel, .review-card, .review-compose, .review-author-note, .reaction-choice,
+  .user-settings-panel, .unlock-panel, .contribution-modal-panel) {
+  background: var(--p-card) !important;
+  border-color: var(--p-line) !important;
+}
+html[data-theme="light"] body :is(.library-story-card, .library-contribution-card, .library-reaction-row,
+  .studio-catalogue-card, .studio-metric, .studio-community-card, .review-card, .review-compose,
+  .review-author-note, .user-settings-panel, .unlock-panel) {
+  border-width: 2px !important;
+  box-shadow: var(--p-shadow);
+}
+html[data-theme="light"] body :is(.studio-form, .studio-info-panel, .studio-revision-panel) { border-width: 2px !important; }
+html[data-theme] body :is(.library-empty-shelf, .library-empty-large, .studio-empty, .review-feed-empty) { background: transparent !important; border-color: var(--p-strong) !important; }
+html[data-theme="dark"] body :is(.library-empty-shelf, .library-empty-large, .studio-empty, .review-feed-empty) { border-color: #4a4a4a !important; }
+
+/* ---------- Library ---------- */
+html[data-theme] body .library-hero { border-bottom-color: var(--p-line) !important; }
+html[data-theme="light"] body .library-hero { border-bottom-width: 2px !important; }
+html[data-theme] body .library-count {
+  background: var(--sf-yellow) !important;
+  padding: 18px 24px 16px;
+  border: 2px solid #000;
+  border-radius: 6px;
+}
+html[data-theme="light"] body .library-count { box-shadow: 5px 5px 0 #000; }
+html[data-theme] body .library-count :is(strong, span, i) { color: #000 !important; }
+html[data-theme] body .library-tabs { border-bottom: 0 !important; gap: 10px; margin-bottom: 40px; padding: 18px 0; border-top: 0 !important; }
+html[data-theme] body .library-tabs button {
+  padding: 9px 20px;
+  border: 2px solid var(--p-strong) !important;
+  border-radius: 999px;
+  background: transparent;
+}
+html[data-theme] body .library-tabs button::after { display: none !important; }
+html[data-theme] body .library-tabs button:hover { background: var(--sf-turquoise); border-color: var(--sf-turquoise) !important; color: #000 !important; }
+html[data-theme="light"] body .library-tabs button:hover { border-color: #000 !important; }
+html[data-theme] body .library-tabs button.active { background: var(--sf-yellow) !important; border-color: #000 !important; color: #000 !important; }
+html[data-theme] body .library-tabs button span { color: inherit !important; font-weight: 700; }
+html[data-theme="dark"] body .library-tabs button.active { border-color: var(--sf-yellow) !important; }
+
+html[data-theme] body .library-shelf-heading small {
+  padding: 4px 12px;
+  border: 2px solid var(--p-strong) !important;
+  border-radius: 999px;
+}
+
+/* Library covers: flat colour with black cross lines, cycling per card */
+html[data-theme] body .library-story-art:not(.has-cover) { background: var(--sf-yellow) !important; border-right: 2px solid var(--p-strong); }
+/* A spine stripe instead of the old cross, so titles stay clear */
+html[data-theme] body .library-story-art:not(.has-cover)::before { background: #000 !important; width: 8px; height: auto; top: 0; bottom: 0; left: 14px; opacity: 1; }
+html[data-theme] body .library-story-art:not(.has-cover)::after { display: none; }
+html[data-theme] body .library-story-art:not(.has-cover) :is(strong, i, .library-art-index) { color: #000 !important; text-shadow: none; }
+html[data-theme] body .library-story-card:nth-child(4n+2) .library-story-art:not(.has-cover) { background: var(--sf-turquoise) !important; }
+html[data-theme] body .library-story-card:nth-child(4n+3) .library-story-art:not(.has-cover) { background: var(--sf-red) !important; }
+html[data-theme="dark"] body .library-story-card:nth-child(4n+4) .library-story-art:not(.has-cover) { background: var(--sf-white) !important; }
+html[data-theme="light"] body .library-story-card:nth-child(4n+4) .library-story-art:not(.has-cover) { background: #000 !important; }
+html[data-theme="light"] body .library-story-card:nth-child(4n+4) .library-story-art:not(.has-cover)::before { background: var(--sf-turquoise) !important; }
+html[data-theme="light"] body .library-story-card:nth-child(4n+4) .library-story-art:not(.has-cover) :is(strong, i, .library-art-index) { color: #fff !important; }
+
+html[data-theme] body .library-progress-track { height: 8px; border-radius: 999px; overflow: hidden; background: var(--p-line); }
+html[data-theme="light"] body .library-progress-track { background: #fff; border: 2px solid #000; height: 12px; }
+html[data-theme] body .library-progress-track span { background: var(--sf-turquoise); height: 100%; display: block; }
+html[data-theme="light"] body .library-story-card:nth-child(4n+1) .library-progress-track span { background: var(--sf-red); }
+html[data-theme] body .library-card-footer { border-top-color: var(--p-line) !important; }
+html[data-theme] body .library-card-footer a { padding: 8px 16px; white-space: nowrap; }
+html[data-theme] body .library-card-footer button { border: 2px solid var(--p-strong) !important; border-radius: 999px; padding: 8px 16px; background: transparent; }
+html[data-theme] body .library-card-footer button:hover { background: var(--sf-red); border-color: #000; color: #000 !important; }
+
+html[data-theme] body .library-empty-shelf span,
+html[data-theme] body .library-empty-large > span {
+  display: inline-grid; place-items: center; width: 40px; height: 40px;
+  background: var(--sf-turquoise); border: 2px solid #000; border-radius: 50%; color: #000 !important;
+}
+html[data-theme] body .library-contribution-card { border-left: 8px solid var(--sf-turquoise) !important; }
+html[data-theme] body .library-reaction-row { border-left: 8px solid var(--sf-yellow) !important; }
+html[data-theme] body .library-contribution-type span { padding: 2px 10px; border-radius: 999px; color: #000 !important; font-weight: 700; }
+html[data-theme] body .library-contribution-type span.public { background: var(--sf-turquoise); }
+html[data-theme] body .library-contribution-type span.private { background: var(--sf-yellow); }
+html[data-theme] body .library-contribution-group h3 span { display: inline-block; min-width: 28px; text-align: center; padding: 0 8px; background: var(--sf-yellow); border-radius: 999px; color: #000 !important; }
+html[data-theme] body .library-error { border-left: 8px solid var(--sf-red); padding-left: 14px; }
+html[data-theme] body .reader-state-mark { background: var(--sf-yellow); color: #000 !important; padding: 8px 14px; border-radius: 6px; font-weight: 700; }
+html[data-theme="light"] body .reader-state-mark { border: 2px solid #000; box-shadow: 3px 3px 0 #000; }
+
+/* ---------- Creator Studio ---------- */
+html[data-theme] body .studio-hero-mark { background: var(--sf-yellow) !important; border: 2px solid #000; }
+html[data-theme="light"] body .studio-hero-mark { box-shadow: 5px 5px 0 #000; }
+html[data-theme] body .studio-hero-mark::before,
+html[data-theme] body .studio-hero-mark::after { display: none; }
+html[data-theme] body .studio-hero-mark :is(span, small) { color: #000 !important; }
+html[data-theme] body .studio-hero { border-bottom-color: var(--p-line) !important; }
+
+html[data-theme] body .studio-tabs { border-bottom: 0 !important; gap: 10px; padding: 14px 0; margin-bottom: 30px; }
+html[data-theme] body .studio-tabs button { padding: 9px 18px; border: 2px solid var(--p-strong) !important; border-radius: 999px; background: transparent; }
+html[data-theme] body .studio-tabs button::after { display: none !important; }
+html[data-theme] body .studio-tabs button:hover { background: var(--sf-turquoise); border-color: var(--sf-turquoise) !important; color: #000 !important; }
+html[data-theme="light"] body .studio-tabs button:hover { border-color: #000 !important; }
+html[data-theme] body .studio-tabs button.active { background: var(--sf-yellow) !important; border-color: #000 !important; color: #000 !important; }
+html[data-theme="dark"] body .studio-tabs button.active { border-color: var(--sf-yellow) !important; }
+html[data-theme] body .studio-community-tabs button { border-radius: 999px; }
+html[data-theme] body .studio-community-tabs button.active { background: var(--sf-yellow); color: #000 !important; border-color: #000; }
+
+html[data-theme] body .studio-metric { border-top: 8px solid var(--sf-yellow) !important; }
+html[data-theme] body .studio-metric:nth-child(4n+2) { border-top-color: var(--sf-turquoise) !important; }
+html[data-theme] body .studio-metric:nth-child(4n+3) { border-top-color: var(--sf-red) !important; }
+html[data-theme="dark"] body .studio-metric:nth-child(4n+4) { border-top-color: var(--sf-white) !important; }
+html[data-theme="light"] body .studio-metric:nth-child(4n+4) { border-top-color: #000 !important; }
+html[data-theme] body .studio-story-row { border-bottom-color: var(--p-line) !important; }
+html[data-theme] body .studio-story-row:hover { background: var(--p-hover) !important; }
+html[data-theme] body .studio-story-row.selected { background: var(--p-hover) !important; box-shadow: inset 6px 0 0 var(--sf-yellow); }
+html[data-theme] body .studio-story-status { font-weight: 700; }
+html[data-theme] body :is(.studio-alert, .studio-notice) { border-left: 8px solid var(--sf-turquoise); background: var(--p-card) !important; }
+html[data-theme] body .studio-alert { border-left-color: var(--sf-red); }
+html[data-theme] body .sf-agent-message { background: var(--p-card); border-color: var(--p-line); }
+html[data-theme="light"] body .sf-agent-message { border: 2px solid #000; }
+html[data-theme] body .studio-activity-bar { background: var(--sf-turquoise) !important; }
+html[data-theme] body .studio-activity-chart { border-bottom: 2px solid var(--p-strong); }
+
+/* ---------- Fields ---------- */
+html[data-theme] body :is(.auth-form input, .studio-form input:not([type=checkbox]), .studio-form textarea,
+  .studio-form select, .review-compose input, .review-compose textarea, .search-page-form input,
+  .support-custom-amount input, .review-feed-controls select, .review-episode-filter select,
+  .studio-workspace-select, .studio-schedule-row input) {
+  background: var(--p-field) !important;
+  border: 2px solid var(--p-field-line) !important;
+  border-radius: 6px;
+}
+html[data-theme] body :is(.auth-form input, .studio-form input, .studio-form textarea, .studio-form select,
+  .review-compose input, .review-compose textarea, .search-page-form input, .review-feed-controls select,
+  .review-episode-filter select, .studio-workspace-select):focus {
+  outline: 3px solid var(--sf-turquoise);
+  outline-offset: 2px;
+  border-color: var(--p-strong) !important;
+}
+html[data-theme] body .auth-form label,
+html[data-theme] body .studio-form label { font-weight: 600; }
+
+/* ---------- Sign in ---------- */
+html[data-theme] body .auth-panel { border-color: var(--p-line); }
+html[data-theme] body .auth-header .back-link { border-bottom: 3px solid var(--sf-turquoise); }
+html[data-theme] body .auth-switch { border-bottom: 0; gap: 10px; }
+html[data-theme] body .auth-switch button { flex: 1; border: 2px solid var(--p-strong) !important; border-radius: 999px; }
+html[data-theme] body .auth-switch button:hover { background: var(--sf-turquoise); border-color: var(--sf-turquoise) !important; color: #000 !important; }
+html[data-theme="light"] body .auth-switch button:hover { border-color: #000 !important; }
+html[data-theme] body .auth-switch button.active { background: var(--sf-yellow); border-color: #000 !important; color: #000 !important; }
+html[data-theme="dark"] body .auth-switch button.active { border-color: var(--sf-yellow) !important; }
+html[data-theme] body .auth-error { border-left: 8px solid var(--sf-red); padding-left: 14px; }
+html[data-theme] body .auth-message { border-left: 8px solid var(--sf-turquoise); padding-left: 14px; }
+
+/* ---------- Settings ---------- */
+html[data-theme] body .theme-choice { border: 2px solid var(--p-line) !important; border-radius: 14px; background: var(--p-card) !important; }
+html[data-theme="dark"] body .theme-choice { border-color: #3a3a3a !important; }
+html[data-theme] body .theme-choice:hover { border-color: var(--sf-turquoise) !important; }
+html[data-theme] body .theme-choice.selected { border-color: var(--sf-yellow) !important; }
+html[data-theme="light"] body .theme-choice.selected { border-color: #000 !important; box-shadow: 5px 5px 0 var(--sf-yellow); }
+html[data-theme] body .theme-choice.selected .theme-choice-indicator {
+  display: grid; place-items: center; width: 30px; height: 30px; border-radius: 50%;
+  background: var(--sf-turquoise); color: #000 !important; font-weight: 700; border: 2px solid #000;
+}
+html[data-theme] body .user-settings-status { border-left: 8px solid var(--sf-turquoise); padding-left: 14px; }
+
+/* ---------- Search ---------- */
+html[data-theme] body :is(.genre-chip, .search-clear) { border: 2px solid var(--p-strong) !important; border-radius: 999px; background: transparent !important; }
+html[data-theme] body :is(.genre-chip, .search-clear):hover { background: var(--sf-turquoise) !important; border-color: var(--sf-turquoise) !important; color: #000 !important; }
+html[data-theme="light"] body :is(.genre-chip, .search-clear):hover { border-color: #000 !important; }
+html[data-theme] body .genre-chip.active { background: var(--sf-yellow) !important; border-color: #000 !important; color: #000 !important; }
+html[data-theme="dark"] body .genre-chip.active { border-color: var(--sf-yellow) !important; }
+html[data-theme] body .search-result-count { padding: 4px 12px; border: 2px solid var(--p-strong) !important; border-radius: 999px; }
+html[data-theme] body .search-results:not(.catalogue-rail) .search-result-art:not(.has-cover) { background: var(--sf-yellow) !important; border: 2px solid var(--p-strong); }
+html[data-theme] body .search-results:not(.catalogue-rail) .search-result-card:nth-child(4n+2) .search-result-art:not(.has-cover) { background: var(--sf-turquoise) !important; }
+html[data-theme] body .search-results:not(.catalogue-rail) .search-result-card:nth-child(4n+3) .search-result-art:not(.has-cover) { background: var(--sf-red) !important; }
+html[data-theme="dark"] body .search-results:not(.catalogue-rail) .search-result-card:nth-child(4n+4) .search-result-art:not(.has-cover) { background: var(--sf-white) !important; }
+html[data-theme="light"] body .search-results:not(.catalogue-rail) .search-result-card:nth-child(4n+4) .search-result-art:not(.has-cover) { background: #000 !important; }
+html[data-theme] body .search-results:not(.catalogue-rail) .search-result-art:not(.has-cover) :is(span, small) { color: #000 !important; text-shadow: none; }
+html[data-theme="light"] body .search-results:not(.catalogue-rail) .search-result-card:nth-child(4n+4) .search-result-art:not(.has-cover) :is(span, small) { color: #fff !important; }
+html[data-theme] body .search-results:not(.catalogue-rail) .search-result-art:not(.has-cover)::before { display: none; }
+html[data-theme] body .search-results:not(.catalogue-rail) .search-result-card { background: var(--p-card) !important; border-color: var(--p-line) !important; }
+html[data-theme="light"] body .search-results:not(.catalogue-rail) .search-result-card { border-width: 2px !important; box-shadow: var(--p-shadow); }
+
+/* ---------- Legal pages ---------- */
+html[data-theme] body .legal-updated { display: inline-block; padding: 4px 12px; background: var(--sf-yellow); color: #000 !important; border-radius: 4px; font-weight: 600; }
+html[data-theme] body .legal-back { border-bottom: 3px solid var(--sf-turquoise); }
+html[data-theme] body .legal-document h2 { border-left: 8px solid var(--sf-yellow); padding-left: 14px; }
+html[data-theme] body .legal-document h2:nth-of-type(3n+2) { border-left-color: var(--sf-turquoise); }
+html[data-theme] body .legal-document h2:nth-of-type(3n+3) { border-left-color: var(--sf-red); }
+html[data-theme] body .legal-document a { text-decoration: underline; text-decoration-color: var(--sf-turquoise); text-decoration-thickness: 3px; text-underline-offset: 3px; }
+
+/* ---------- Review and reaction rooms ---------- */
+html[data-theme] body :is(.review-room-section-heading h2 span, .contribution-section-heading h2 span) { color: var(--sf-yellow) !important; }
+html[data-theme="light"] body :is(.review-room-section-heading h2 span, .contribution-section-heading h2 span) { color: var(--sf-red) !important; }
+html[data-theme] body .review-card { border-left: 8px solid var(--sf-turquoise) !important; }
+html[data-theme] body .review-author-note { border-left: 8px solid var(--sf-yellow) !important; }
+html[data-theme] body .review-spoiler-note { border-left: 8px solid var(--sf-red) !important; background: var(--p-card) !important; }
+html[data-theme] body .review-reveal { background: transparent !important; border: 2px dashed var(--p-strong) !important; }
+html[data-theme] body .review-card-tags span,
+html[data-theme] body .review-card-meta .category { border-radius: 999px; }
+html[data-theme] body :is(.reaction-choice, .review-room-reaction-list button) { border-width: 2px !important; border-radius: 10px; }
+html[data-theme] body .reaction-choice:hover { border-color: var(--sf-turquoise) !important; }
+html[data-theme] body .reaction-choice:is(.selected, [aria-pressed="true"], :has(input:checked)) { border-color: var(--sf-yellow) !important; background: var(--sf-yellow) !important; color: #000 !important; }
+html[data-theme] body .reaction-choice:is(.selected, [aria-pressed="true"], :has(input:checked)) * { color: #000 !important; }
+html[data-theme] body .review-room-stats > * { border-top: 6px solid var(--sf-yellow); }
+html[data-theme] body .review-room-stats > *:nth-child(3n+2) { border-top-color: var(--sf-turquoise); }
+html[data-theme] body .review-room-stats > *:nth-child(3n+3) { border-top-color: var(--sf-red); }
+html[data-theme] body :is(.review-room-error, .contribution-error) { border-left: 8px solid var(--sf-red); padding-left: 14px; }
+
+/* Phones: keep the pills tidy */
+@media (max-width: 640px) {
+  html[data-theme] body .library-story-card { grid-template-columns: 1fr; }
+  html[data-theme] body .library-story-art { min-height: 150px; }
+  html[data-theme] body .library-story-art:not(.has-cover) { border-right: 0; border-bottom: 2px solid var(--p-strong); }
+  html[data-theme] body .library-story-art.has-cover { min-height: 260px; }
+  html[data-theme] body :is(.library-tabs, .studio-tabs) { overflow-x: auto; flex-wrap: nowrap; }
+  html[data-theme] body :is(.library-tabs, .studio-tabs) button { flex: 0 0 auto; white-space: nowrap; }
+  html[data-theme="light"] body .featured { box-shadow: 4px 4px 0 #000; }
+}
+
+/* Calm motion */
+@media (prefers-reduced-motion: no-preference) {
+  html[data-theme] body :is(.join-button, .primary-button, .studio-primary, .auth-submit, .library-card-footer a) { transition: background .15s ease, transform .1s ease, box-shadow .1s ease; }
+  html[data-theme] body :is(.library-story-card, .studio-catalogue-card) { transition: transform .18s ease; }
+  html[data-theme] body :is(.library-story-card, .studio-catalogue-card):hover { transform: translateY(-4px); }
+}
