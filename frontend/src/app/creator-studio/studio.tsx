@@ -268,7 +268,7 @@ export default function CreatorStudio(){
   const saved=persisted.story;
   const matches=group==="identity"?saved.title===payload.title&&saved.slug===payload.slug&&(saved.author_name||null)===payload.author_name
    :group==="description"?(saved.tagline||null)===payload.tagline&&(saved.synopsis||null)===payload.synopsis
-   :group==="genres"?JSON.stringify(saved.genres||[])===JSON.stringify(payload.genres.map(item=>item.replace(/\\b\\w/g,char=>char.toUpperCase())).sort())
+   :group==="genres"?JSON.stringify(saved.genres||[])===JSON.stringify(payload.genres.map(item=>item.replace(/\b\w/g,char=>char.toUpperCase())).sort())
    :saved.section_label===payload.section_label&&saved.section_label_plural===payload.section_label_plural&&saved.first_episode_free===payload.first_episode_free;
   if(!matches)throw new Error("The server did not return the values just saved. Your changes have not been confirmed; please try again.");
   setWorkspace(persisted);
