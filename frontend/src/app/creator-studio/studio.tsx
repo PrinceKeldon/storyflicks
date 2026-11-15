@@ -259,16 +259,16 @@ export default function CreatorStudio(){
  async function saveStoryGroup(ev:FormEvent<HTMLFormElement>,group:"identity"|"description"|"genres"|"reading"){ev.preventDefault();if(!workspace)return;const busyKey="save-story-"+group;setBusy(busyKey);setError("");setNotice("");try{
   const current=workspace.story;
   const payload={title:current.title,author_name:current.author_name||null,slug:current.slug,tagline:current.tagline||null,synopsis:current.synopsis||null,genres:current.genres||[],first_episode_free:current.first_episode_free,section_label:current.section_label||"Episode",section_label_plural:current.section_label_plural||"Episodes"};
-  if(group==="identity"){payload.title=story.title;payload.author_name=story.author_name||null;payload.slug=story.slug;}
-  if(group==="description"){payload.tagline=story.tagline||null;payload.synopsis=story.synopsis||null;}
+  if(group==="identity"){payload.title=story.title.trim();payload.author_name=story.author_name.trim()||null;payload.slug=story.slug.trim();}
+  if(group==="description"){payload.tagline=story.tagline.trim()||null;payload.synopsis=story.synopsis.trim()||null;}
   if(group==="genres")payload.genres=parseGenres(story.genres);
-  if(group==="reading"){payload.section_label=story.section_label;payload.section_label_plural=story.section_label_plural;payload.first_episode_free=story.first_episode_free;}
+  if(group==="reading"){payload.section_label=story.section_label.trim();payload.section_label_plural=story.section_label_plural.trim();payload.first_episode_free=story.first_episode_free;}
   await request("/creator/stories/"+storyId,{method:"PUT",body:JSON.stringify(payload)});
   const persisted=await request("/creator/stories/"+storyId+"/workspace") as Workspace;
   const saved=persisted.story;
   const matches=group==="identity"?saved.title===payload.title&&saved.slug===payload.slug&&(saved.author_name||null)===payload.author_name
    :group==="description"?(saved.tagline||null)===payload.tagline&&(saved.synopsis||null)===payload.synopsis
-   :group==="genres"?JSON.stringify(saved.genres||[])===JSON.stringify(payload.genres)
+   :group==="genres"?JSON.stringify(saved.genres||[])===JSON.stringify(payload.genres.map(item=>item.replace(/\\b\\w/g,char=>char.toUpperCase())).sort())
    :saved.section_label===payload.section_label&&saved.section_label_plural===payload.section_label_plural&&saved.first_episode_free===payload.first_episode_free;
   if(!matches)throw new Error("The server did not return the values just saved. Your changes have not been confirmed; please try again.");
   setWorkspace(persisted);
