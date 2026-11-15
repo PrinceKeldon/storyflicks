@@ -63,6 +63,15 @@ export default async function StoryDetailPage({ params }: { params: Promise<{ sl
   const isChapterGuide = sectionLabel.trim().toLowerCase() === "chapter";
   const frontMatter = (result?.materials || []).filter(item => item.placement === "front_matter");
   const backMatter = (result?.materials || []).filter(item => item.placement === "back_matter");
+  const preferredGenreOrder = ["drama", "forbidden romance", "psychological drama", "mystery & suspense"];
+  const displayedGenres = [...(story?.genres || [])].sort((a, b) => {
+    const aIndex = preferredGenreOrder.indexOf(a.trim().toLowerCase());
+    const bIndex = preferredGenreOrder.indexOf(b.trim().toLowerCase());
+    if (aIndex === -1 && bIndex === -1) return 0;
+    if (aIndex === -1) return 1;
+    if (bIndex === -1) return -1;
+    return aIndex - bIndex;
+  });
 
   return (
     <main className="app-shell detail-shell">
@@ -78,7 +87,7 @@ export default async function StoryDetailPage({ params }: { params: Promise<{ sl
           <p className="story-tagline">{story?.tagline ?? (slug === "the-priest" ? "Two lives. One secret. A confession that changes everything." : "A new STORYFLICKS original.")}</p>
           <p className="story-synopsis">{story?.synopsis ?? (slug === "the-priest" ? "For over twenty years, Father James has kept his priestly life separate from the man he secretly becomes beyond the collar. But when Sophia enters his world, questions of faith, desire and identity begin to blur — and some secrets may be impossible to keep." : "Story details are coming soon.")}</p>
           <div className="story-facts"><span>{episodes.length} PUBLISHED {sectionLabelPlural.toUpperCase()}</span><span>{(story?.completion_status || "ongoing").toUpperCase()}</span><span>{story?.first_episode_free === false ? "ACCESS REQUIRED" : "FREE READING · UNLOCK THE NEXT EPISODE WITH YOUR REACTION"}</span></div>
-          {story?.genres?.length ? <p className="story-genres">{story.genres.join(" · ")}</p> : null}
+          {displayedGenres.length ? <p className="story-genres">{displayedGenres.join(" · ")}</p> : null}
           <div className="story-primary-actions">{episodes[0]?.id && <Link href={`/stories/${slug}/read/${episodes[0].id}`} className="primary-button">Read first {sectionLabel.toLowerCase()} <span>→</span></Link>}<a href="#episodes" className={episodes[0]?.id ? "outline-button" : "primary-button"}>Explore {sectionLabelPlural.toLowerCase()} <span>↓</span></a>{story?.id && <BookmarkButton storyId={story.id} slug={slug} />}</div>
           {episodes[0]?.id && <Link href={`/stories/${slug}/reviews/${episodes[0].id}`} className="story-discussion-link">Enter the Review Room <span>↗</span></Link>}
           {story?.id && <SupportStoryButton storyId={story.id} slug={slug} />}
