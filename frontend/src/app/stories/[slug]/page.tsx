@@ -69,15 +69,16 @@ export default async function StoryDetailPage({ params }: { params: Promise<{ sl
       <header className="detail-top"><Link href="/" className="back-link">← Back to Discover</Link><span className="detail-label">STORYFLICKS ORIGINAL / 001</span></header>
       <section className="story-intro">
         <div className={story?.cover_url ? "story-poster has-cover" : "story-poster"} aria-label={`${story?.title ?? "Story"} book cover artwork`}>
-          {story?.cover_url ? <img className="story-cover-image" src={story.cover_url} alt={`${story.title} book cover`} /> : <><span className="poster-kicker">{story?.genres?.join(" · ").toUpperCase() || (slug === "the-priest" ? "A STORY ABOUT FAITH, DESIRE & SECRETS" : "A STORYFLICKS ORIGINAL")}</span><span className="poster-title">{story?.title ?? "The Priest"}</span><span className="poster-foot">STORYFLICKS ORIGINAL</span></>}
+          {story?.cover_url ? <img className="story-cover-image" src={story.cover_url} alt={`${story.title} book cover`} /> : <><span className="poster-kicker">(slug === "the-priest" ? "A STORY ABOUT FAITH, DESIRE & SECRETS" : "A STORYFLICKS ORIGINAL")</span><span className="poster-title">{story?.title ?? "The Priest"}</span><span className="poster-foot">STORYFLICKS ORIGINAL</span></>}
         </div>
         <div className="story-info">
-          <p className="eyebrow">{story?.genres?.join(" · ").toUpperCase() || "STORYFLICKS ORIGINAL"} · {(story?.completion_status || "ongoing").toUpperCase()} · {sectionLabelPlural.toUpperCase()}</p>
+          
           <h1>{story?.title ?? (slug === "the-priest" ? "The Priest" : "Story")}</h1>
           {story?.author_name && <p className="story-author-byline">By {story.author_name}</p>}
           <p className="story-tagline">{story?.tagline ?? (slug === "the-priest" ? "Two lives. One secret. A confession that changes everything." : "A new STORYFLICKS original.")}</p>
           <p className="story-synopsis">{story?.synopsis ?? (slug === "the-priest" ? "For over twenty years, Father James has kept his priestly life separate from the man he secretly becomes beyond the collar. But when Sophia enters his world, questions of faith, desire and identity begin to blur — and some secrets may be impossible to keep." : "Story details are coming soon.")}</p>
-          <div className="story-facts"><span>{episodes.length} PUBLISHED {sectionLabelPlural.toUpperCase()}</span><span>{(story?.completion_status || "ongoing").toUpperCase()}</span><span>{story?.first_episode_free === false ? "ACCESS REQUIRED" : "FIRST EPISODE FREE"}</span></div>
+          <div className="story-facts"><span>{episodes.length} PUBLISHED {sectionLabelPlural.toUpperCase()}</span><span>{(story?.completion_status || "ongoing").toUpperCase()}</span><span>{story?.first_episode_free === false ? "ACCESS REQUIRED" : "FREE READING · UNLOCK THE NEXT EPISODE WITH YOUR REACTION"}</span></div>
+          {story?.genres?.length ? <p className="story-genres">{story.genres.join(" · ")}</p> : null}
           <div className="story-primary-actions">{episodes[0]?.id && <Link href={`/stories/${slug}/read/${episodes[0].id}`} className="primary-button">Read first {sectionLabel.toLowerCase()} <span>→</span></Link>}<a href="#episodes" className={episodes[0]?.id ? "outline-button" : "primary-button"}>Explore {sectionLabelPlural.toLowerCase()} <span>↓</span></a>{story?.id && <BookmarkButton storyId={story.id} slug={slug} />}</div>
           {episodes[0]?.id && <Link href={`/stories/${slug}/reviews/${episodes[0].id}`} className="story-discussion-link">Enter the Review Room <span>↗</span></Link>}
           {story?.id && <SupportStoryButton storyId={story.id} slug={slug} />}
