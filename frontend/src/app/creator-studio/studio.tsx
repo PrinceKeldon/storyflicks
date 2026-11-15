@@ -272,7 +272,7 @@ export default function CreatorStudio(){
    :saved.section_label===payload.section_label&&saved.section_label_plural===payload.section_label_plural&&saved.first_episode_free===payload.first_episode_free;
   if(!matches)throw new Error("The server did not return the values just saved. Your changes have not been confirmed; please try again.");
   setWorkspace(persisted);
-  setStory({title:saved.title,author_name:typeof saved.author_name==="string"?saved.author_name:"",slug:saved.slug,tagline:saved.tagline||"",synopsis:saved.synopsis||"",genres:(saved.genres||[]).join(", "),first_episode_free:saved.first_episode_free,section_label:saved.section_label||"Episode",section_label_plural:saved.section_label_plural||"Episodes"});
+  setStory(current=>group==="identity"?({...current,title:saved.title,author_name:typeof saved.author_name==="string"?saved.author_name:"",slug:saved.slug}):group==="description"?({...current,tagline:saved.tagline||"",synopsis:saved.synopsis||""}):group==="genres"?({...current,genres:(saved.genres||[]).join(", ")}):({...current,first_episode_free:saved.first_episode_free,section_label:saved.section_label||"Episode",section_label_plural:saved.section_label_plural||"Episodes"}));
   await loadDashboard();
   setNotice(group==="identity"?"Story identity saved and verified.":group==="description"?"Story description saved and verified.":group==="genres"?"Genres saved and verified.":"Reading settings saved and verified.");
  }catch(e){setError(message(e,"Could not save this story section."));}finally{setBusy("");}}
