@@ -421,3 +421,53 @@ html[data-theme] body :is(.review-room-error, .contribution-error) { border-left
   html[data-theme] body :is(.library-story-card, .studio-catalogue-card) { transition: transform .18s ease; }
   html[data-theme] body :is(.library-story-card, .studio-catalogue-card):hover { transform: translateY(-4px); }
 }
+
+/* Creator Studio: keep the primary save action visible while long forms are edited. */
+html[data-theme] body .studio-form-actions,
+html[data-theme] body .studio-note-actions {
+  position: sticky;
+  bottom: 12px;
+  z-index: 20;
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 12px;
+  padding: 13px 15px;
+  margin: 18px -8px -8px;
+  border: 2px solid var(--p-strong);
+  border-radius: 12px;
+  background: #111514;
+  box-shadow: 0 5px 18px rgb(0 0 0 / 28%);
+}
+html[data-theme="light"] body .studio-form-actions,
+html[data-theme="light"] body .studio-note-actions {
+  background: #fff;
+  box-shadow: 3px 3px 0 #000;
+}
+html[data-theme] body .studio-form-actions .studio-form-save,
+html[data-theme] body .studio-note-actions .studio-form-save {
+  min-width: 190px;
+  min-height: 46px;
+  padding-inline: 22px;
+  font-size: 16px;
+  font-weight: 700;
+  visibility: visible;
+  opacity: 1;
+}
+html[data-theme] body .studio-form-actions .studio-save-hint {
+  flex: 1 1 240px;
+}
+@media (max-width: 700px) {
+  html[data-theme] body .studio-form-actions,
+  html[data-theme] body .studio-note-actions {
+    bottom: 8px;
+    margin-inline: -5px;
+    padding: 10px;
+    gap: 9px;
+  }
+  html[data-theme] body .studio-form-actions .studio-form-save,
+  html[data-theme] body .studio-note-actions .studio-form-save {
+    width: 100%;
+    min-width: 0;
+  }
+}
