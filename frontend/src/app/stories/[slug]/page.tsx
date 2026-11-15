@@ -78,7 +78,7 @@ export default async function StoryDetailPage({ params }: { params: Promise<{ sl
       <header className="detail-top"><Link href="/" className="back-link">← Back to Discover</Link><span className="detail-label">STORYFLICKS ORIGINAL / 001</span></header>
       <section className="story-intro">
         <div className={story?.cover_url ? "story-poster has-cover" : "story-poster"} aria-label={`${story?.title ?? "Story"} book cover artwork`}>
-          {story?.cover_url ? <img className="story-cover-image" src={story.cover_url} alt={`${story.title} book cover`} /> : <><span className="poster-kicker">(slug === "the-priest" ? "A STORY ABOUT FAITH, DESIRE & SECRETS" : "A STORYFLICKS ORIGINAL")</span><span className="poster-title">{story?.title ?? "The Priest"}</span><span className="poster-foot">STORYFLICKS ORIGINAL</span></>}
+          {story?.cover_url ? <img className="story-cover-image" src={story.cover_url} alt={`${story.title} book cover`} /> : <><span className="poster-kicker">{slug === "the-priest" ? "A STORY ABOUT FAITH, DESIRE & SECRETS" : "A STORYFLICKS ORIGINAL"}</span><span className="poster-title">{story?.title ?? "The Priest"}</span><span className="poster-foot">STORYFLICKS ORIGINAL</span></>}
         </div>
         <div className="story-info">
           
