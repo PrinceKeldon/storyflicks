@@ -245,3 +245,20 @@ html[data-theme="dark"] body .episode-arrow { color: var(--sf-turquoise) !import
 .reading-page[data-font="modern"] .manuscript { font-family: 'Source Serif 4', Georgia, serif; }
 .reading-page[data-font="sans"] .manuscript { font-family: 'DM Sans', Arial, sans-serif; }
 .reading-page[data-font="dyslexia"] .manuscript { font-family: 'Atkinson Hyperlegible', Arial, sans-serif; letter-spacing: .01em; }
+
+
+/* Story detail: keep genres as a quiet secondary line below the access metadata. */
+.story-info .story-genres {
+  margin: -10px 0 26px;
+  font: 10px/1.5 'DM Mono', monospace !important;
+  letter-spacing: 1.1px;
+  text-transform: uppercase;
+}
+html[data-theme="dark"] body .story-info .story-genres {
+  color: var(--sf-turquoise) !important;
+  font-size: 10px !important;
+}
+html[data-theme="light"] body .story-info .story-genres {
+  color: var(--mint) !important;
+  font-size: 10px !important;
+}
