@@ -471,3 +471,56 @@ html[data-theme] body .studio-form-actions .studio-save-hint {
     min-width: 0;
   }
 }
+
+
+/* ---------- Responsive primary navigation: phone + tablet portrait ---------- */
+/* Keep the full navigation available in portrait; do not require a landscape turn. */
+@media (max-width: 900px) {
+  html[data-theme] body .topbar {
+    height: auto;
+    min-height: 72px;
+    flex-wrap: wrap;
+    align-items: center;
+    column-gap: 20px;
+    row-gap: 0;
+    padding-top: 12px;
+  }
+  html[data-theme] body .topbar > .wordmark { flex: 0 0 auto; }
+  html[data-theme] body .topbar > .account-actions {
+    order: 2;
+    flex: 1 1 auto;
+    min-width: 0;
+    margin-left: auto;
+    justify-content: flex-end;
+    gap: 12px;
+  }
+  html[data-theme] body .topbar > .main-nav {
+    order: 3;
+    display: flex;
+    flex: 0 0 100%;
+    width: 100%;
+    min-width: 0;
+    height: auto;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: flex-start;
+    gap: 0 28px;
+    padding: 4px 0 0;
+  }
+  html[data-theme] body .topbar > .main-nav .nav-link {
+    min-height: 46px;
+    height: auto;
+    flex: 0 0 auto;
+    white-space: nowrap;
+  }
+}
+@media (max-width: 620px) {
+  html[data-theme] body .topbar {
+    column-gap: 10px;
+    padding-top: 10px;
+  }
+  html[data-theme] body .topbar > .main-nav { gap: 0 22px; padding-top: 2px; }
+  html[data-theme] body .topbar > .main-nav .nav-link { min-height: 44px; font-size: 16px; }
+  html[data-theme] body .topbar > .account-actions { gap: 8px; }
+  html[data-theme] body .topbar .account-email { display: none; }
+}
