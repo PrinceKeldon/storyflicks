@@ -48,6 +48,7 @@ export default async function SearchPage({
     }
   } else {
     unavailable = true;
+  }
 
   return (
     <main className="app-shell">
