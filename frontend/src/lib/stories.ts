@@ -10,6 +10,7 @@ export type Episode = {
   publication_status: string;
   image_url?: string | null;
   image_alt?: string | null;
+  published_at?: string | null;
 };
 
 export type StoryResponse = {
