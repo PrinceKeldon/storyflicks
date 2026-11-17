@@ -35,8 +35,10 @@ async def create_support_checkout(
     submission: SupportCheckoutRequest,
     user: AuthenticatedUser = Depends(get_current_user),
 ):
-    if not settings.stripe_secret_key or not settings.stripe_secret_key.startswith("sk_test_"):
-        raise HTTPException(503, "Reader support sandbox payments are not configured yet.")
+    expected_key_prefix = {"test": "sk_test_", "live": "sk_live_"}.get(settings.stripe_mode)
+    if not expected_key_prefix or not settings.stripe_secret_key.startswith(expected_key_prefix):
+        mode_label = "live" if settings.stripe_mode == "live" else "sandbox"
+        raise HTTPException(503, f"Reader support {mode_label} payments are not configured yet.")
 
     if submission.amount_cents % 100 != 0:
         raise HTTPException(422, "Choose a whole-dollar contribution amount.")
