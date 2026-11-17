@@ -2,52 +2,41 @@ import Link from "next/link";
 import BookmarkButton from "./bookmark-button";
 import SupportStoryButton from "./support-story-button";
 import LegalLinks from "../../legal-links";
-
-type Episode = {
-  id: string;
-  sequence_number: number;
-  title: string;
-  synopsis?: string | null;
-  publication_status: string;
-  image_url?: string | null;
-  image_alt?: string | null;
-};
-
-type StoryResponse = {
-  story: {
-    id: string;
-    slug: string;
-    title: string;
-    author_name?: string | null;
-    section_label?: string | null;
-    section_label_plural?: string | null;
-    tagline?: string | null;
-    synopsis?: string | null;
-    genres?: string[];
-    completion_status?: string | null;
-    first_episode_free?: boolean;
-    cover_url?: string | null;
-  };
-  episodes: Episode[];
-  materials?: {id:string;title:string;section_type:string;placement:"front_matter"|"back_matter";position:number}[];
-};
+import type { Metadata } from "next";
+import { SITE_URL, cardVersion, getStory, shortText, type Episode } from "../../../lib/stories";
 
 const knownEpisodes: Episode[] = [
   { id: "", sequence_number: 1, title: "The Confession", publication_status: "published" },
   { id: "", sequence_number: 2, title: "Sins of Coffee-ssion", publication_status: "published" },
 ];
 
-async function getStory(slug: string): Promise<StoryResponse | null> {
-  const apiUrl = process.env.NEXT_PUBLIC_API_URL;
-  if (!apiUrl) return null;
-
-  try {
-    const response = await fetch(`${apiUrl.replace(/\/$/, "")}/stories/${slug}`, { cache: "no-store" });
-    if (!response.ok) return null;
-    return (await response.json()) as StoryResponse;
-  } catch {
-    return null;
+export async function generateMetadata({ params }: { params: Promise<{ slug: string }> }): Promise<Metadata> {
+  const { slug } = await params;
+  const story = (await getStory(slug))?.story;
+  if (!story) {
+    // Unknown story (or API unavailable): keep it out of search results and use the site defaults.
+    return slug === "the-priest" ? { alternates: { canonical: `/stories/${slug}` } } : { title: "Story not found", robots: { index: false, follow: true } };
   }
+  const description = shortText(story.tagline && story.synopsis ? `${story.tagline} ${story.synopsis}` : story.tagline || story.synopsis)
+    || "A story on STORYFLICKS.";
+  const card = `/stories/${encodeURIComponent(slug)}/og?v=${cardVersion(story.title, story.author_name, story.tagline, story.cover_url)}`;
+  const byline = story.author_name ? `${story.title} by ${story.author_name}` : story.title;
+  return {
+    title: story.title,
+    description,
+    alternates: { canonical: `/stories/${encodeURIComponent(slug)}` },
+    openGraph: {
+      type: "book",
+      siteName: "STORYFLICKS",
+      title: byline,
+      description,
+      url: `/stories/${encodeURIComponent(slug)}`,
+      images: [{ url: card, width: 1200, height: 630, alt: `${story.title} on STORYFLICKS` }],
+      ...(story.author_name ? { authors: [story.author_name] } : {}),
+      ...(story.genres?.length ? { tags: story.genres } : {}),
+    },
+    twitter: { card: "summary_large_image", title: byline, description, images: [card] },
+  };
 }
 
 export default async function StoryDetailPage({ params }: { params: Promise<{ slug: string }> }) {
@@ -58,6 +47,16 @@ export default async function StoryDetailPage({ params }: { params: Promise<{ sl
   }
   const story = result?.story;
   const episodes = result?.episodes ?? (slug === "the-priest" ? knownEpisodes : []);
+  const structuredData = story ? {
+    "@context": "https://schema.org",
+    "@type": "CreativeWorkSeries",
+    name: story.title,
+    url: `${SITE_URL}/stories/${encodeURIComponent(slug)}`,
+    ...(story.author_name ? { author: { "@type": "Person", name: story.author_name } } : {}),
+    ...(shortText(story.synopsis || story.tagline, 500) ? { description: shortText(story.synopsis || story.tagline, 500) } : {}),
+    ...(story.genres?.length ? { genre: story.genres } : {}),
+    ...(story.cover_url ? { image: story.cover_url } : {}),
+  } : null;
   const sectionLabel = story?.section_label || "Episode";
   const sectionLabelPlural = story?.section_label_plural || "Episodes";
   const isChapterGuide = sectionLabel.trim().toLowerCase() === "chapter";
@@ -75,6 +74,7 @@ export default async function StoryDetailPage({ params }: { params: Promise<{ sl
 
   return (
     <main className="app-shell detail-shell">
+      {structuredData && <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(structuredData).replace(/</g, "\\u003c") }} />}
       <header className="detail-top"><Link href="/" className="back-link">← Back to Discover</Link><span className="detail-label">STORYFLICKS ORIGINAL / 001</span></header>
       <section className="story-intro">
         <div className={story?.cover_url ? "story-poster has-cover" : "story-poster"} aria-label={`${story?.title ?? "Story"} book cover artwork`}>
