@@ -1,4 +1,5 @@
 from functools import lru_cache
+from typing import Literal
 
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
@@ -14,6 +15,8 @@ class Settings(BaseSettings):
     scheduler_secret: str = ""
     stripe_secret_key: str = ""
     stripe_webhook_secret: str = ""
+    # Keep test mode as the safe default; live payments require explicit opt-in.
+    stripe_mode: Literal["test", "live"] = "test"
     # Read through Settings (not os.getenv) so values in .env are picked up:
     # pydantic-settings loads .env itself and does not export it to os.environ.
     gemini_api_key: str = ""

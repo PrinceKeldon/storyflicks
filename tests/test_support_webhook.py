@@ -168,6 +168,7 @@ class CheckoutTests(unittest.IsolatedAsyncioTestCase):
         with (
             patch.object(support, "supabase", fake),
             patch.object(support.settings, "stripe_secret_key", "sk_test_x"),
+            patch.object(support.settings, "stripe_mode", "test"),
             patch.object(support.httpx, "AsyncClient", FakeStripeClient),
             self.assertLogs(support.logger, level="WARNING"),
         ):
@@ -180,11 +181,41 @@ class CheckoutTests(unittest.IsolatedAsyncioTestCase):
         self.assertEqual(result["amount"], "$5.00")
         self.assertTrue(any(call[0] == "insert" for call in fake.calls))
 
+
+    async def test_live_mode_accepts_only_a_live_secret_key(self):
+        fake = FakeSupabase()
+        with (
+            patch.object(support, "supabase", fake),
+            patch.object(support.settings, "stripe_secret_key", "sk_live_example"),
+            patch.object(support.settings, "stripe_mode", "live"),
+            patch.object(support.httpx, "AsyncClient", FakeStripeClient),
+        ):
+            result = await support.create_support_checkout(
+                support.SupportCheckoutRequest(story_id=uuid4(), amount_cents=500),
+                AuthenticatedUser(id=str(uuid4()), email=None, access_token="t"),
+            )
+
+        self.assertEqual(result["checkout_url"], "https://checkout.stripe.test/cs_test_999")
+
+    async def test_live_mode_rejects_a_test_secret_key(self):
+        with (
+            patch.object(support.settings, "stripe_secret_key", "sk_test_example"),
+            patch.object(support.settings, "stripe_mode", "live"),
+        ):
+            with self.assertRaises(HTTPException) as raised:
+                await support.create_support_checkout(
+                    support.SupportCheckoutRequest(story_id=uuid4(), amount_cents=500),
+                    AuthenticatedUser(id=str(uuid4()), email=None, access_token="t"),
+                )
+
+        self.assertEqual(raised.exception.status_code, 503)
+
     async def test_checkout_charges_and_records_in_dollars(self):
         fake = FakeSupabase()
         with (
             patch.object(support, "supabase", fake),
             patch.object(support.settings, "stripe_secret_key", "sk_test_x"),
+            patch.object(support.settings, "stripe_mode", "test"),
             patch.object(support.httpx, "AsyncClient", FakeStripeClient),
         ):
             await support.create_support_checkout(
