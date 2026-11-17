@@ -90,7 +90,7 @@ export default async function DiscoverPage() {
             <div className="art-cross" />
             <div className="art-caption">STORIES THAT STAY<br />WITH YOU</div>
             <div className="art-title"><strong>{featured.title}</strong></div>
-            <div className="art-index">SF ORIGINAL&nbsp;&nbsp; / &nbsp;&nbsp;001</div>
+            <div className="art-index">STORYFLICKS ORIGINAL</div>
           </div>
           <div className="feature-index"><span>01</span><i /> {String(publishedCount).padStart(2, "0")}</div>
         </section>
