@@ -114,17 +114,24 @@ export default function ReadingRoom({ slug, episodeId }: { slug: string; episode
     if (!session?.access_token) { setStatus("signed-out"); return; }
     tokenRef.current = session.access_token;
     try {
-      const preferencesResponse = await fetch(`${apiUrl}/library/preferences`, {
-        headers: { Authorization: `Bearer ${session.access_token}` },
-        cache: "no-store",
-      }).catch(() => null);
+      // These requests are independent once the authenticated session is known.
+      // Start them together so reader preferences do not delay the episode payload.
+      const [preferencesResponse, response] = await Promise.all([
+        fetch(`${apiUrl}/library/preferences`, {
+          headers: { Authorization: `Bearer ${session.access_token}` },
+          cache: "no-store",
+        }).catch(() => null),
+        fetch(`${apiUrl}/episodes/${episodeId}`, {
+          headers: { Authorization: `Bearer ${session.access_token}` },
+          cache: "no-store",
+        }),
+      ]);
       if (preferencesResponse?.ok) {
         const preferences = await preferencesResponse.json() as { theme?: "paper" | "sepia" | "night"; text_size?: "small" | "comfortable" | "large"; reading_width?: "narrow" | "standard" | "wide" };
         if (preferences.theme) setTheme(preferences.theme);
         if (preferences.text_size) setFontScale(preferences.text_size === "small" ? 90 : preferences.text_size === "large" ? 115 : 100);
         if (preferences.reading_width) setWidth(preferences.reading_width === "wide" ? "wide" : preferences.reading_width === "narrow" ? "narrow" : "comfortable");
       }
-      const response = await fetch(`${apiUrl}/episodes/${episodeId}`, { headers: { Authorization: `Bearer ${session.access_token}` }, cache: "no-store" });
       if (response.status === 401) { setStatus("signed-out"); return; }
       if (!response.ok) {
         const body = await response.json().catch(() => ({})) as { detail?: string | EpisodeAccessGate };
