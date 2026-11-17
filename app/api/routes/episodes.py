@@ -286,26 +286,12 @@ async def read_episode(
             ) or candidate["id"] in entitled_ids
         ]
         if accessible_previous:
-            participation_rows = await admin_get_in(
-                "episode_participations",
-                "episode_id",
-                [candidate["id"] for candidate in accessible_previous],
-                {
-                    "select": "episode_id",
-                    "user_id": f"eq.{user.id}",
-                    "order": "episode_id.asc",
-                },
-            )
-            participated_ids = {row["episode_id"] for row in participation_rows}
-            for candidate in reversed(accessible_previous):
-                if candidate["id"] in participated_ids:
-                    continue
-                previous_episode = {
-                    "id": candidate["id"],
-                    "title": candidate["title"],
-                    "sequence_number": candidate["sequence_number"],
-                }
-                break
+            candidate = accessible_previous[-1]
+            previous_episode = {
+                "id": candidate["id"],
+                "title": candidate["title"],
+                "sequence_number": candidate["sequence_number"],
+            }
 
     return {
         "story": {
