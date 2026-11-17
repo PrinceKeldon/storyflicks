@@ -19,23 +19,11 @@ type DiscoverStory = {
   cover_url?: string | null;
 };
 
-const previewStory: DiscoverStory = {
-  id: "",
-  slug: "the-priest",
-  title: "The Priest",
-  tagline: "Two lives. One secret. A confession that changes everything.",
-  synopsis: "For over twenty years, Father James has kept his priestly life separate from the man he secretly becomes beyond the collar. But when Sophia enters his world, questions of faith, desire and identity begin to blur — and some secrets may be impossible to keep.",
-  genres: ["Drama"],
-  completion_status: "ongoing",
-  section_label: "Episode",
-  section_label_plural: "Episodes",
-};
-
 const navItems = ["Discover", "My Library"];
 
 async function getCatalogue(): Promise<{ stories: DiscoverStory[]; unavailable: boolean }> {
   const apiUrl = process.env.NEXT_PUBLIC_API_URL?.replace(/\/+$/, "");
-  if (!apiUrl) return { stories: [previewStory], unavailable: false };
+  if (!apiUrl) return { stories: [], unavailable: true };
 
   try {
     const response = await fetch(apiUrl + "/stories", { next: { revalidate: 60 } });
