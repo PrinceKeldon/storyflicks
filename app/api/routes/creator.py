@@ -471,6 +471,8 @@ async def create_creator_episode(
     submission: CreatorEpisodeSubmission,
     user: AuthenticatedUser = Depends(get_current_user),
 ):
+    # Authorise before looking up conflicts: the 409 message names the clashing chapter.
+    await require_story_editor(story_id, user)
     conflicts = await supabase.admin_get(
         "episodes",
         {"story_id": f"eq.{story_id}", "sequence_number": f"eq.{submission.sequence_number}",
@@ -503,6 +505,8 @@ async def update_creator_episode(
     submission: CreatorEpisodeSubmission,
     user: AuthenticatedUser = Depends(get_current_user),
 ):
+    # Authorise before looking up conflicts: the 409 message names the clashing chapter.
+    await require_story_editor(story_id, user)
     conflicts = await supabase.admin_get(
         "episodes",
         {"story_id": f"eq.{story_id}", "sequence_number": f"eq.{submission.sequence_number}",
