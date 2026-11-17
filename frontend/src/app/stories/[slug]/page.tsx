@@ -1,22 +1,20 @@
 import Link from "next/link";
+import { notFound } from "next/navigation";
 import BookmarkButton from "./bookmark-button";
 import SupportStoryButton from "./support-story-button";
 import LegalLinks from "../../legal-links";
 import type { Metadata } from "next";
-import { SITE_URL, cardVersion, getStory, shortText, type Episode } from "../../../lib/stories";
-
-const knownEpisodes: Episode[] = [
-  { id: "", sequence_number: 1, title: "The Confession", publication_status: "published" },
-  { id: "", sequence_number: 2, title: "Sins of Coffee-ssion", publication_status: "published" },
-];
+import { SITE_URL, cardVersion, getStory, shortText, type StoryResponse } from "../../../lib/stories";
 
 export async function generateMetadata({ params }: { params: Promise<{ slug: string }> }): Promise<Metadata> {
   const { slug } = await params;
-  const story = (await getStory(slug))?.story;
-  if (!story) {
-    // Unknown story (or API unavailable): keep it out of search results and use the site defaults.
-    return slug === "the-priest" ? { alternates: { canonical: `/stories/${slug}` } } : { title: "Story not found", robots: { index: false, follow: true } };
+  let story: StoryResponse["story"] | undefined;
+  try {
+    story = (await getStory(slug))?.story;
+  } catch {
+    return { title: "Story temporarily unavailable", robots: { index: false, follow: false } };
   }
+  if (!story) return { title: "Story not found", robots: { index: false, follow: true } };
   const description = shortText(story.tagline && story.synopsis ? `${story.tagline} ${story.synopsis}` : story.tagline || story.synopsis)
     || "A story on STORYFLICKS.";
   const card = `/stories/${encodeURIComponent(slug)}/og?v=${cardVersion(story.title, story.author_name, story.tagline, story.cover_url)}`;
@@ -42,12 +40,10 @@ export async function generateMetadata({ params }: { params: Promise<{ slug: str
 export default async function StoryDetailPage({ params }: { params: Promise<{ slug: string }> }) {
   const { slug } = await params;
   const result = await getStory(slug);
-  if (!result && slug !== "the-priest") {
-    return <main className="app-shell detail-shell"><Link href="/" className="back-link">← Discover</Link><p className="eyebrow">STORY NOT FOUND</p><h1 className="detail-heading">This story isn’t here.</h1></main>;
-  }
-  const story = result?.story;
-  const episodes = result?.episodes ?? (slug === "the-priest" ? knownEpisodes : []);
-  const structuredData = story ? {
+  if (!result) notFound();
+  const story = result.story;
+  const episodes = result.episodes;
+  const structuredData = {
     "@context": "https://schema.org",
     "@type": "CreativeWorkSeries",
     name: story.title,
@@ -56,8 +52,9 @@ export default async function StoryDetailPage({ params }: { params: Promise<{ sl
     ...(shortText(story.synopsis || story.tagline, 500) ? { description: shortText(story.synopsis || story.tagline, 500) } : {}),
     ...(story.genres?.length ? { genre: story.genres } : {}),
     ...(story.cover_url ? { image: story.cover_url } : {}),
-  } : null;
-  const sectionLabel = story?.section_label || "Episode";
+    ...(episodes.length ? { hasPart: episodes.map((episode) => ({ "@type": "CreativeWork", name: episode.title, url: `${SITE_URL}/stories/${encodeURIComponent(slug)}#episode-${episode.id}`, ...(episode.synopsis ? { description: shortText(episode.synopsis, 300) } : {}), datePublished: episode.published_at })) } : {}),
+  };
+  const sectionLabel = story.section_label || "Episode";
   const sectionLabelPlural = story?.section_label_plural || "Episodes";
   const isChapterGuide = sectionLabel.trim().toLowerCase() === "chapter";
   const frontMatter = (result?.materials || []).filter(item => item.placement === "front_matter");
@@ -75,17 +72,17 @@ export default async function StoryDetailPage({ params }: { params: Promise<{ sl
   return (
     <main className="app-shell detail-shell">
       {structuredData && <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(structuredData).replace(/</g, "\\u003c") }} />}
-      <header className="detail-top"><Link href="/" className="back-link">← Back to Discover</Link><span className="detail-label">STORYFLICKS ORIGINAL / 001</span></header>
+      <header className="detail-top"><Link href="/" className="back-link">← Back to Discover</Link><span className="detail-label">STORYFLICKS ORIGINAL</span></header>
       <section className="story-intro">
         <div className={story?.cover_url ? "story-poster has-cover" : "story-poster"} aria-label={`${story?.title ?? "Story"} book cover artwork`}>
-          {story?.cover_url ? <img className="story-cover-image" src={story.cover_url} alt={`${story.title} book cover`} /> : <><span className="poster-kicker">{slug === "the-priest" ? "A STORY ABOUT FAITH, DESIRE & SECRETS" : "A STORYFLICKS ORIGINAL"}</span><span className="poster-title">{story?.title ?? "The Priest"}</span><span className="poster-foot">STORYFLICKS ORIGINAL</span></>}
+          {story?.cover_url ? <img className="story-cover-image" src={story.cover_url} alt={`${story.title} book cover`} /> : <><span className="poster-kicker">{"A STORYFLICKS ORIGINAL"}</span><span className="poster-title">{story.title}</span><span className="poster-foot">STORYFLICKS ORIGINAL</span></>}
         </div>
         <div className="story-info">
           
-          <h1>{story?.title ?? (slug === "the-priest" ? "The Priest" : "Story")}</h1>
+          <h1>{story.title}</h1>
           {story?.author_name && <p className="story-author-byline">By {story.author_name}</p>}
-          <p className="story-tagline">{story?.tagline ?? (slug === "the-priest" ? "Two lives. One secret. A confession that changes everything." : "A new STORYFLICKS original.")}</p>
-          <p className="story-synopsis">{story?.synopsis ?? (slug === "the-priest" ? "For over twenty years, Father James has kept his priestly life separate from the man he secretly becomes beyond the collar. But when Sophia enters his world, questions of faith, desire and identity begin to blur — and some secrets may be impossible to keep." : "Story details are coming soon.")}</p>
+          <p className="story-tagline">{story.tagline || "A new STORYFLICKS original."}</p>
+          <p className="story-synopsis">{story.synopsis || "Story details are coming soon."}</p>
           <div className="story-facts"><span>{episodes.length} PUBLISHED {sectionLabelPlural.toUpperCase()}</span><span>{(story?.completion_status || "ongoing").toUpperCase()}</span><span>{story?.first_episode_free === false ? "ACCESS REQUIRED" : "FREE READING · UNLOCK THE NEXT EPISODE WITH YOUR REACTION"}</span></div>
           {displayedGenres.length ? <p className="story-genres">{displayedGenres.join(" · ")}</p> : null}
           <div className="story-primary-actions">{episodes[0]?.id && <Link href={`/stories/${slug}/read/${episodes[0].id}`} className="primary-button">Read first {sectionLabel.toLowerCase()} <span>→</span></Link>}<a href="#episodes" className={episodes[0]?.id ? "outline-button" : "primary-button"}>Explore {sectionLabelPlural.toLowerCase()} <span>↓</span></a>{story?.id && <BookmarkButton storyId={story.id} slug={slug} />}</div>
@@ -99,7 +96,7 @@ export default async function StoryDetailPage({ params }: { params: Promise<{ sl
         <div className="episode-list">
           {episodes.map((episode) => (
             episode.id ? (
-              <Link href={`/stories/${slug}/read/${episode.id}`} className={isChapterGuide ? "episode-row chapter-guide-row" : "episode-row"} key={episode.id}>
+              <Link href={`/stories/${slug}/read/${episode.id}`} className={isChapterGuide ? "episode-row chapter-guide-row" : "episode-row"} key={episode.id} id={`episode-${episode.id}`}>
                 {episode.image_url && <img className="episode-thumb episode-thumb-portrait" src={episode.image_url} alt={episode.image_alt || `${episode.title} ${sectionLabel.toLowerCase()} artwork`} />}
                 <span className="episode-number">{String(episode.sequence_number).padStart(2, "0")}</span>
                 <div className="episode-copy"><h3>{episode.title}</h3>{episode.synopsis?.trim() && <p>{episode.synopsis}</p>}</div>
@@ -118,7 +115,7 @@ export default async function StoryDetailPage({ params }: { params: Promise<{ sl
         <p className="episode-note">{story?.completion_status === "completed" ? "This story is complete. Enjoy the full journey." : `More ${sectionLabelPlural.toLowerCase()} are in the works. Follow the story as it unfolds.`}</p>
       </section>
       {backMatter.length>0&&<section className="episode-guide sf-reader-material-guide"><div className="section-heading"><div><p className="eyebrow">AFTER THE STORY</p><h2>Closing pages<span>.</span></h2></div><span className="guide-count">{backMatter.length} SECTIONS</span></div><div className="episode-list">{backMatter.map(item=><Link href={`/stories/${slug}/material/${item.id}`} className="episode-row chapter-guide-row" key={item.id}><span className="episode-number">·</span><div className="episode-copy"><h3>{item.title}</h3></div><span className="episode-arrow">↗</span></Link>)}</div></section>}
-      <footer className="footer"><Link className="wordmark" href="/">STORY<span>FLICKS</span><i>.</i></Link><p>Stories worth staying for.</p><span>© 2026 STORYFLICKS</span><LegalLinks /></footer>
+      <footer className="footer"><Link className="wordmark" href="/">STORY<span>FLICKS</span><i>.</i></Link><p>Stories worth staying for.</p><span>© {new Date().getFullYear()} STORYFLICKS</span><LegalLinks /></footer>
     </main>
   );
 }

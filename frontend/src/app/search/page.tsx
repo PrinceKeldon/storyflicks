@@ -13,16 +13,6 @@ type SearchStory = {
   cover_url?: string | null;
 };
 
-const previewStory: SearchStory = {
-  id: "",
-  slug: "the-priest",
-  title: "THE PRIEST",
-  tagline: "Two lives. One secret. A confession that changes everything.",
-  synopsis: "For over twenty years, Father James has kept his priestly life separate from the man he secretly becomes beyond the collar. But when Sophia enters his world, questions of faith, desire and identity begin to blur — and some secrets may be impossible to keep.",
-  genres: ["Drama"],
-  completion_status: "ongoing",
-};
-
 // Search results are endless variations of one page: keep them out of the index, let the plain page in.
 export async function generateMetadata({ searchParams }: { searchParams: Promise<{ q?: string; genre?: string }> }): Promise<Metadata> {
   const params = await searchParams;
@@ -57,10 +47,7 @@ export default async function SearchPage({
       unavailable = true;
     }
   } else {
-    const haystack = (previewStory.title + " " + previewStory.tagline + " " + previewStory.synopsis).toLowerCase();
-    const queryMatches = !query || haystack.includes(query.toLowerCase());
-    const genreMatches = !genre || previewStory.genres.some((item) => item.toLowerCase() === genre.toLowerCase());
-    if (queryMatches && genreMatches) items = [previewStory];
+    unavailable = true;
   }
 
   return (

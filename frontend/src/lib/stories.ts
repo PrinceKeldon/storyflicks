@@ -10,6 +10,7 @@ export type Episode = {
   publication_status: string;
   image_url?: string | null;
   image_alt?: string | null;
+  published_at?: string | null;
 };
 
 export type StoryResponse = {
@@ -42,14 +43,16 @@ export function apiBase(): string | null {
 // are de-duplicated by Next.js, so the API is only called once per request.
 export async function getStory(slug: string): Promise<StoryResponse | null> {
   const base = apiBase();
-  if (!base) return null;
+  if (!base) throw new Error("The STORYFLICKS API is not configured.");
 
   try {
     const response = await fetch(`${base}/stories/${encodeURIComponent(slug)}`, { cache: "no-store" });
-    if (!response.ok) return null;
+    if (response.status === 404) return null;
+    if (!response.ok) throw new Error(`Story request failed (${response.status}).`);
     return (await response.json()) as StoryResponse;
-  } catch {
-    return null;
+  } catch (error) {
+    if (error instanceof Error) throw error;
+    throw new Error("The story service is temporarily unavailable.");
   }
 }
 
