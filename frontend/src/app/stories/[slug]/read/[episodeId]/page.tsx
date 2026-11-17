@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
 import ReadingRoom from "./reading-room";
-import { SITE_URL, cardVersion, getStory, shortText } from "../../../../../lib/stories";
+import { cardVersion, getStory, shortText } from "../../../../../lib/stories";
 
 export async function generateMetadata({ params }: { params: Promise<{ slug: string; episodeId: string }> }): Promise<Metadata> {
   const { slug, episodeId } = await params;
