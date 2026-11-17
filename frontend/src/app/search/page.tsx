@@ -1,4 +1,5 @@
 import Link from "next/link";
+import type { Metadata } from "next";
 
 type SearchStory = {
   id: string;
@@ -21,6 +22,15 @@ const previewStory: SearchStory = {
   genres: ["Drama"],
   completion_status: "ongoing",
 };
+
+// Search results are endless variations of one page: keep them out of the index, let the plain page in.
+export async function generateMetadata({ searchParams }: { searchParams: Promise<{ q?: string; genre?: string }> }): Promise<Metadata> {
+  const params = await searchParams;
+  const filtered = Boolean((typeof params.q === "string" && params.q.trim()) || (typeof params.genre === "string" && params.genre.trim()));
+  return filtered
+    ? { title: "Search", robots: { index: false, follow: true } }
+    : { title: "Discover stories", alternates: { canonical: "/search" } };
+}
 
 export default async function SearchPage({
   searchParams,

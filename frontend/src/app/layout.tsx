@@ -4,10 +4,21 @@ import "./storyflicks-design-system.css";
 import "./redesign.css";
 import "./redesign-pages.css";
 import ThemeProvider from "./theme-provider";
+import { SITE_URL } from "../lib/stories";
 
 export const metadata: Metadata = {
-  title: "STORYFLICKS — Stories worth staying for",
+  metadataBase: new URL(SITE_URL),
+  title: { default: "STORYFLICKS — Stories worth staying for", template: "%s | STORYFLICKS" },
   description: "An entertainment platform that happens to deliver stories.",
+  applicationName: "STORYFLICKS",
+  openGraph: {
+    type: "website",
+    siteName: "STORYFLICKS",
+    title: "STORYFLICKS — Stories worth staying for",
+    description: "An entertainment platform that happens to deliver stories.",
+    images: [{ url: "/og", width: 1200, height: 630, alt: "STORYFLICKS" }],
+  },
+  twitter: { card: "summary_large_image" },
 };
 
 export default function RootLayout({ children }: Readonly<{ children: React.ReactNode }>) {
