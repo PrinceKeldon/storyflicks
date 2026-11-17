@@ -4,11 +4,11 @@ import BookmarkButton from "./bookmark-button";
 import SupportStoryButton from "./support-story-button";
 import LegalLinks from "../../legal-links";
 import type { Metadata } from "next";
-import { SITE_URL, cardVersion, getStory, shortText } from "../../../lib/stories";
+import { SITE_URL, cardVersion, getStory, shortText, type StoryResponse } from "../../../lib/stories";
 
 export async function generateMetadata({ params }: { params: Promise<{ slug: string }> }): Promise<Metadata> {
   const { slug } = await params;
-  let story: Awaited<ReturnType<typeof getStory>>["story"] | undefined;
+  let story: StoryResponse["story"] | undefined;
   try {
     story = (await getStory(slug))?.story;
   } catch {
