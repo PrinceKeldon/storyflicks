@@ -52,6 +52,7 @@ export default async function StoryDetailPage({ params }: { params: Promise<{ sl
     ...(shortText(story.synopsis || story.tagline, 500) ? { description: shortText(story.synopsis || story.tagline, 500) } : {}),
     ...(story.genres?.length ? { genre: story.genres } : {}),
     ...(story.cover_url ? { image: story.cover_url } : {}),
+    ...(episodes.length ? { hasPart: episodes.map((episode) => ({ "@type": "CreativeWork", name: episode.title, url: `${SITE_URL}/stories/${encodeURIComponent(slug)}#episode-${episode.id}`, ...(episode.synopsis ? { description: shortText(episode.synopsis, 300) } : {}), datePublished: episode.published_at })) } : {}),
   };
   const sectionLabel = story.section_label || "Episode";
   const sectionLabelPlural = story?.section_label_plural || "Episodes";
@@ -95,7 +96,7 @@ export default async function StoryDetailPage({ params }: { params: Promise<{ sl
         <div className="episode-list">
           {episodes.map((episode) => (
             episode.id ? (
-              <Link href={`/stories/${slug}/read/${episode.id}`} className={isChapterGuide ? "episode-row chapter-guide-row" : "episode-row"} key={episode.id}>
+              <Link href={`/stories/${slug}/read/${episode.id}`} className={isChapterGuide ? "episode-row chapter-guide-row" : "episode-row"} key={episode.id} id={`episode-${episode.id}`}>
                 {episode.image_url && <img className="episode-thumb episode-thumb-portrait" src={episode.image_url} alt={episode.image_alt || `${episode.title} ${sectionLabel.toLowerCase()} artwork`} />}
                 <span className="episode-number">{String(episode.sequence_number).padStart(2, "0")}</span>
                 <div className="episode-copy"><h3>{episode.title}</h3>{episode.synopsis?.trim() && <p>{episode.synopsis}</p>}</div>
