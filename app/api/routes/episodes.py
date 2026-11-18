@@ -204,8 +204,7 @@ async def read_episode(
         )
 
     # Progress, artwork and navigation are independent after access is verified.
-    # Run the three database reads concurrently to reduce the Reading Room's
-    # critical-path latency without changing its payload or access rules.
+    # Run these reads concurrently without changing the payload or access rules.
     progress_records, asset_rows, navigation_episodes = await asyncio.gather(
         supabase.admin_get(
             "reading_progress",
@@ -260,9 +259,7 @@ async def read_episode(
             "sequence_number": next_item["sequence_number"],
         }
 
-    # Offer the nearest earlier episode using the same entitlement rules as
-    # the existing reader access guard. Keep this check centralised so future
-    # access-rule changes cannot make navigation disagree with episode access.
+    # Offer the nearest earlier episode using the canonical reader access check.
     previous_candidates = [
         item for item in navigation_episodes
         if item["sequence_number"] < episode["sequence_number"]

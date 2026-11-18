@@ -2,6 +2,7 @@ import base64
 from datetime import datetime
 import json
 import re
+from uuid import UUID
 
 from fastapi import APIRouter, HTTPException, Path, Query
 
@@ -28,7 +29,7 @@ async def list_stories(
 
     filters = []
     if q:
-        safe_query = " ".join(re.findall(r"[\w-]+", q, flags=re.UNICODE))
+        safe_query = " ".join(re.findall(r"[\\w-]+", q, flags=re.UNICODE))
         if safe_query:
             filters.append(
                 f"or(title.ilike.*{safe_query}*,"
@@ -37,22 +38,27 @@ async def list_stories(
             )
 
     if genre:
-        safe_genre = " ".join(re.findall(r"[\w &-]+", genre, flags=re.UNICODE)).strip()
+        safe_genre = " ".join(re.findall(r"[\\w &-]+", genre, flags=re.UNICODE)).strip()
         if safe_genre:
             genre_value = f'"{safe_genre}"' if " " in safe_genre else safe_genre
             params["genres"] = f"cs.{{{genre_value}}}"
 
     if cursor:
         try:
-            decoded = base64.urlsafe_b64decode(cursor + "=" * (-len(cursor) % 4))
+            decoded = base64.b64decode(
+                cursor + "=" * (-len(cursor) % 4),
+                altchars=b"-_",
+                validate=True,
+            )
             cursor_data = json.loads(decoded)
             cursor_published_at = cursor_data["published_at"]
-            cursor_id = cursor_data["id"]
-            if not isinstance(cursor_published_at, str) or not isinstance(cursor_id, str):
-                raise ValueError("Invalid cursor fields")
-            datetime.fromisoformat(cursor_published_at.replace("Z", "+00:00"))
-            if not re.fullmatch(r"[0-9a-fA-F-]{36}", cursor_id):
-                raise ValueError("Invalid cursor ID")
+            if not isinstance(cursor_published_at, str):
+                raise ValueError("Invalid cursor timestamp")
+            cursor_id = str(UUID(cursor_data["id"]))
+            parsed_timestamp = datetime.fromisoformat(
+                cursor_published_at.replace("Z", "+00:00")
+            )
+            cursor_published_at = parsed_timestamp.isoformat()
         except (ValueError, KeyError, TypeError, json.JSONDecodeError) as exc:
             raise HTTPException(status_code=400, detail="Invalid catalogue cursor.") from exc
         filters.append(
@@ -69,14 +75,13 @@ async def list_stories(
     has_more = len(rows) > limit
     page = rows[:limit]
     next_cursor = None
-    if has_more and page:
+    if has_more and page and page[-1].get("published_at"):
         last = page[-1]
-        if last.get("published_at"):
-            raw_cursor = json.dumps(
-                {"published_at": last["published_at"], "id": last["id"]},
-                separators=(",", ":"),
-            ).encode()
-            next_cursor = base64.urlsafe_b64encode(raw_cursor).decode().rstrip("=")
+        raw_cursor = json.dumps(
+            {"published_at": last["published_at"], "id": last["id"]},
+            separators=(",", ":"),
+        ).encode()
+        next_cursor = base64.urlsafe_b64encode(raw_cursor).decode().rstrip("=")
 
     return {
         "items": [
@@ -85,6 +90,7 @@ async def list_stories(
         ],
         "next_cursor": next_cursor,
     }
+
 
 @router.get("/stories/{slug}")
 async def get_story(slug: str = Path(pattern=r"^[a-z0-9]+(-[a-z0-9]+)*$", max_length=100)):

@@ -22,10 +22,16 @@ export default function SignInForm({ redirectTo, initialMode = "signin" }: { red
     try {
       const result = mode === "signin"
         ? await supabase.auth.signInWithPassword({ email: email.trim(), password })
-        : await supabase.auth.signUp({ email: email.trim(), password });
+        : await supabase.auth.signUp({
+            email: email.trim(),
+            password,
+            options: {
+              emailRedirectTo: `${window.location.origin}/auth/callback?next=${encodeURIComponent(redirectTo)}`,
+            },
+          });
       if (result.error) { setError(result.error.message); return; }
       if (mode === "signup" && !result.data.session) {
-        setMessage("Check your email for a confirmation link. Once confirmed, come back here to sign in.");
+        setMessage("Check your email for a confirmation link. Use it to finish creating your account.");
         return;
       }
       window.location.assign(redirectTo);

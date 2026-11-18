@@ -4,7 +4,9 @@ import "./storyflicks-design-system.css";
 import "./redesign.css";
 import "./redesign-pages.css";
 import ThemeProvider from "./theme-provider";
+import AuthSessionProvider from "./auth-session-provider";
 import { SITE_URL } from "../lib/stories";
+import { fontVariables } from "./fonts";
 
 export const metadata: Metadata = {
   metadataBase: new URL(SITE_URL),
@@ -23,8 +25,8 @@ export const metadata: Metadata = {
 
 export default function RootLayout({ children }: Readonly<{ children: React.ReactNode }>) {
   return (
-    <html lang="en" data-theme="dark" suppressHydrationWarning>
-      <body><ThemeProvider />{children}</body>
+    <html lang="en" data-theme="dark" className={fontVariables} suppressHydrationWarning>
+      <body><AuthSessionProvider><ThemeProvider />{children}</AuthSessionProvider></body>
     </html>
   );
 }

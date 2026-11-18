@@ -68,7 +68,7 @@ The API validates the access token with Supabase Auth. Reader/creator RPC calls 
 - Episode and review path identifiers are parsed as UUIDs; public story slugs are format-validated.
 - Supabase upstream error payloads are not written to application logs.
 - `story-assets` is currently a **public-read bucket**. Signed upload URLs and creator-role checks protect writes, but an object URL is publicly readable once known. Store only artwork intended for public display in this bucket; do not upload private or confidential files.
-- The API does not yet implement distributed rate limiting. Before opening public traffic, add gateway/Redis-backed per-user and per-IP limits for sign-in-adjacent contribution, report, upload and creator-write endpoints.
+- The API applies in-process sliding-window rate limits (`app/core/rate_limit.py`): per user and per IP, with tighter limits on Gemini assistant/manuscript calls, uploads, checkout, reports and reviews/reactions. Limits are per API instance and reset on restart; if the API is scaled beyond one instance, move the counters to Redis or a gateway. Set `RATE_LIMIT_PROXY_HOPS` to the number of trusted proxies in front of the API (default 1, matching Render) and `RATE_LIMIT_ENABLED=false` to switch it off.
 - Set `CORS_ORIGINS` in the deployed API environment to the exact production frontend origin(s), for example `["https://storyflicks.live"]`; keep localhost origins only in local development.
 
 ## API surface

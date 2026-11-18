@@ -40,8 +40,8 @@ export default async function SearchPage({
     const search = new URLSearchParams();
     if (query) search.set("q", query);
     if (genre) search.set("genre", genre);
+    search.set("limit", "24");
     try {
-      search.set("limit", "24");
       const response = await fetch(apiUrl + "/stories?" + search.toString(), { cache: "no-store" });
       if (!response.ok) throw new Error("Catalogue request failed.");
       const data = await response.json();
@@ -99,7 +99,8 @@ export default async function SearchPage({
         {unavailable ? (
           <div className="empty-shelf"><div className="empty-mark">↗</div><div><h3>The catalogue is temporarily unavailable.</h3><p>Please try again when the STORYFLICKS API is connected.</p></div></div>
         ) : items.length ? (
-          <SearchResults initialItems={items} initialCursor={nextCursor} query={query} genre={genre} />        ) : (
+          <SearchResults initialItems={items} initialCursor={nextCursor} query={query} genre={genre} />
+        ) : (
           <div className="empty-shelf"><div className="empty-mark">⌕</div><div><h3>No stories found just yet.</h3><p>Try another title, theme or genre. The catalogue will grow as new stories are published.</p></div><Link href="/" className="outline-button">Back to Discover <span>↗</span></Link></div>
         )}
       </section>

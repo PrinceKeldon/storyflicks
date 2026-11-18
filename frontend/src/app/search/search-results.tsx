@@ -1,5 +1,6 @@
 "use client";
 
+import RemoteImage from "@/components/remote-image";
 import Link from "next/link";
 import { useState } from "react";
 
@@ -63,24 +64,22 @@ export default function SearchResults({
   return (
     <>
       <span className="search-result-count" aria-live="polite">{items.length} {items.length === 1 ? "story" : "stories"}</span>
-      {items.length ? (
-        <div className="search-results">
-          {items.map((item) => (
-            <Link key={item.id || item.slug} className="search-result-card" href={"/stories/" + item.slug}>
-              <div className={item.cover_url ? "search-result-art has-cover" : "search-result-art"} aria-label={item.title + " book cover artwork"}>
-                {item.cover_url ? <img className="catalogue-cover-image" src={item.cover_url} alt={item.title + " book cover"} /> : <><span>{item.title}</span><small>STORYFLICKS ORIGINAL</small></>}
-              </div>
-              <div className="search-result-copy">
-                <p className="eyebrow">{item.genres?.join(" · ") || "STORYFLICKS ORIGINAL"} <span>·</span> {item.completion_status || "EPISODIC"}</p>
-                <h3>{item.title}</h3>
-                {item.author_name && <p className="catalogue-author-byline">By {item.author_name}</p>}
-                <p>{item.tagline || item.synopsis || "Discover this STORYFLICKS original."}</p>
-                <span className="text-button">Explore story <span>↗</span></span>
-              </div>
-            </Link>
-          ))}
-        </div>
-      ) : null}
+      <div className="search-results">
+        {items.map((item) => (
+          <Link key={item.id || item.slug} className="search-result-card" href={"/stories/" + item.slug}>
+            <div className={item.cover_url ? "search-result-art has-cover" : "search-result-art"} aria-label={item.title + " book cover artwork"}>
+              {item.cover_url ? <RemoteImage className="catalogue-cover-image" src={item.cover_url} alt={item.title + " book cover"} fill sizes="(max-width: 640px) 40vw, 200px" /> : <><span>{item.title}</span><small>STORYFLICKS ORIGINAL</small></>}
+            </div>
+            <div className="search-result-copy">
+              <p className="eyebrow">{item.genres?.join(" · ") || "STORYFLICKS ORIGINAL"} <span>·</span> {item.completion_status || "EPISODIC"}</p>
+              <h3>{item.title}</h3>
+              {item.author_name && <p className="catalogue-author-byline">By {item.author_name}</p>}
+              <p>{item.tagline || item.synopsis || "Discover this STORYFLICKS original."}</p>
+              <span className="text-button">Explore story <span>↗</span></span>
+            </div>
+          </Link>
+        ))}
+      </div>
       {error ? <p role="alert" className="search-load-error">{error}</p> : null}
       {cursor ? (
         <div className="search-load-more">
