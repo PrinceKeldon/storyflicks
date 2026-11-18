@@ -1,4 +1,5 @@
 "use client";
+import RemoteImage from "@/components/remote-image";
 
 import Link from "next/link";
 import { useCallback, useEffect, useState } from "react";
@@ -90,7 +91,7 @@ export default function PersonalisedShelf() {
       ) : card && target ? (
         <article className="personalised-story-card">
           <Link className={"personalised-story-art" + (card.story.cover_url ? " has-cover" : "")} href={"/stories/" + card.story.slug} aria-label={"Explore " + card.story.title}>
-            {card.story.cover_url ? <img className="personalised-cover-image" src={card.story.cover_url} alt={card.story.title + " book cover"} /> : <><span>STORYFLICKS ORIGINAL</span><strong>{card.story.title}</strong><i>{card.story.completion_status === "completed" ? "COMPLETE" : "ONGOING"}</i></>}
+            {card.story.cover_url ? <RemoteImage className="personalised-cover-image" src={card.story.cover_url} alt={card.story.title + " book cover"} fill sizes="(max-width: 640px) 100vw, 220px" /> : <><span>STORYFLICKS ORIGINAL</span><strong>{card.story.title}</strong><i>{card.story.completion_status === "completed" ? "COMPLETE" : "ONGOING"}</i></>}
           </Link>
           <div className="personalised-story-copy">
             <p className="eyebrow">{card.story.completion_status === "completed" ? "YOUR COMPLETED STORY" : "YOUR READING JOURNEY"}</p>

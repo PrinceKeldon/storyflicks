@@ -1,3 +1,4 @@
+import RemoteImage from "@/components/remote-image";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import BookmarkButton from "./bookmark-button";
@@ -75,7 +76,7 @@ export default async function StoryDetailPage({ params }: { params: Promise<{ sl
       <header className="detail-top"><Link href="/" className="back-link">← Back to Discover</Link><span className="detail-label">STORYFLICKS ORIGINAL</span></header>
       <section className="story-intro">
         <div className={story?.cover_url ? "story-poster has-cover" : "story-poster"} aria-label={`${story?.title ?? "Story"} book cover artwork`}>
-          {story?.cover_url ? <img className="story-cover-image" src={story.cover_url} alt={`${story.title} book cover`} /> : <><span className="poster-kicker">{"A STORYFLICKS ORIGINAL"}</span><span className="poster-title">{story.title}</span><span className="poster-foot">STORYFLICKS ORIGINAL</span></>}
+          {story?.cover_url ? <RemoteImage className="story-cover-image" src={story.cover_url} alt={`${story.title} book cover`} fill sizes="(max-width: 700px) 80vw, 360px" priority /> : <><span className="poster-kicker">{"A STORYFLICKS ORIGINAL"}</span><span className="poster-title">{story.title}</span><span className="poster-foot">STORYFLICKS ORIGINAL</span></>}
         </div>
         <div className="story-info">
           
@@ -97,14 +98,14 @@ export default async function StoryDetailPage({ params }: { params: Promise<{ sl
           {episodes.map((episode) => (
             episode.id ? (
               <Link href={`/stories/${slug}/read/${episode.id}`} className={isChapterGuide ? "episode-row chapter-guide-row" : "episode-row"} key={episode.id} id={`episode-${episode.id}`}>
-                {episode.image_url && <img className="episode-thumb episode-thumb-portrait" src={episode.image_url} alt={episode.image_alt || `${episode.title} ${sectionLabel.toLowerCase()} artwork`} />}
+                {episode.image_url && <RemoteImage className="episode-thumb episode-thumb-portrait" src={episode.image_url} alt={episode.image_alt || `${episode.title} ${sectionLabel.toLowerCase()} artwork`} width={116} height={174} sizes="116px" />}
                 <span className="episode-number">{String(episode.sequence_number).padStart(2, "0")}</span>
                 <div className="episode-copy"><h3>{episode.title}</h3>{episode.synopsis?.trim() && <p>{episode.synopsis}</p>}</div>
                 {!isChapterGuide && <><span className="episode-status">PUBLISHED</span><span className="episode-arrow">↗</span></>}
               </Link>
             ) : (
               <article className={isChapterGuide ? "episode-row chapter-guide-row" : "episode-row"} key={episode.sequence_number}>
-                {episode.image_url && <img className="episode-thumb episode-thumb-portrait" src={episode.image_url} alt={episode.image_alt || `${episode.title} ${sectionLabel.toLowerCase()} artwork`} />}
+                {episode.image_url && <RemoteImage className="episode-thumb episode-thumb-portrait" src={episode.image_url} alt={episode.image_alt || `${episode.title} ${sectionLabel.toLowerCase()} artwork`} width={116} height={174} sizes="116px" />}
                 <span className="episode-number">{String(episode.sequence_number).padStart(2, "0")}</span>
                 <div className="episode-copy"><h3>{episode.title}</h3>{episode.synopsis?.trim() && <p>{episode.synopsis}</p>}</div>
                 {!isChapterGuide && <><span className="episode-status">PUBLISHED</span><span className="episode-arrow">↗</span></>}

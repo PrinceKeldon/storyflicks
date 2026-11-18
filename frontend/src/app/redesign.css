@@ -129,12 +129,12 @@ html[data-theme="dark"] body .personalised-story-footer a:hover { background: #f
   padding: 0 16px;
 }
 .catalogue-rail .search-result-art:before { display: none; }
-.catalogue-rail .search-result-art span { font: 700 26px/.95 'Playfair Display', Georgia, serif; }
+.catalogue-rail .search-result-art span { font: 700 26px/.95 var(--font-playfair), 'Playfair Display', Georgia, serif; }
 .catalogue-rail .search-result-art small { display: none; }
 .catalogue-rail .search-result-art .catalogue-cover-image { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; }
 .catalogue-rail .search-result-copy { padding: 12px 0 0; }
-.catalogue-rail .search-result-copy .eyebrow { font: 500 16px 'DM Mono', monospace; letter-spacing: .6px; margin: 0 0 8px; }
-.catalogue-rail .search-result-copy h3 { font: 700 19px/1.25 'Playfair Display', Georgia, serif; margin: 0; }
+.catalogue-rail .search-result-copy .eyebrow { font: 500 16px var(--font-dm-mono), 'DM Mono', monospace; letter-spacing: .6px; margin: 0 0 8px; }
+.catalogue-rail .search-result-copy h3 { font: 700 19px/1.25 var(--font-playfair), 'Playfair Display', Georgia, serif; margin: 0; }
 .catalogue-rail .catalogue-author-byline { font-size: 16px; margin: 4px 0 0; }
 .catalogue-rail .search-result-copy > p:not([class]),
 .catalogue-rail .search-result-copy .text-button { display: none; }
@@ -242,15 +242,15 @@ html[data-theme="dark"] body .episode-arrow { color: var(--sf-turquoise) !import
 .reading-page.reading-width-narrow { width: min(100% - 40px, 580px); }
 .reading-page { --manuscript-line-height: 1.6; }
 .reading-page.reading-spacing-relaxed { --manuscript-line-height: 1.9; }
-.reading-page[data-font="modern"] .manuscript { font-family: 'Source Serif 4', Georgia, serif; }
-.reading-page[data-font="sans"] .manuscript { font-family: 'DM Sans', Arial, sans-serif; }
-.reading-page[data-font="dyslexia"] .manuscript { font-family: 'Atkinson Hyperlegible', Arial, sans-serif; letter-spacing: .01em; }
+.reading-page[data-font="modern"] .manuscript { font-family: var(--font-source-serif), 'Source Serif 4', Georgia, serif; }
+.reading-page[data-font="sans"] .manuscript { font-family: var(--font-dm-sans), 'DM Sans', Arial, sans-serif; }
+.reading-page[data-font="dyslexia"] .manuscript { font-family: var(--font-atkinson), 'Atkinson Hyperlegible', Arial, sans-serif; letter-spacing: .01em; }
 
 
 /* Story detail: keep genres as a quiet secondary line below the access metadata. */
 .story-info .story-genres {
   margin: -10px 0 26px;
-  font: 10px/1.5 'DM Mono', monospace !important;
+  font: 10px/1.5 var(--font-dm-mono), 'DM Mono', monospace !important;
   letter-spacing: 1.1px;
   text-transform: uppercase;
 }
