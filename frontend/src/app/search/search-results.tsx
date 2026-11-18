@@ -62,6 +62,7 @@ export default function SearchResults({
 
   return (
     <>
+      <span className="search-result-count" aria-live="polite">{items.length} {items.length === 1 ? "story" : "stories"}</span>
       {items.length ? (
         <div className="search-results">
           {items.map((item) => (
