@@ -123,6 +123,7 @@ export default function ReadingRoom({
   const pendingProgress = useRef<{ scrollY: number; percent: number } | null>(null);
   const preferencesTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const tokenRef = useRef<string | null>(null);
+  const [sessionReady, setSessionReady] = useState(false);
   const apiUrl = process.env.NEXT_PUBLIC_API_URL?.replace(/\/$/, "");
 
   const loadEpisode = useCallback(async () => {
@@ -134,10 +135,13 @@ export default function ReadingRoom({
     }
     const { data: { session } } = await supabase.auth.getSession();
     if (!session?.access_token) {
+      tokenRef.current = null;
+      setSessionReady(false);
       setStatus("signed-out");
       return;
     }
     tokenRef.current = session.access_token;
+    setSessionReady(true);
   }, []);
 
   useEffect(() => {
@@ -192,7 +196,7 @@ export default function ReadingRoom({
   }, [apiUrl, flushProgress]);
 
   useEffect(() => {
-    if (status !== "ready" || !tokenRef.current || !apiUrl) return;
+    if (status !== "ready" || !sessionReady || !tokenRef.current || !apiUrl) return;
     if (preferencesTimer.current) clearTimeout(preferencesTimer.current);
     preferencesTimer.current = setTimeout(() => {
       const textSize = fontScale <= 95 ? "small" : fontScale >= 110 ? "large" : "comfortable";
@@ -203,7 +207,7 @@ export default function ReadingRoom({
       }).catch(() => undefined);
     }, 700);
     return () => { if (preferencesTimer.current) clearTimeout(preferencesTimer.current); };
-  }, [apiUrl, fontScale, status, theme, width]);
+  }, [apiUrl, fontScale, sessionReady, status, theme, width]);
 
   useEffect(() => {
     try {
