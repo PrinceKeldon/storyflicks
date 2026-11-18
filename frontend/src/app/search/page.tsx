@@ -1,6 +1,6 @@
-import RemoteImage from "@/components/remote-image";
 import Link from "next/link";
 import type { Metadata } from "next";
+import SearchResults from "./search-results";
 
 type SearchStory = {
   id: string;
@@ -33,6 +33,7 @@ export default async function SearchPage({
   const genre = typeof params.genre === "string" ? params.genre.trim().slice(0, 40) : "";
   const apiUrl = process.env.NEXT_PUBLIC_API_URL?.replace(/\/$/, "");
   let items: SearchStory[] = [];
+  let nextCursor: string | null = null;
   let unavailable = false;
 
   if (apiUrl) {
@@ -44,6 +45,7 @@ export default async function SearchPage({
       if (!response.ok) throw new Error("Catalogue request failed.");
       const data = await response.json();
       items = Array.isArray(data.items) ? data.items : [];
+      nextCursor = typeof data.next_cursor === "string" ? data.next_cursor : null;
     } catch {
       unavailable = true;
     }
@@ -91,28 +93,12 @@ export default async function SearchPage({
             <p className="eyebrow">{query || genre ? "YOUR RESULTS" : "AVAILABLE STORIES"}</p>
             <h2>{query ? "Results for “" + query + "”" : genre ? genre + " stories" : "Explore the catalogue"}</h2>
           </div>
-          <span className="search-result-count" aria-live="polite">{items.length} {items.length === 1 ? "story" : "stories"}</span>
         </div>
 
         {unavailable ? (
           <div className="empty-shelf"><div className="empty-mark">↗</div><div><h3>The catalogue is temporarily unavailable.</h3><p>Please try again when the STORYFLICKS API is connected.</p></div></div>
         ) : items.length ? (
-          <div className="search-results">
-            {items.map((item) => (
-              <Link key={item.id || item.slug} className="search-result-card" href={"/stories/" + item.slug}>
-                <div className={item.cover_url ? "search-result-art has-cover" : "search-result-art"} aria-label={item.title + " book cover artwork"}>
-                  {item.cover_url ? <RemoteImage className="catalogue-cover-image" src={item.cover_url} alt={item.title + " book cover"} fill sizes="(max-width: 640px) 40vw, 200px" /> : <><span>{item.title}</span><small>STORYFLICKS ORIGINAL</small></>}
-                </div>
-                <div className="search-result-copy">
-                  <p className="eyebrow">{item.genres?.join(" · ") || "STORYFLICKS ORIGINAL"} <span>·</span> {item.completion_status || "EPISODIC"}</p>
-                  <h3>{item.title}</h3>
-                  {item.author_name && <p className="catalogue-author-byline">By {item.author_name}</p>}
-                  <p>{item.tagline || item.synopsis || "Discover this STORYFLICKS original."}</p>
-                  <span className="text-button">Explore story <span>↗</span></span>
-                </div>
-              </Link>
-            ))}
-          </div>
+          <SearchResults initialItems={items} initialCursor={nextCursor} query={query} genre={genre} />
         ) : (
           <div className="empty-shelf"><div className="empty-mark">⌕</div><div><h3>No stories found just yet.</h3><p>Try another title, theme or genre. The catalogue will grow as new stories are published.</p></div><Link href="/" className="outline-button">Back to Discover <span>↗</span></Link></div>
         )}
