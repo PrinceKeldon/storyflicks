@@ -1,3 +1,4 @@
+import RemoteImage from "@/components/remote-image";
 import Link from "next/link";
 import type { Metadata } from "next";
 
@@ -100,7 +101,7 @@ export default async function SearchPage({
             {items.map((item) => (
               <Link key={item.id || item.slug} className="search-result-card" href={"/stories/" + item.slug}>
                 <div className={item.cover_url ? "search-result-art has-cover" : "search-result-art"} aria-label={item.title + " book cover artwork"}>
-                  {item.cover_url ? <img className="catalogue-cover-image" src={item.cover_url} alt={item.title + " book cover"} /> : <><span>{item.title}</span><small>STORYFLICKS ORIGINAL</small></>}
+                  {item.cover_url ? <RemoteImage className="catalogue-cover-image" src={item.cover_url} alt={item.title + " book cover"} fill sizes="(max-width: 640px) 40vw, 200px" /> : <><span>{item.title}</span><small>STORYFLICKS ORIGINAL</small></>}
                 </div>
                 <div className="search-result-copy">
                   <p className="eyebrow">{item.genres?.join(" · ") || "STORYFLICKS ORIGINAL"} <span>·</span> {item.completion_status || "EPISODIC"}</p>

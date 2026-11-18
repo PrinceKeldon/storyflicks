@@ -1,3 +1,4 @@
+import RemoteImage from "@/components/remote-image";
 import Link from "next/link";
 import PersonalisedShelf from "./personalised-shelf";
 import CreatorStudioNavLink from "./creator-studio-nav-link";
@@ -85,7 +86,7 @@ export default async function DiscoverPage() {
             </div>
           </div>
           <div className={featured.cover_url ? "feature-art has-cover" : "feature-art"} role="img" aria-label={featured.title + " book cover artwork"}>
-            {featured.cover_url ? <img className="feature-cover-image" src={featured.cover_url} alt={featured.title + " book cover"} /> : null}
+            {featured.cover_url ? <RemoteImage className="feature-cover-image" src={featured.cover_url} alt={featured.title + " book cover"} fill sizes="(max-width: 900px) 80vw, 420px" priority /> : null}
             <div className="art-grain" />
             <div className="art-cross" />
             <div className="art-caption">STORIES THAT STAY<br />WITH YOU</div>
@@ -114,7 +115,7 @@ export default async function DiscoverPage() {
             {moreStories.slice(0, 6).map((story) => (
               <Link key={story.id || story.slug} className="search-result-card" href={"/stories/" + story.slug}>
                 <div className={story.cover_url ? "search-result-art has-cover" : "search-result-art"} role="img" aria-label={story.title + " book cover artwork"}>
-                  {story.cover_url ? <img className="catalogue-cover-image" src={story.cover_url} alt={story.title + " book cover"} /> : <><span>{story.title}</span><small>STORYFLICKS ORIGINAL</small></>}
+                  {story.cover_url ? <RemoteImage className="catalogue-cover-image" src={story.cover_url} alt={story.title + " book cover"} fill sizes="(max-width: 640px) 45vw, 200px" /> : <><span>{story.title}</span><small>STORYFLICKS ORIGINAL</small></>}
                 </div>
                 <div className="search-result-copy">
                   <p className="eyebrow">{story.genres?.join(" · ") || "STORYFLICKS ORIGINAL"} <span>·</span> {(story.completion_status || "EPISODIC").toUpperCase()}</p>

@@ -1,5 +1,6 @@
 "use client";
 
+import RemoteImage from "@/components/remote-image";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import ReactionPanel from "../../react/[episodeId]/reaction-panel";
@@ -341,10 +342,14 @@ export default function ReadingRoom({
       <article className={`reading-page reading-width-${width} reading-spacing-${spacing}`} data-font={typeface}>
         <div className="reading-episode-heading reading-episode-heading-stacked">
           {episodeArtwork?.public_url && (
-            <img
+            <RemoteImage
               className="reading-episode-thumbnail"
               src={episodeArtwork.public_url}
               alt={episodeArtwork.alt_text || `${payload.episode.title} ${String(payload.story.section_label || "section").toLowerCase()} artwork`}
+              width={240}
+              height={360}
+              sizes="240px"
+              priority
             />
           )}
           <div className="reading-kicker">{payload.story.title} <span>·</span> {(payload.story.section_label || "Episode").toUpperCase()} {String(payload.episode.sequence_number).padStart(2, "0")}</div>
@@ -370,7 +375,7 @@ export default function ReadingRoom({
             return <p className={`manuscript-paragraph${index === firstBodyParagraphIndex ? " has-drop-cap" : ""}`} style={style} key={index}>{renderRuns(block)}</p>;
           })}
         </div>
-        {bodyAssets.map((asset) => <figure className="reading-asset" key={asset.id}><img src={asset.public_url!} alt={asset.alt_text || "Story illustration"} /></figure>)}
+        {bodyAssets.map((asset) => <figure className="reading-asset" key={asset.id}><img loading="lazy" decoding="async" src={asset.public_url!} alt={asset.alt_text || "Story illustration"} /></figure>)}
         <footer className="reading-end">
           {payload.next_episode && (
             <button type="button" className="reading-next-episode" onClick={() => setShowContribution(true)}>
