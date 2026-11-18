@@ -2225,7 +2225,7 @@ html[data-theme="dark"] body :is(input,textarea,select)::placeholder {
 .reader-page-viewport.is-paginated::-webkit-scrollbar{display:none}
 .reader-page-viewport.is-scrolling{height:auto;overflow:visible}
 .reader-page-viewport .reader-paged-content{box-sizing:border-box;width:calc(100vw - 40px);max-width:none;height:100%;margin:0;padding:28px 0 34px;column-width:calc(100vw - 40px);column-gap:0;column-fill:auto}
-.reader-page-viewport .reader-paged-content>*{break-inside:avoid;column-span:none}
+.reader-page-viewport .reader-paged-content>.reading-episode-heading,.reader-page-viewport .reader-paged-content>.reading-rule,.reader-page-viewport .reader-paged-content>.reading-asset,.reader-page-viewport .reader-paged-content>.reading-end{break-inside:avoid;column-span:none}
 .reader-page-viewport .reader-paged-content .reading-episode-heading,
 .reader-page-viewport .reader-paged-content .manuscript,
 .reader-page-viewport .reader-paged-content .reading-rule,
@@ -2233,7 +2233,7 @@ html[data-theme="dark"] body :is(input,textarea,select)::placeholder {
 .reader-page-viewport .reader-paged-content .reading-end{width:min(100% - 40px,690px);margin-left:auto;margin-right:auto}
 .reader-page-viewport .reader-paged-content .manuscript p,
 .reader-page-viewport .reader-paged-content .manuscript h2,
-.reader-page-viewport .reader-paged-content .manuscript blockquote{orphans:3;widows:3;break-inside:avoid}
+.reader-page-viewport .reader-paged-content .manuscript blockquote{orphans:3;widows:3;break-inside:auto}
 .reader-page-viewport .reader-paged-content .reading-episode-heading{padding-top:12px}
 .reader-page-controls{height:62px;display:flex;align-items:center;justify-content:space-between;gap:14px;padding:0 max(20px,calc((100vw - 690px)/2));border-top:1px solid color-mix(in srgb,var(--reader-ink) 16%,transparent);border-bottom:1px solid color-mix(in srgb,var(--reader-ink) 16%,transparent);font:16px var(--font-dm-mono),'DM Mono',monospace;letter-spacing:.7px}
 .reader-page-controls button{border:0;background:transparent;color:var(--reader-ink);font:inherit;cursor:pointer;padding:10px 4px}
