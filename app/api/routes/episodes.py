@@ -1,4 +1,5 @@
 
+import asyncio
 import json
 from typing import Any, Literal
 from collections import defaultdict
@@ -202,29 +203,42 @@ async def read_episode(
             },
         )
 
-    progress_records = await supabase.admin_get(
-        "reading_progress",
-        {
-            "select": (
-                "progress_percent,last_position,"
-                "started_at,completed_at,updated_at"
-            ),
-            "user_id": f"eq.{user.id}",
-            "episode_id": f"eq.{episode_id}",
-            "limit": "1",
-        },
+    # Progress, artwork and navigation are independent after access is verified.
+    # Run these reads concurrently without changing the payload or access rules.
+    progress_records, asset_rows, navigation_episodes = await asyncio.gather(
+        supabase.admin_get(
+            "reading_progress",
+            {
+                "select": (
+                    "progress_percent,last_position,"
+                    "started_at,completed_at,updated_at"
+                ),
+                "user_id": f"eq.{user.id}",
+                "episode_id": f"eq.{episode_id}",
+                "limit": "1",
+            },
+        ),
+        supabase.admin_get(
+            "episode_assets",
+            {
+                "select": "id,asset_type,storage_path,alt_text,metadata,position",
+                "episode_id": f"eq.{episode_id}",
+                "order": "position.asc",
+            },
+        ),
+        supabase.admin_get_all(
+            "episodes",
+            {
+                "select": "id,title,sequence_number,publication_status",
+                "story_id": f"eq.{story['id']}",
+                "publication_status": "eq.published",
+                "deleted_at": "is.null",
+                "order": "sequence_number.asc",
+            },
+        ),
     )
 
     reading_progress = progress_records[0] if progress_records else None
-
-    asset_rows = await supabase.admin_get(
-        "episode_assets",
-        {
-            "select": "id,asset_type,storage_path,alt_text,metadata,position",
-            "episode_id": f"eq.{episode_id}",
-            "order": "position.asc",
-        },
-    )
     assets = [
         {
             **asset,
@@ -232,19 +246,6 @@ async def read_episode(
         }
         for asset in asset_rows
     ]
-
-    # Load the published episode sequence once, then derive both directions.
-    # This avoids coupling navigation to a single-row filtered lookup.
-    navigation_episodes = await supabase.admin_get_all(
-        "episodes",
-        {
-            "select": "id,title,sequence_number,publication_status",
-            "story_id": f"eq.{story['id']}",
-            "publication_status": "eq.published",
-            "deleted_at": "is.null",
-            "order": "sequence_number.asc",
-        },
-    )
     next_candidates = [
         item for item in navigation_episodes
         if item["sequence_number"] > episode["sequence_number"]
@@ -258,7 +259,7 @@ async def read_episode(
             "sequence_number": next_item["sequence_number"],
         }
 
-    # Offer the nearest earlier episode the reader is entitled to reopen.
+    # Offer the nearest earlier episode using the canonical reader access check.
     previous_candidates = [
         item for item in navigation_episodes
         if item["sequence_number"] < episode["sequence_number"]

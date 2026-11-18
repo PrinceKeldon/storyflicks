@@ -46,7 +46,7 @@ export async function getStory(slug: string): Promise<StoryResponse | null> {
   if (!base) throw new Error("The STORYFLICKS API is not configured.");
 
   try {
-    const response = await fetch(`${base}/stories/${encodeURIComponent(slug)}`, { cache: "no-store" });
+    const response = await fetch(`${base}/stories/${encodeURIComponent(slug)}`, { next: { revalidate: 60 } });
     if (response.status === 404) return null;
     if (!response.ok) throw new Error(`Story request failed (${response.status}).`);
     return (await response.json()) as StoryResponse;
