@@ -2221,7 +2221,7 @@ html[data-theme="dark"] body :is(input,textarea,select)::placeholder {
 /* Reading Room pagination prototype — scoped to the episode reader. */
 .reader-mode-toggle{border:1px solid color-mix(in srgb,var(--reader-ink) 28%,transparent);background:transparent;color:var(--reader-ink);padding:7px 11px;border-radius:999px;font-size:16px;cursor:pointer;white-space:nowrap}
 .reader-page-viewport{width:100%;position:relative}
-.reader-page-viewport.is-paginated{height:calc(100dvh - 154px);min-height:420px;overflow-x:auto;overflow-y:hidden;overscroll-behavior-x:contain;scroll-snap-type:x mandatory;scrollbar-width:none;touch-action:pan-x pan-y}
+.reader-page-viewport.is-paginated{height:calc(100dvh - 154px);min-height:420px;overflow-x:auto;overflow-y:hidden;overscroll-behavior-x:contain;scroll-snap-type:x mandatory;scrollbar-width:none;touch-action:pan-y}
 .reader-page-viewport.is-paginated::-webkit-scrollbar{display:none}
 .reader-page-viewport.is-scrolling{height:auto;overflow:visible}
 .reader-page-viewport .reader-paged-content{box-sizing:border-box;width:calc(100vw - 40px);max-width:none;height:100%;margin:0;padding:28px 0 34px;column-width:calc(100vw - 40px);column-gap:0;column-fill:auto}
