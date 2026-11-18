@@ -109,6 +109,7 @@ export default function ReadingRoom({
   const [status, setStatus] = useState<"loading" | "signed-out" | "ready" | "locked" | "error">(initialStatus);
   const [accessGate, setAccessGate] = useState<EpisodeAccessGate | null>(initialAccessGate);
   const [showContribution, setShowContribution] = useState(false);
+  const [isTransitioning, setIsTransitioning] = useState(false);
   const router = useRouter();
   const [error, setError] = useState(initialError);
   const [theme, setTheme] = useState<"paper" | "sepia" | "night">("paper");
@@ -279,6 +280,17 @@ export default function ReadingRoom({
       <p>{accessGate.locked_episode ? <>You’re almost at {accessGate.section_label || "Episode"} {String(accessGate.locked_episode.sequence_number).padStart(2, "0")}: <strong>{accessGate.locked_episode.title}</strong>. </> : null}{accessGate.message} Your next step is to share your take on {accessGate.section_label || "Episode"} {String(accessGate.previous_episode.sequence_number).padStart(2, "0")}, <strong>{accessGate.previous_episode.title}</strong>. Either a quick reaction or a written review is enough.</p>
       <button type="button" className="primary-button" onClick={() => setShowContribution(true)}>Share your take <span>→</span></button>
       <Link className="text-button" href={`/stories/${slug}/read/${accessGate.previous_episode.id}`}>← Return to {accessGate.section_label || "Episode"} {String(accessGate.previous_episode.sequence_number).padStart(2, "0")}</Link>
+      {isTransitioning && (
+        <div className="reader-transition" role="status" aria-live="polite" aria-atomic="true">
+          <div className="reader-transition-content">
+            <span className="reader-transition-mark" aria-hidden="true">SF.</span>
+            <span className="reader-transition-spinner" aria-hidden="true" />
+            <p className="reader-transition-eyebrow">TURNING THE PAGE</p>
+            <h2>Your next chapter is on its way.</h2>
+            <p>Your reaction has been received. Please bear with us while the next page loads.</p>
+          </div>
+        </div>
+      )}
       {showContribution && <div className="contribution-modal-backdrop" role="presentation">
         <div className="contribution-modal-dialog" role="dialog" aria-modal="true" aria-label="Share your take">
           <ReactionPanel
@@ -288,6 +300,7 @@ export default function ReadingRoom({
             onClose={() => setShowContribution(false)}
             onUnlocked={(nextEpisodeId) => {
               setShowContribution(false);
+              setIsTransitioning(true);
               router.replace(`/stories/${slug}/read/${nextEpisodeId}`);
             }}
           />
@@ -371,6 +384,17 @@ export default function ReadingRoom({
         </footer>
       </article>
       <footer className="reader-footer"><span>STORYFLICKS</span><span>Stories worth staying for.</span><span>© 2026</span></footer>
+      {isTransitioning && (
+        <div className="reader-transition" role="status" aria-live="polite" aria-atomic="true">
+          <div className="reader-transition-content">
+            <span className="reader-transition-mark" aria-hidden="true">SF.</span>
+            <span className="reader-transition-spinner" aria-hidden="true" />
+            <p className="reader-transition-eyebrow">TURNING THE PAGE</p>
+            <h2>Your next chapter is on its way.</h2>
+            <p>Your reaction has been received. Please bear with us while the next page loads.</p>
+          </div>
+        </div>
+      )}
       {showContribution && <div className="contribution-modal-backdrop" role="presentation">
         <div className="contribution-modal-dialog" role="dialog" aria-modal="true" aria-label="Share your take">
           <ReactionPanel
@@ -380,6 +404,7 @@ export default function ReadingRoom({
             onClose={() => setShowContribution(false)}
             onUnlocked={(nextEpisodeId) => {
               setShowContribution(false);
+              setIsTransitioning(true);
               router.replace(`/stories/${slug}/read/${nextEpisodeId}`);
             }}
           />
