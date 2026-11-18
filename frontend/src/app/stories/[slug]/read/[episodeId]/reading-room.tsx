@@ -5,7 +5,7 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import ReactionPanel from "../../react/[episodeId]/reaction-panel";
 import SupportStoryButton from "../../support-story-button";
-import { Fragment, useCallback, useEffect, useMemo, useRef, useState, type ReactNode } from "react";
+import { Fragment, useCallback, useEffect, useMemo, useRef, useState, type ReactNode, type MouseEvent, type TouchEvent } from "react";
 import { getSupabaseBrowserClient } from "@/lib/supabase";
 
 type ContentRun = {text:string;bold?:boolean;italic?:boolean;underline?:boolean;strike?:boolean;superscript?:boolean;subscript?:boolean;formatting?:{color?:string;highlight?:string;fontSizePt?:number;fontFamily?:string;smallCaps?:boolean;allCaps?:boolean}};
@@ -120,6 +120,12 @@ export default function ReadingRoom({
   const [typeface, setTypeface] = useState<"classic" | "modern" | "sans" | "dyslexia">("classic");
   const [spacing, setSpacing] = useState<"comfortable" | "relaxed">("comfortable");
   const [progress, setProgress] = useState(0);
+  const [readingMode, setReadingMode] = useState<"pages" | "scroll">("pages");
+  const [currentPage, setCurrentPage] = useState(0);
+  const [pageCount, setPageCount] = useState(1);
+  const pageViewportRef = useRef<HTMLDivElement | null>(null);
+  const touchStartX = useRef<number | null>(null);
+  const suppressTapAfterSwipe = useRef(false);
   const [showSettings, setShowSettings] = useState(false);
   const saveTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const pendingProgress = useRef<{ scrollY: number; percent: number } | null>(null);
@@ -213,6 +219,8 @@ export default function ReadingRoom({
 
   useEffect(() => {
     try {
+      const savedMode = window.localStorage.getItem("storyflicks-reader-mode");
+      if (savedMode === "scroll" || savedMode === "pages") setReadingMode(savedMode);
       const saved = JSON.parse(window.localStorage.getItem("storyflicks-reader-display") || "{}") as { typeface?: string; spacing?: string };
       if (saved.typeface === "modern" || saved.typeface === "sans" || saved.typeface === "dyslexia") setTypeface(saved.typeface);
       if (saved.spacing === "relaxed") setSpacing("relaxed");
@@ -220,6 +228,14 @@ export default function ReadingRoom({
       // Storage can be unavailable; the defaults still work.
     }
   }, []);
+
+  useEffect(() => {
+    try {
+      window.localStorage.setItem("storyflicks-reader-mode", readingMode);
+    } catch {
+      // The selected reading mode remains active for this visit.
+    }
+  }, [readingMode]);
 
   useEffect(() => {
     try {
@@ -256,6 +272,102 @@ export default function ReadingRoom({
     const y = payload.reading_progress.last_position.scrollY;
     requestAnimationFrame(() => window.scrollTo(0, y));
   }, [payload, status]);
+
+  const updatePageMetrics = useCallback(() => {
+    const viewport = pageViewportRef.current;
+    if (!viewport || readingMode !== "pages") return;
+    const width = Math.max(1, viewport.clientWidth);
+    const count = Math.max(1, Math.ceil((viewport.scrollWidth - 1) / width));
+    const page = Math.min(count - 1, Math.max(0, Math.round(viewport.scrollLeft / width)));
+    setPageCount(count);
+    setCurrentPage(page);
+    setProgress(Math.min(100, Math.round(((page + 1) / count) * 100)));
+    try {
+      window.localStorage.setItem(`storyflicks-reader-page:${episodeId}`, String(page));
+    } catch {
+      // Page navigation remains functional when local storage is unavailable.
+    }
+  }, [episodeId, readingMode]);
+
+  const goToPage = useCallback((requestedPage: number) => {
+    const viewport = pageViewportRef.current;
+    if (!viewport || readingMode !== "pages") return;
+    const page = Math.max(0, Math.min(pageCount - 1, requestedPage));
+    viewport.scrollTo({ left: page * viewport.clientWidth, behavior: window.matchMedia("(prefers-reduced-motion: reduce)").matches ? "auto" : "smooth" });
+    setCurrentPage(page);
+  }, [pageCount, readingMode]);
+
+  useEffect(() => {
+    if (readingMode !== "pages" || status !== "ready") return;
+    const viewport = pageViewportRef.current;
+    if (!viewport) return;
+    let frame = 0;
+    const measure = () => {
+      cancelAnimationFrame(frame);
+      frame = requestAnimationFrame(updatePageMetrics);
+    };
+    const observer = new ResizeObserver(measure);
+    observer.observe(viewport);
+    const content = viewport.querySelector(".reader-paged-content");
+    if (content) observer.observe(content);
+    viewport.addEventListener("scroll", measure, { passive: true });
+    measure();
+    try {
+      const savedPage = Number(window.localStorage.getItem(`storyflicks-reader-page:${episodeId}`) || "0");
+      if (Number.isFinite(savedPage) && savedPage > 0) {
+        requestAnimationFrame(() => viewport.scrollTo({ left: savedPage * viewport.clientWidth, behavior: "auto" }));
+      }
+    } catch {
+      // Start at the first page when storage is unavailable.
+    }
+    return () => {
+      cancelAnimationFrame(frame);
+      observer.disconnect();
+      viewport.removeEventListener("scroll", measure);
+    };
+  }, [episodeId, readingMode, status, updatePageMetrics, fontScale, spacing, width, typeface]);
+
+  useEffect(() => {
+    if (readingMode !== "pages") return;
+    const onKeyDown = (event: KeyboardEvent) => {
+      if (event.altKey || event.ctrlKey || event.metaKey) return;
+      if (event.key === "ArrowRight" || event.key === "PageDown") {
+        event.preventDefault();
+        goToPage(currentPage + 1);
+      } else if (event.key === "ArrowLeft" || event.key === "PageUp") {
+        event.preventDefault();
+        goToPage(currentPage - 1);
+      }
+    };
+    window.addEventListener("keydown", onKeyDown);
+    return () => window.removeEventListener("keydown", onKeyDown);
+  }, [currentPage, goToPage, readingMode]);
+
+  const handlePageTouchStart = (event: TouchEvent<HTMLDivElement>) => {
+    if (readingMode === "pages") touchStartX.current = event.changedTouches[0]?.clientX ?? null;
+  };
+
+  const handlePageTouchEnd = (event: TouchEvent<HTMLDivElement>) => {
+    if (readingMode !== "pages" || touchStartX.current === null) return;
+    const endX = event.changedTouches[0]?.clientX ?? touchStartX.current;
+    const delta = endX - touchStartX.current;
+    touchStartX.current = null;
+    if (Math.abs(delta) < 45) return;
+    suppressTapAfterSwipe.current = true;
+    goToPage(currentPage + (delta < 0 ? 1 : -1));
+  };
+
+  const handlePageTap = (event: MouseEvent<HTMLDivElement>) => {
+    if (suppressTapAfterSwipe.current) {
+      suppressTapAfterSwipe.current = false;
+      return;
+    }
+    if (readingMode !== "pages" || (event.target as HTMLElement).closest("a,button")) return;
+    const bounds = event.currentTarget.getBoundingClientRect();
+    const x = event.clientX - bounds.left;
+    if (x < bounds.width * 0.28) goToPage(currentPage - 1);
+    else if (x > bounds.width * 0.72) goToPage(currentPage + 1);
+  };
 
   const episodeArtwork = payload?.episode.assets?.find((asset) => asset.asset_type === "inline_image" && asset.public_url);
   const bodyAssets = payload?.episode.assets?.filter((asset) => asset.public_url && asset.id !== episodeArtwork?.id) || [];
@@ -329,6 +441,7 @@ export default function ReadingRoom({
           )}
           <span className="reader-progress-label">{progress}%</span>
           <button className="reader-tool-button" onClick={() => setShowSettings((value) => !value)} aria-expanded={showSettings}>Aa <span>Reading settings</span></button>
+          <button className="reader-mode-toggle" type="button" onClick={() => { setReadingMode((mode) => mode === "pages" ? "scroll" : "pages"); setCurrentPage(0); }} aria-label={readingMode === "pages" ? "Switch to continuous scrolling" : "Switch to paginated reading"}>{readingMode === "pages" ? "Scrolling" : "Pages"}</button>
           <Link className="reader-exit" href={`/stories/${slug}`}>Exit</Link>
         </div>
       </header>
@@ -339,7 +452,8 @@ export default function ReadingRoom({
         <div><span>LINE SPACING</span><div className="setting-options"><button className={spacing === "comfortable" ? "selected" : ""} onClick={() => setSpacing("comfortable")}>Comfortable</button><button className={spacing === "relaxed" ? "selected" : ""} onClick={() => setSpacing("relaxed")}>Relaxed</button></div></div>
         <div><span>READING WIDTH</span><div className="setting-options"><button className={width === "narrow" ? "selected" : ""} onClick={() => setWidth("narrow")}>Narrow</button><button className={width === "comfortable" ? "selected" : ""} onClick={() => setWidth("comfortable")}>Comfortable</button><button className={width === "wide" ? "selected" : ""} onClick={() => setWidth("wide")}>Wide</button></div></div>
       </section>}
-      <article className={`reading-page reading-width-${width} reading-spacing-${spacing}`} data-font={typeface}>
+      <div className={`reader-page-viewport ${readingMode === "pages" ? "is-paginated" : "is-scrolling"}`} ref={pageViewportRef} onClick={handlePageTap} onTouchStart={handlePageTouchStart} onTouchEnd={handlePageTouchEnd}>
+      <article className={`reading-page reading-width-${width} reading-spacing-${spacing} ${readingMode === "pages" ? "reader-paged-content" : ""}`} data-font={typeface}>
         <div className="reading-episode-heading reading-episode-heading-stacked">
           {episodeArtwork?.public_url && (
             <RemoteImage
@@ -388,6 +502,12 @@ export default function ReadingRoom({
           </div>
         </footer>
       </article>
+      </div>
+      {readingMode === "pages" && <nav className="reader-page-controls" aria-label="Page navigation">
+        <button type="button" onClick={() => goToPage(currentPage - 1)} disabled={currentPage === 0}>← Previous</button>
+        <span aria-live="polite">PAGE {String(currentPage + 1).padStart(2, "0")} / {String(pageCount).padStart(2, "0")}</span>
+        <button type="button" onClick={() => goToPage(currentPage + 1)} disabled={currentPage >= pageCount - 1}>Next →</button>
+      </nav>}
       <footer className="reader-footer"><span>STORYFLICKS</span><span>Stories worth staying for.</span><span>© 2026</span></footer>
       {isTransitioning && (
         <div className="reader-transition" role="status" aria-live="polite" aria-atomic="true">

@@ -2216,3 +2216,29 @@ html[data-theme="dark"] body :is(input,textarea,select)::placeholder {
   .reader-transition { animation: none; }
   .reader-transition-spinner { animation-duration: 2.5s; }
 }
+
+
+/* Reading Room pagination prototype — scoped to the episode reader. */
+.reader-mode-toggle{border:1px solid color-mix(in srgb,var(--reader-ink) 28%,transparent);background:transparent;color:var(--reader-ink);padding:7px 11px;border-radius:999px;font-size:16px;cursor:pointer;white-space:nowrap}
+.reader-page-viewport{width:100%;position:relative}
+.reader-page-viewport.is-paginated{height:calc(100dvh - 154px);min-height:420px;overflow-x:auto;overflow-y:hidden;overscroll-behavior-x:contain;scroll-snap-type:x mandatory;scrollbar-width:none;touch-action:pan-y}
+.reader-page-viewport.is-paginated::-webkit-scrollbar{display:none}
+.reader-page-viewport.is-scrolling{height:auto;overflow:visible}
+.reader-page-viewport .reader-paged-content{box-sizing:border-box;width:calc(100vw - 40px);max-width:none;height:100%;margin:0;padding:28px 0 34px;column-width:calc(100vw - 40px);column-gap:0;column-fill:auto}
+.reader-page-viewport .reader-paged-content>.reading-episode-heading,.reader-page-viewport .reader-paged-content>.reading-rule,.reader-page-viewport .reader-paged-content>.reading-asset,.reader-page-viewport .reader-paged-content>.reading-end{break-inside:avoid;column-span:none}
+.reader-page-viewport .reader-paged-content .reading-episode-heading,
+.reader-page-viewport .reader-paged-content .manuscript,
+.reader-page-viewport .reader-paged-content .reading-rule,
+.reader-page-viewport .reader-paged-content .reading-asset,
+.reader-page-viewport .reader-paged-content .reading-end{width:min(100% - 40px,690px);margin-left:auto;margin-right:auto}
+.reader-page-viewport .reader-paged-content .manuscript p,
+.reader-page-viewport .reader-paged-content .manuscript h2,
+.reader-page-viewport .reader-paged-content .manuscript blockquote{orphans:3;widows:3;break-inside:auto}
+.reader-page-viewport .reader-paged-content .reading-episode-heading{padding-top:12px}
+.reader-page-controls{height:62px;display:flex;align-items:center;justify-content:space-between;gap:14px;padding:0 max(20px,calc((100vw - 690px)/2));border-top:1px solid color-mix(in srgb,var(--reader-ink) 16%,transparent);border-bottom:1px solid color-mix(in srgb,var(--reader-ink) 16%,transparent);font:16px var(--font-dm-mono),'DM Mono',monospace;letter-spacing:.7px}
+.reader-page-controls button{border:0;background:transparent;color:var(--reader-ink);font:inherit;cursor:pointer;padding:10px 4px}
+.reader-page-controls button:disabled{opacity:.35;cursor:not-allowed}
+.reader-page-controls span{white-space:nowrap}
+.reader-page-viewport.is-paginated .reading-page{break-after:auto}
+@media(max-width:650px){.reader-mode-toggle{padding:6px 8px;font-size:14px}.reader-page-viewport.is-paginated{height:calc(100dvh - 132px);min-height:380px}.reader-page-viewport .reader-paged-content{width:calc(100vw - 28px);column-width:calc(100vw - 28px);padding:18px 0 24px}.reader-page-viewport .reader-paged-content .reading-episode-heading,.reader-page-viewport .reader-paged-content .manuscript,.reader-page-viewport .reader-paged-content .reading-rule,.reader-page-viewport .reader-paged-content .reading-asset,.reader-page-viewport .reader-paged-content .reading-end{width:calc(100% - 24px)}.reader-page-controls{height:56px;padding:0 14px;font-size:14px}.reader-toolbar{flex-wrap:wrap}}
+@media(prefers-reduced-motion:reduce){.reader-page-viewport.is-paginated{scroll-behavior:auto}}
