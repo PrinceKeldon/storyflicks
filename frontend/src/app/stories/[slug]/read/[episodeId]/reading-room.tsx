@@ -5,7 +5,7 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import ReactionPanel from "../../react/[episodeId]/reaction-panel";
 import SupportStoryButton from "../../support-story-button";
-import { Fragment, useCallback, useEffect, useMemo, useRef, useState, type ReactNode, type MouseEvent } from "react";
+import { Fragment, useCallback, useEffect, useMemo, useRef, useState, type ReactNode, type MouseEvent, type TouchEvent } from "react";
 import { getSupabaseBrowserClient } from "@/lib/supabase";
 
 type ContentRun = {text:string;bold?:boolean;italic?:boolean;underline?:boolean;strike?:boolean;superscript?:boolean;subscript?:boolean;formatting?:{color?:string;highlight?:string;fontSizePt?:number;fontFamily?:string;smallCaps?:boolean;allCaps?:boolean}};
