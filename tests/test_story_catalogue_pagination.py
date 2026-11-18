@@ -15,7 +15,7 @@ class StoryCataloguePaginationTests(unittest.IsolatedAsyncioTestCase):
             for i in range(1, 4)
         ]
         with patch.object(stories.supabase, "admin_get", new=AsyncMock(return_value=rows)) as admin_get:
-            result = await stories.list_stories(limit=2)
+            result = await stories.list_stories(q=None, genre=None, limit=2, cursor=None)
 
         self.assertEqual(len(result["items"]), 2)
         self.assertIsNotNone(result["next_cursor"])
@@ -42,7 +42,7 @@ class StoryCataloguePaginationTests(unittest.IsolatedAsyncioTestCase):
 
     async def test_rejects_malformed_cursor(self):
         with self.assertRaises(HTTPException) as raised:
-            await stories.list_stories(cursor="not-a-valid-cursor")
+            await stories.list_stories(q=None, genre=None, limit=24, cursor="not-a-valid-cursor")
         self.assertEqual(raised.exception.status_code, 400)
 
 
