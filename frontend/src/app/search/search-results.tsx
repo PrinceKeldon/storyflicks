@@ -33,7 +33,7 @@ export default function SearchResults({
 
   async function loadMore() {
     if (!cursor || loading) return;
-    const apiUrl = process.env.NEXT_PUBLIC_API_URL?.replace(/\\/$/, "");
+    const apiUrl = process.env.NEXT_PUBLIC_API_URL?.replace(/\/$/, "");
     if (!apiUrl) {
       setError("The catalogue is temporarily unavailable.");
       return;
