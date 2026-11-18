@@ -16,7 +16,7 @@ router = APIRouter()
 async def list_stories(
     q: str | None = Query(default=None, max_length=100),
     genre: str | None = Query(default=None, max_length=40),
-    limit: int = Query(default=24, ge=1, le=100),
+    limit: int = Query(default=100, ge=1, le=100),
     cursor: str | None = Query(default=None, max_length=512),
 ):
     params = {
