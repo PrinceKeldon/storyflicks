@@ -384,6 +384,17 @@ export default function ReadingRoom({
         </footer>
       </article>
       <footer className="reader-footer"><span>STORYFLICKS</span><span>Stories worth staying for.</span><span>© 2026</span></footer>
+      {isTransitioning && (
+        <div className="reader-transition" role="status" aria-live="polite" aria-atomic="true">
+          <div className="reader-transition-content">
+            <span className="reader-transition-mark" aria-hidden="true">SF.</span>
+            <span className="reader-transition-spinner" aria-hidden="true" />
+            <p className="reader-transition-eyebrow">TURNING THE PAGE</p>
+            <h2>Your next chapter is on its way.</h2>
+            <p>Your reaction has been received. Please bear with us while the next page loads.</p>
+          </div>
+        </div>
+      )}
       {showContribution && <div className="contribution-modal-backdrop" role="presentation">
         <div className="contribution-modal-dialog" role="dialog" aria-modal="true" aria-label="Share your take">
           <ReactionPanel
