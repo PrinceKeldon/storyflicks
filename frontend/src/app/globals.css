@@ -2226,7 +2226,7 @@ html[data-theme="dark"] body :is(input,textarea,select)::placeholder {
 .reader-page-viewport.is-paginated{flex:1 1 0;min-height:0;height:0;overflow-x:scroll;overflow-y:hidden;overscroll-behavior-x:contain;scroll-snap-type:x mandatory;scrollbar-width:none;touch-action:pan-x pan-y;scroll-behavior:smooth}
 .reader-page-viewport.is-paginated::-webkit-scrollbar{display:none}
 .reader-page-viewport.is-scrolling{height:auto;overflow:visible}
-.reader-page-viewport .reader-paged-content{box-sizing:border-box;width:100%;max-width:none;height:100%;min-height:100%;margin:0;padding:clamp(14px,3vh,30px) 0;column-width:100%;column-gap:0;column-fill:auto}
+.reader-page-viewport .reader-paged-content{box-sizing:border-box;width:100%;max-width:none;height:100%;min-height:100%;margin:0;padding:clamp(14px,3vh,30px) 0;column-width:var(--reader-page-column-width,100vw);column-gap:0;column-fill:auto}
 .reader-page-viewport .reader-paged-content>.reading-episode-heading,.reader-page-viewport .reader-paged-content>.reading-rule,.reader-page-viewport .reader-paged-content>.reading-asset,.reader-page-viewport .reader-paged-content>.reading-end{break-inside:avoid;column-span:none}
 .reader-page-viewport .reader-paged-content .reading-episode-heading,
 .reader-page-viewport .reader-paged-content .manuscript,

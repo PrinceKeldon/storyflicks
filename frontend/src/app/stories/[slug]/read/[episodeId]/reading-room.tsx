@@ -277,6 +277,7 @@ export default function ReadingRoom({
     const viewport = pageViewportRef.current;
     if (!viewport || readingMode !== "pages") return;
     const width = Math.max(1, viewport.clientWidth);
+    viewport.style.setProperty("--reader-page-column-width", `${width}px`);
     const content = viewport.querySelector<HTMLElement>(".reader-paged-content");
     const contentWidth = Math.max(viewport.scrollWidth, content?.scrollWidth || 0);
     const count = Math.max(1, Math.ceil((contentWidth - 1) / width));
@@ -297,6 +298,7 @@ export default function ReadingRoom({
     const viewport = pageViewportRef.current;
     if (!viewport || readingMode !== "pages") return;
     const pageWidth = Math.max(1, viewport.clientWidth);
+    viewport.style.setProperty("--reader-page-column-width", `${pageWidth}px`);
     const content = viewport.querySelector<HTMLElement>(".reader-paged-content");
     const contentWidth = Math.max(viewport.scrollWidth, content?.scrollWidth || 0);
     const pageTotal = Math.max(1, Math.ceil((contentWidth - 1) / pageWidth));
@@ -331,6 +333,7 @@ export default function ReadingRoom({
       if (Number.isFinite(savedPage) && savedPage > 0) {
         requestAnimationFrame(() => {
           const pageWidth = Math.max(1, viewport.clientWidth);
+          viewport.style.setProperty("--reader-page-column-width", `${pageWidth}px`);
           const content = viewport.querySelector<HTMLElement>(".reader-paged-content");
           const contentWidth = Math.max(viewport.scrollWidth, content?.scrollWidth || 0);
           const pageTotal = Math.max(1, Math.ceil((contentWidth - 1) / pageWidth));
