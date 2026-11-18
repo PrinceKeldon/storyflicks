@@ -24,7 +24,7 @@ type EpisodePayload = {
   episode: { id: string; sequence_number: number; title: string; synopsis?: string | null; content: unknown; assets?: { id: string; asset_type: string; public_url?: string | null; alt_text?: string | null; position: number }[] };
   next_episode?: { id: string; title: string; sequence_number: number } | null;
   previous_episode?: { id: string; title: string; sequence_number: number } | null;
-  reading_progress?: { progress_percent?: number; last_position?: { scrollY?: number } | null } | null;
+  reading_progress?: { progress_percent?: number; last_position?: { scrollY?: number; page?: number } | null } | null;
 };
 
 function extractBlocks(content: unknown): ContentBlock[] {
@@ -124,11 +124,11 @@ export default function ReadingRoom({
   const [currentPage, setCurrentPage] = useState(0);
   const [pageCount, setPageCount] = useState(1);
   const pageViewportRef = useRef<HTMLDivElement | null>(null);
-  const touchStartX = useRef<number | null>(null);
-  const suppressTapAfterSwipe = useRef(false);
+  const touchStart = useRef<{ x: number; y: number } | null>(null);
+  const lastSwipeAt = useRef(0);
   const [showSettings, setShowSettings] = useState(false);
   const saveTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
-  const pendingProgress = useRef<{ scrollY: number; percent: number } | null>(null);
+  const pendingProgress = useRef<{ scrollY: number; percent: number; page?: number } | null>(null);
   const preferencesTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const tokenRef = useRef<string | null>(null);
   const [sessionReady, setSessionReady] = useState(false);
@@ -188,14 +188,14 @@ export default function ReadingRoom({
     void fetch(`${apiUrl}/episodes/${episodeId}/progress`, {
       method: "PUT",
       headers: { "Content-Type": "application/json", Authorization: `Bearer ${tokenRef.current}` },
-      body: JSON.stringify({ progress_percent: latest.percent, last_position: { scrollY: latest.scrollY } }),
+      body: JSON.stringify({ progress_percent: latest.percent, last_position: { scrollY: latest.scrollY, ...(typeof latest.page === "number" ? { page: latest.page } : {}) } }),
       keepalive: true,
     }).catch(() => undefined);
   }, [apiUrl, episodeId]);
 
-  const saveProgress = useCallback((scrollY: number, percent: number) => {
+  const saveProgress = useCallback((scrollY: number, percent: number, page?: number) => {
     if (!tokenRef.current || !apiUrl) return;
-    pendingProgress.current = { scrollY, percent };
+    pendingProgress.current = { scrollY, percent, ...(typeof page === "number" ? { page } : {}) };
     if (saveTimer.current) clearTimeout(saveTimer.current);
     saveTimer.current = setTimeout(() => {
       saveTimer.current = null;
@@ -246,7 +246,7 @@ export default function ReadingRoom({
   }, [typeface, spacing]);
 
   useEffect(() => {
-    if (status !== "ready") return;
+    if (status !== "ready" || readingMode !== "scroll") return;
     const update = () => {
       const max = document.documentElement.scrollHeight - window.innerHeight;
       const next = max > 0 ? Math.min(100, Math.max(0, Math.round((window.scrollY / max) * 100))) : 0;
@@ -265,13 +265,13 @@ export default function ReadingRoom({
       document.removeEventListener("visibilitychange", flushWhenHidden);
       flushProgress();
     };
-  }, [flushProgress, saveProgress, status]);
+  }, [flushProgress, readingMode, saveProgress, status]);
 
   useEffect(() => {
-    if (status !== "ready" || !payload?.reading_progress?.last_position?.scrollY) return;
+    if (readingMode !== "scroll" || status !== "ready" || !payload?.reading_progress?.last_position?.scrollY) return;
     const y = payload.reading_progress.last_position.scrollY;
     requestAnimationFrame(() => window.scrollTo(0, y));
-  }, [payload, status]);
+  }, [payload, readingMode, status]);
 
   const updatePageMetrics = useCallback(() => {
     const viewport = pageViewportRef.current;
@@ -281,21 +281,29 @@ export default function ReadingRoom({
     const page = Math.min(count - 1, Math.max(0, Math.round(viewport.scrollLeft / width)));
     setPageCount(count);
     setCurrentPage(page);
-    setProgress(Math.min(100, Math.round(((page + 1) / count) * 100)));
+    const percent = Math.min(100, Math.round(((page + 1) / count) * 100));
+    setProgress(percent);
+    saveProgress(0, percent, page);
     try {
       window.localStorage.setItem(`storyflicks-reader-page:${episodeId}`, String(page));
     } catch {
       // Page navigation remains functional when local storage is unavailable.
     }
-  }, [episodeId, readingMode]);
+  }, [episodeId, readingMode, saveProgress]);
 
   const goToPage = useCallback((requestedPage: number) => {
     const viewport = pageViewportRef.current;
     if (!viewport || readingMode !== "pages") return;
-    const page = Math.max(0, Math.min(pageCount - 1, requestedPage));
+    const pageWidth = Math.max(1, viewport.clientWidth);
+    const pageTotal = Math.max(1, Math.ceil((viewport.scrollWidth - 1) / pageWidth));
+    const page = Math.max(0, Math.min(pageTotal - 1, requestedPage));
     viewport.scrollTo({ left: page * viewport.clientWidth, behavior: window.matchMedia("(prefers-reduced-motion: reduce)").matches ? "auto" : "smooth" });
     setCurrentPage(page);
-  }, [pageCount, readingMode]);
+    const percent = Math.min(100, Math.round(((page + 1) / pageTotal) * 100));
+    setPageCount(pageTotal);
+    setProgress(percent);
+    saveProgress(0, percent, page);
+  }, [readingMode, saveProgress]);
 
   useEffect(() => {
     if (readingMode !== "pages" || status !== "ready") return;
@@ -424,7 +432,7 @@ export default function ReadingRoom({
   if (status === "error" || !payload) return <main className="reader-state"><span className="reader-state-mark">SF.</span><p className="eyebrow">A SMALL INTERRUPTION</p><h1>We couldn’t open this episode.</h1><p>{error}</p><Link className="text-button" href={`/stories/${slug}`}>← Back to {payload?.story.title || "the story"}</Link></main>;
 
   return (
-    <main className={`reading-room theme-${theme}`}>
+    <main className={`reading-room theme-${theme}${readingMode === "pages" ? " is-paged" : ""}`}>
       <div className="reader-progress-track"><span style={{ width: `${progress}%` }} /></div>
       <header className="reader-toolbar">
         <Link className="reader-brand" href="/">STORY<span>FLICKS</span><i>.</i></Link>
@@ -452,7 +460,7 @@ export default function ReadingRoom({
         <div><span>LINE SPACING</span><div className="setting-options"><button className={spacing === "comfortable" ? "selected" : ""} onClick={() => setSpacing("comfortable")}>Comfortable</button><button className={spacing === "relaxed" ? "selected" : ""} onClick={() => setSpacing("relaxed")}>Relaxed</button></div></div>
         <div><span>READING WIDTH</span><div className="setting-options"><button className={width === "narrow" ? "selected" : ""} onClick={() => setWidth("narrow")}>Narrow</button><button className={width === "comfortable" ? "selected" : ""} onClick={() => setWidth("comfortable")}>Comfortable</button><button className={width === "wide" ? "selected" : ""} onClick={() => setWidth("wide")}>Wide</button></div></div>
       </section>}
-      <div className={`reader-page-viewport ${readingMode === "pages" ? "is-paginated" : "is-scrolling"}`} ref={pageViewportRef} onClick={handlePageTap} onTouchStart={handlePageTouchStart} onTouchEnd={handlePageTouchEnd}>
+      <div className={`reader-page-viewport ${readingMode === "pages" ? "is-paginated" : "is-scrolling"}`} ref={pageViewportRef} onClick={handlePageTap} onTouchStart={handlePageTouchStart} onTouchEnd={handlePageTouchEnd} onTouchCancel={() => { touchStart.current = null; }}>
       <article className={`reading-page reading-width-${width} reading-spacing-${spacing} ${readingMode === "pages" ? "reader-paged-content" : ""}`} data-font={typeface}>
         <div className="reading-episode-heading reading-episode-heading-stacked">
           {episodeArtwork?.public_url && (
