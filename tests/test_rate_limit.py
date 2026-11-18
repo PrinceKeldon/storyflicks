@@ -55,7 +55,7 @@ class RateLimitTests(unittest.IsolatedAsyncioTestCase):
         self.assertIn("checkout", names("POST", "/api/support/checkout"))
         self.assertIn("upload", names("POST", "/api/creator/stories/x/assets/upload-url"))
         self.assertIn("report", names("POST", "/api/reports"))
-        self.assertEqual(names("GET", "/api/stories"), {"any"})
+        self.assertEqual(names("GET", "/api/stories"), {"read"})
         self.assertEqual(rules_for("POST", "/api/support/stripe-webhook"), ())
         self.assertEqual(rules_for("POST", "/api/internal/publish-due-episodes"), ())
         self.assertEqual(rules_for("OPTIONS", "/api/creator/agent/chat"), ())
