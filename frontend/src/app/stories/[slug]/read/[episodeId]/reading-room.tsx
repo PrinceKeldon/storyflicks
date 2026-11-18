@@ -297,7 +297,7 @@ export default function ReadingRoom({
     const pageWidth = Math.max(1, viewport.clientWidth);
     const pageTotal = Math.max(1, Math.ceil((viewport.scrollWidth - 1) / pageWidth));
     const page = Math.max(0, Math.min(pageTotal - 1, requestedPage));
-    viewport.scrollTo({ left: page * viewport.clientWidth, behavior: window.matchMedia("(prefers-reduced-motion: reduce)").matches ? "auto" : "smooth" });
+    viewport.scrollTo({ left: page * pageWidth, behavior: window.matchMedia("(prefers-reduced-motion: reduce)").matches ? "auto" : "smooth" });
     setCurrentPage(page);
     const percent = Math.min(100, Math.round(((page + 1) / pageTotal) * 100));
     setPageCount(pageTotal);
@@ -338,7 +338,9 @@ export default function ReadingRoom({
   useEffect(() => {
     if (readingMode !== "pages") return;
     const onKeyDown = (event: KeyboardEvent) => {
-      if (event.altKey || event.ctrlKey || event.metaKey) return;
+      if (event.altKey || event.ctrlKey || event.metaKey || event.defaultPrevented || showContribution) return;
+      const target = event.target;
+      if (target instanceof HTMLElement && (target.isContentEditable || target.closest("input,textarea,select,button"))) return;
       if (event.key === "ArrowRight" || event.key === "PageDown") {
         event.preventDefault();
         goToPage(currentPage + 1);
@@ -349,7 +351,7 @@ export default function ReadingRoom({
     };
     window.addEventListener("keydown", onKeyDown);
     return () => window.removeEventListener("keydown", onKeyDown);
-  }, [currentPage, goToPage, readingMode]);
+  }, [currentPage, goToPage, readingMode, showContribution]);
 
   const handlePageTouchStart = (event: TouchEvent<HTMLDivElement>) => {
     const touch = event.touches[0];
@@ -453,7 +455,14 @@ export default function ReadingRoom({
           )}
           <span className="reader-progress-label">{progress}%</span>
           <button className="reader-tool-button" onClick={() => setShowSettings((value) => !value)} aria-expanded={showSettings}>Aa <span>Reading settings</span></button>
-          <button className="reader-mode-toggle" type="button" onClick={() => { setReadingMode((mode) => mode === "pages" ? "scroll" : "pages"); setCurrentPage(0); }} aria-label={readingMode === "pages" ? "Switch to continuous scrolling" : "Switch to paginated reading"}>{readingMode === "pages" ? "Scrolling" : "Pages"}</button>
+          <button className="reader-mode-toggle" type="button" onClick={() => {
+            if (readingMode === "scroll") {
+              window.scrollTo(0, 0);
+              setReadingMode("pages");
+            } else {
+              setReadingMode("scroll");
+            }
+          }} aria-label={readingMode === "pages" ? "Switch to continuous scrolling" : "Switch to paginated reading"}>{readingMode === "pages" ? "Scrolling" : "Pages"}</button>
           <Link className="reader-exit" href={`/stories/${slug}`}>Exit</Link>
         </div>
       </header>
