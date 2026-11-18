@@ -124,6 +124,8 @@ export default function ReadingRoom({
   const [currentPage, setCurrentPage] = useState(0);
   const [pageCount, setPageCount] = useState(1);
   const pageViewportRef = useRef<HTMLDivElement | null>(null);
+  const touchStartX = useRef<number | null>(null);
+  const suppressTapAfterSwipe = useRef(false);
   const [showSettings, setShowSettings] = useState(false);
   const saveTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const pendingProgress = useRef<{ scrollY: number; percent: number } | null>(null);
@@ -341,7 +343,25 @@ export default function ReadingRoom({
     return () => window.removeEventListener("keydown", onKeyDown);
   }, [currentPage, goToPage, readingMode]);
 
+  const handlePageTouchStart = (event: TouchEvent<HTMLDivElement>) => {
+    if (readingMode === "pages") touchStartX.current = event.changedTouches[0]?.clientX ?? null;
+  };
+
+  const handlePageTouchEnd = (event: TouchEvent<HTMLDivElement>) => {
+    if (readingMode !== "pages" || touchStartX.current === null) return;
+    const endX = event.changedTouches[0]?.clientX ?? touchStartX.current;
+    const delta = endX - touchStartX.current;
+    touchStartX.current = null;
+    if (Math.abs(delta) < 45) return;
+    suppressTapAfterSwipe.current = true;
+    goToPage(currentPage + (delta < 0 ? 1 : -1));
+  };
+
   const handlePageTap = (event: MouseEvent<HTMLDivElement>) => {
+    if (suppressTapAfterSwipe.current) {
+      suppressTapAfterSwipe.current = false;
+      return;
+    }
     if (readingMode !== "pages" || (event.target as HTMLElement).closest("a,button")) return;
     const bounds = event.currentTarget.getBoundingClientRect();
     const x = event.clientX - bounds.left;
@@ -432,7 +452,7 @@ export default function ReadingRoom({
         <div><span>LINE SPACING</span><div className="setting-options"><button className={spacing === "comfortable" ? "selected" : ""} onClick={() => setSpacing("comfortable")}>Comfortable</button><button className={spacing === "relaxed" ? "selected" : ""} onClick={() => setSpacing("relaxed")}>Relaxed</button></div></div>
         <div><span>READING WIDTH</span><div className="setting-options"><button className={width === "narrow" ? "selected" : ""} onClick={() => setWidth("narrow")}>Narrow</button><button className={width === "comfortable" ? "selected" : ""} onClick={() => setWidth("comfortable")}>Comfortable</button><button className={width === "wide" ? "selected" : ""} onClick={() => setWidth("wide")}>Wide</button></div></div>
       </section>}
-      <div className={`reader-page-viewport ${readingMode === "pages" ? "is-paginated" : "is-scrolling"}`} ref={pageViewportRef} onClick={handlePageTap}>
+      <div className={`reader-page-viewport ${readingMode === "pages" ? "is-paginated" : "is-scrolling"}`} ref={pageViewportRef} onClick={handlePageTap} onTouchStart={handlePageTouchStart} onTouchEnd={handlePageTouchEnd}>
       <article className={`reading-page reading-width-${width} reading-spacing-${spacing} ${readingMode === "pages" ? "reader-paged-content" : ""}`} data-font={typeface}>
         <div className="reading-episode-heading reading-episode-heading-stacked">
           {episodeArtwork?.public_url && (
