@@ -23,13 +23,13 @@ async def list_stories(
         "select": "id,slug,title,author_name,tagline,synopsis,genres,cover_path,publication_status,completion_status,first_episode_free,section_label,section_label_plural,published_at,updated_at",
         "publication_status": "eq.published",
         "deleted_at": "is.null",
-        "order": "published_at.desc,id.desc",
+        "order": "published_at.desc.nullslast,id.desc",
         "limit": str(limit + 1),
     }
 
     filters = []
     if q:
-        safe_query = " ".join(re.findall(r"[\w-]+", q, flags=re.UNICODE))
+        safe_query = " ".join(re.findall(r"[\\w-]+", q, flags=re.UNICODE))
         if safe_query:
             filters.append(
                 f"or(title.ilike.*{safe_query}*,"
@@ -38,7 +38,7 @@ async def list_stories(
             )
 
     if genre:
-        safe_genre = " ".join(re.findall(r"[\w &-]+", genre, flags=re.UNICODE)).strip()
+        safe_genre = " ".join(re.findall(r"[\\w &-]+", genre, flags=re.UNICODE)).strip()
         if safe_genre:
             genre_value = f'"{safe_genre}"' if " " in safe_genre else safe_genre
             params["genres"] = f"cs.{{{genre_value}}}"
@@ -52,19 +52,27 @@ async def list_stories(
             )
             cursor_data = json.loads(decoded)
             cursor_published_at = cursor_data["published_at"]
-            if not isinstance(cursor_published_at, str):
-                raise ValueError("Invalid cursor timestamp")
+            if cursor_published_at is not None:
+                if not isinstance(cursor_published_at, str):
+                    raise ValueError("Invalid cursor timestamp")
+                parsed_timestamp = datetime.fromisoformat(
+                    cursor_published_at.replace("Z", "+00:00")
+                )
+                cursor_published_at = parsed_timestamp.isoformat()
             cursor_id = str(UUID(cursor_data["id"]))
-            parsed_timestamp = datetime.fromisoformat(
-                cursor_published_at.replace("Z", "+00:00")
-            )
-            cursor_published_at = parsed_timestamp.isoformat()
         except (ValueError, KeyError, TypeError, json.JSONDecodeError) as exc:
             raise HTTPException(status_code=400, detail="Invalid catalogue cursor.") from exc
-        filters.append(
-            f"or(published_at.lt.{cursor_published_at},"
-            f"and(published_at.eq.{cursor_published_at},id.lt.{cursor_id}))"
-        )
+
+        if cursor_published_at is None:
+            # NULL timestamps sort last; continue within that final group by ID.
+            filters.append(f"or(and(published_at.is.null,id.lt.{cursor_id}))")
+        else:
+            # Include the NULL group after all dated rows so no records are skipped.
+            filters.append(
+                f"or(published_at.lt.{cursor_published_at},"
+                f"and(published_at.eq.{cursor_published_at},id.lt.{cursor_id}),"
+                "published_at.is.null)"
+            )
 
     if len(filters) == 1:
         params["or"] = filters[0][2:]
@@ -75,10 +83,10 @@ async def list_stories(
     has_more = len(rows) > limit
     page = rows[:limit]
     next_cursor = None
-    if has_more and page and page[-1].get("published_at"):
+    if has_more and page:
         last = page[-1]
         raw_cursor = json.dumps(
-            {"published_at": last["published_at"], "id": last["id"]},
+            {"published_at": last.get("published_at"), "id": last["id"]},
             separators=(",", ":"),
         ).encode()
         next_cursor = base64.urlsafe_b64encode(raw_cursor).decode().rstrip("=")
