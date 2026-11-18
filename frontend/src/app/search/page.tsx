@@ -40,6 +40,7 @@ export default async function SearchPage({
     const search = new URLSearchParams();
     if (query) search.set("q", query);
     if (genre) search.set("genre", genre);
+    search.set("limit", "24");
     try {
       const response = await fetch(apiUrl + "/stories?" + search.toString(), { cache: "no-store" });
       if (!response.ok) throw new Error("Catalogue request failed.");
