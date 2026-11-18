@@ -277,7 +277,9 @@ export default function ReadingRoom({
     const viewport = pageViewportRef.current;
     if (!viewport || readingMode !== "pages") return;
     const width = Math.max(1, viewport.clientWidth);
-    const count = Math.max(1, Math.ceil((viewport.scrollWidth - 1) / width));
+    const content = viewport.querySelector<HTMLElement>(".reader-paged-content");
+    const contentWidth = Math.max(viewport.scrollWidth, content?.scrollWidth || 0);
+    const count = Math.max(1, Math.ceil((contentWidth - 1) / width));
     const page = Math.min(count - 1, Math.max(0, Math.round(viewport.scrollLeft / width)));
     setPageCount(count);
     setCurrentPage(page);
@@ -295,7 +297,9 @@ export default function ReadingRoom({
     const viewport = pageViewportRef.current;
     if (!viewport || readingMode !== "pages") return;
     const pageWidth = Math.max(1, viewport.clientWidth);
-    const pageTotal = Math.max(1, Math.ceil((viewport.scrollWidth - 1) / pageWidth));
+    const content = viewport.querySelector<HTMLElement>(".reader-paged-content");
+    const contentWidth = Math.max(viewport.scrollWidth, content?.scrollWidth || 0);
+    const pageTotal = Math.max(1, Math.ceil((contentWidth - 1) / pageWidth));
     const page = Math.max(0, Math.min(pageTotal - 1, requestedPage));
     viewport.scrollTo({ left: page * pageWidth, behavior: window.matchMedia("(prefers-reduced-motion: reduce)").matches ? "auto" : "smooth" });
     setCurrentPage(page);
@@ -327,7 +331,9 @@ export default function ReadingRoom({
       if (Number.isFinite(savedPage) && savedPage > 0) {
         requestAnimationFrame(() => {
           const pageWidth = Math.max(1, viewport.clientWidth);
-          const pageTotal = Math.max(1, Math.ceil((viewport.scrollWidth - 1) / pageWidth));
+          const content = viewport.querySelector<HTMLElement>(".reader-paged-content");
+          const contentWidth = Math.max(viewport.scrollWidth, content?.scrollWidth || 0);
+          const pageTotal = Math.max(1, Math.ceil((contentWidth - 1) / pageWidth));
           viewport.scrollTo({ left: Math.min(pageTotal - 1, savedPage) * pageWidth, behavior: "auto" });
           requestAnimationFrame(updatePageMetrics);
         });
