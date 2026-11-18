@@ -86,13 +86,31 @@ function manuscriptBlockStyle(block: ContentBlock) {
   };
 }
 
-export default function ReadingRoom({ slug, episodeId }: { slug: string; episodeId: string }) {
-  const [payload, setPayload] = useState<EpisodePayload | null>(null);
-  const [status, setStatus] = useState<"loading" | "signed-out" | "ready" | "locked" | "error">("loading");
-  const [accessGate, setAccessGate] = useState<EpisodeAccessGate | null>(null);
+type ReaderPreferences = { theme?: "paper" | "sepia" | "night"; text_size?: "small" | "comfortable" | "large"; reading_width?: "narrow" | "standard" | "wide" };
+
+export default function ReadingRoom({
+  slug,
+  episodeId,
+  initialPayload = null,
+  initialStatus = "loading",
+  initialAccessGate = null,
+  initialError = "",
+  initialPreferences = null,
+}: {
+  slug: string;
+  episodeId: string;
+  initialPayload?: EpisodePayload | null;
+  initialStatus?: "loading" | "signed-out" | "ready" | "locked" | "error";
+  initialAccessGate?: EpisodeAccessGate | null;
+  initialError?: string;
+  initialPreferences?: ReaderPreferences | null;
+}) {
+  const [payload, setPayload] = useState<EpisodePayload | null>(initialPayload);
+  const [status, setStatus] = useState<"loading" | "signed-out" | "ready" | "locked" | "error">(initialStatus);
+  const [accessGate, setAccessGate] = useState<EpisodeAccessGate | null>(initialAccessGate);
   const [showContribution, setShowContribution] = useState(false);
   const router = useRouter();
-  const [error, setError] = useState("");
+  const [error, setError] = useState(initialError);
   const [theme, setTheme] = useState<"paper" | "sepia" | "night">("paper");
   const [fontScale, setFontScale] = useState(100);
   const [width, setWidth] = useState<"narrow" | "comfortable" | "wide">("comfortable");
@@ -105,43 +123,26 @@ export default function ReadingRoom({ slug, episodeId }: { slug: string; episode
   const pendingProgress = useRef<{ scrollY: number; percent: number } | null>(null);
   const preferencesTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const tokenRef = useRef<string | null>(null);
+  const [sessionReady, setSessionReady] = useState(false);
   const apiUrl = process.env.NEXT_PUBLIC_API_URL?.replace(/\/$/, "");
 
   const loadEpisode = useCallback(async () => {
     const supabase = getSupabaseBrowserClient();
-    if (!supabase || !apiUrl) { setStatus("error"); setError("Reading is not configured yet. Please try again later."); return; }
+    if (!supabase) {
+      setStatus("error");
+      setError("Reading is not configured yet. Please try again later.");
+      return;
+    }
     const { data: { session } } = await supabase.auth.getSession();
-    if (!session?.access_token) { setStatus("signed-out"); return; }
+    if (!session?.access_token) {
+      tokenRef.current = null;
+      setSessionReady(false);
+      setStatus("signed-out");
+      return;
+    }
     tokenRef.current = session.access_token;
-    try {
-      const preferencesResponse = await fetch(`${apiUrl}/library/preferences`, {
-        headers: { Authorization: `Bearer ${session.access_token}` },
-        cache: "no-store",
-      }).catch(() => null);
-      if (preferencesResponse?.ok) {
-        const preferences = await preferencesResponse.json() as { theme?: "paper" | "sepia" | "night"; text_size?: "small" | "comfortable" | "large"; reading_width?: "narrow" | "standard" | "wide" };
-        if (preferences.theme) setTheme(preferences.theme);
-        if (preferences.text_size) setFontScale(preferences.text_size === "small" ? 90 : preferences.text_size === "large" ? 115 : 100);
-        if (preferences.reading_width) setWidth(preferences.reading_width === "wide" ? "wide" : preferences.reading_width === "narrow" ? "narrow" : "comfortable");
-      }
-      const response = await fetch(`${apiUrl}/episodes/${episodeId}`, { headers: { Authorization: `Bearer ${session.access_token}` }, cache: "no-store" });
-      if (response.status === 401) { setStatus("signed-out"); return; }
-      if (!response.ok) {
-        const body = await response.json().catch(() => ({})) as { detail?: string | EpisodeAccessGate };
-        if (response.status === 403 && body.detail && typeof body.detail === "object" && body.detail.code === "contribution_required") {
-          setAccessGate(body.detail);
-          setStatus("locked");
-          return;
-        }
-        const detail = body.detail;
-        throw new Error(typeof detail === "string" ? detail : detail?.message || "We couldn’t open this section.");
-      }
-      const data = await response.json() as EpisodePayload;
-      setPayload(data);
-      setProgress(data.reading_progress?.progress_percent ?? 0);
-      setStatus("ready");
-    } catch (cause) { setError(cause instanceof Error ? cause.message : "Something went wrong."); setStatus("error"); }
-  }, [apiUrl, episodeId]);
+    setSessionReady(true);
+  }, []);
 
   useEffect(() => {
     const supabase = getSupabaseBrowserClient();
@@ -152,7 +153,21 @@ export default function ReadingRoom({ slug, episodeId }: { slug: string; episode
     return () => subscription.unsubscribe();
   }, []);
 
-  useEffect(() => { void loadEpisode(); return () => { if (preferencesTimer.current) clearTimeout(preferencesTimer.current); }; }, [loadEpisode]);
+  useEffect(() => {
+    setPayload(initialPayload);
+    setStatus(initialStatus);
+    setAccessGate(initialAccessGate);
+    setError(initialError);
+    if (initialPreferences?.theme) setTheme(initialPreferences.theme);
+    if (initialPreferences?.text_size) setFontScale(initialPreferences.text_size === "small" ? 90 : initialPreferences.text_size === "large" ? 115 : 100);
+    if (initialPreferences?.reading_width) setWidth(initialPreferences.reading_width === "wide" ? "wide" : initialPreferences.reading_width === "narrow" ? "narrow" : "comfortable");
+    if (initialPayload) setProgress(initialPayload.reading_progress?.progress_percent ?? 0);
+  }, [episodeId, initialPayload, initialStatus, initialAccessGate, initialError, initialPreferences]);
+
+  useEffect(() => {
+    void loadEpisode();
+    return () => { if (preferencesTimer.current) clearTimeout(preferencesTimer.current); };
+  }, [loadEpisode]);
 
   const flushProgress = useCallback(() => {
     const latest = pendingProgress.current;
@@ -181,7 +196,7 @@ export default function ReadingRoom({ slug, episodeId }: { slug: string; episode
   }, [apiUrl, flushProgress]);
 
   useEffect(() => {
-    if (status !== "ready" || !tokenRef.current || !apiUrl) return;
+    if (status !== "ready" || !sessionReady || !tokenRef.current || !apiUrl) return;
     if (preferencesTimer.current) clearTimeout(preferencesTimer.current);
     preferencesTimer.current = setTimeout(() => {
       const textSize = fontScale <= 95 ? "small" : fontScale >= 110 ? "large" : "comfortable";
@@ -192,7 +207,7 @@ export default function ReadingRoom({ slug, episodeId }: { slug: string; episode
       }).catch(() => undefined);
     }, 700);
     return () => { if (preferencesTimer.current) clearTimeout(preferencesTimer.current); };
-  }, [apiUrl, fontScale, status, theme, width]);
+  }, [apiUrl, fontScale, sessionReady, status, theme, width]);
 
   useEffect(() => {
     try {
