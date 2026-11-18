@@ -57,10 +57,16 @@ export default async function ReadingPage({ params }: { params: Promise<{ slug: 
   }
 
   const headers = { Authorization: `Bearer ${session.session.access_token}` };
-  const [episodeResponse, preferencesResponse] = await Promise.all([
-    fetch(`${apiUrl}/episodes/${encodeURIComponent(episodeId)}`, { headers, cache: "no-store" }),
-    fetch(`${apiUrl}/library/preferences`, { headers, cache: "no-store" }).catch(() => null),
-  ]);
+  let episodeResponse: Response;
+  let preferencesResponse: Response | null;
+  try {
+    [episodeResponse, preferencesResponse] = await Promise.all([
+      fetch(`${apiUrl}/episodes/${encodeURIComponent(episodeId)}`, { headers, cache: "no-store" }),
+      fetch(`${apiUrl}/library/preferences`, { headers, cache: "no-store" }).catch(() => null),
+    ]);
+  } catch {
+    return <ReadingRoom slug={slug} episodeId={episodeId} initialStatus="error" initialError="We couldn’t reach the Reading Room service. Please try again." />;
+  }
 
   let preferences: { theme?: "paper" | "sepia" | "night"; text_size?: "small" | "comfortable" | "large"; reading_width?: "narrow" | "standard" | "wide" } | null = null;
   if (preferencesResponse?.ok) {
