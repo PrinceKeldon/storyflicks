@@ -27,8 +27,17 @@ export async function middleware(request: NextRequest) {
   return response;
 }
 
+// Only routes that need a verified session run the refresh; public pages,
+// share cards and static assets skip the extra Supabase call.
 export const config = {
   matcher: [
-    "/((?!_next/static|_next/image|favicon.ico|.*\\.(?:svg|png|jpg|jpeg|gif|webp|ico)$).*)",
+    "/library/:path*",
+    "/settings/:path*",
+    "/creator-studio/:path*",
+    "/support/:path*",
+    "/stories/:slug/read/:path*",
+    "/stories/:slug/react/:path*",
+    "/stories/:slug/reviews/:path*",
+    "/auth/:path*",
   ],
 };
