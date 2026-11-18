@@ -260,38 +260,22 @@ async def read_episode(
             "sequence_number": next_item["sequence_number"],
         }
 
-    # Offer the nearest earlier episode the reader is entitled to reopen.
+    # Offer the nearest earlier episode using the same entitlement rules as
+    # the existing reader access guard. Keep this check centralised so future
+    # access-rule changes cannot make navigation disagree with episode access.
     previous_candidates = [
         item for item in navigation_episodes
         if item["sequence_number"] < episode["sequence_number"]
     ]
     previous_episode = None
-    if previous_candidates:
-        previous_ids = [candidate["id"] for candidate in previous_candidates]
-        entitlement_rows = await admin_get_in(
-            "episode_entitlements",
-            "episode_id",
-            previous_ids,
-            {
-                "select": "episode_id",
-                "user_id": f"eq.{user.id}",
-                "order": "episode_id.asc",
-            },
-        )
-        entitled_ids = {row["episode_id"] for row in entitlement_rows}
-        accessible_previous = [
-            candidate for candidate in previous_candidates
-            if (
-                candidate["sequence_number"] == 1 and story.get("first_episode_free")
-            ) or candidate["id"] in entitled_ids
-        ]
-        if accessible_previous:
-            candidate = accessible_previous[-1]
+    for candidate in reversed(previous_candidates):
+        if await reader_can_access(user.id, candidate, story):
             previous_episode = {
                 "id": candidate["id"],
                 "title": candidate["title"],
                 "sequence_number": candidate["sequence_number"],
             }
+            break
 
     return {
         "story": {
