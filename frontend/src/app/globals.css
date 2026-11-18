@@ -2223,10 +2223,10 @@ html[data-theme="dark"] body :is(input,textarea,select)::placeholder {
    the space left after the real toolbar, settings and navigation controls. */
 .reader-mode-toggle{border:1px solid color-mix(in srgb,var(--reader-ink) 28%,transparent);background:transparent;color:var(--reader-ink);padding:7px 11px;border-radius:999px;font-size:16px;cursor:pointer;white-space:nowrap}
 .reader-page-viewport{width:100%;min-width:0;position:relative}
-.reader-page-viewport.is-paginated{flex:1 1 auto;min-height:0;height:auto;overflow-x:auto;overflow-y:hidden;overscroll-behavior-x:contain;scroll-snap-type:x mandatory;scrollbar-width:none;touch-action:pan-y;scroll-behavior:smooth}
+.reader-page-viewport.is-paginated{flex:1 1 0;min-height:0;height:0;overflow-x:scroll;overflow-y:hidden;overscroll-behavior-x:contain;scroll-snap-type:x mandatory;scrollbar-width:none;touch-action:pan-x pan-y;scroll-behavior:smooth}
 .reader-page-viewport.is-paginated::-webkit-scrollbar{display:none}
 .reader-page-viewport.is-scrolling{height:auto;overflow:visible}
-.reader-page-viewport .reader-paged-content{box-sizing:border-box;width:100%;max-width:none;height:100%;margin:0;padding:clamp(14px,3vh,30px) 0;column-width:100%;column-gap:0;column-fill:auto}
+.reader-page-viewport .reader-paged-content{box-sizing:border-box;width:100%;max-width:none;height:100%;min-height:100%;margin:0;padding:clamp(14px,3vh,30px) 0;column-width:100%;column-gap:0;column-fill:auto}
 .reader-page-viewport .reader-paged-content>.reading-episode-heading,.reader-page-viewport .reader-paged-content>.reading-rule,.reader-page-viewport .reader-paged-content>.reading-asset,.reader-page-viewport .reader-paged-content>.reading-end{break-inside:avoid;column-span:none}
 .reader-page-viewport .reader-paged-content .reading-episode-heading,
 .reader-page-viewport .reader-paged-content .manuscript,
