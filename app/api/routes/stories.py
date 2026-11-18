@@ -52,9 +52,9 @@ async def list_stories(
             )
             cursor_data = json.loads(decoded)
             cursor_published_at = cursor_data["published_at"]
-            cursor_id = str(UUID(cursor_data["id"]))
             if not isinstance(cursor_published_at, str):
                 raise ValueError("Invalid cursor timestamp")
+            cursor_id = str(UUID(cursor_data["id"]))
             parsed_timestamp = datetime.fromisoformat(
                 cursor_published_at.replace("Z", "+00:00")
             )
