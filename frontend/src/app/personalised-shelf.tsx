@@ -4,6 +4,7 @@ import RemoteImage from "@/components/remote-image";
 import Link from "next/link";
 import { useCallback, useEffect, useState } from "react";
 import { getSupabaseBrowserClient } from "@/lib/supabase";
+import { getAccessToken, fetchWithTimeout, apiErrorMessage } from "@/lib/api-client";
 
 type Episode = { id: string; sequence_number: number; title: string };
 type Progress = { episode_id: string; progress_percent: number; completed_at: string | null; updated_at: string };
@@ -39,26 +40,26 @@ export default function PersonalisedShelf() {
   const apiUrl = process.env.NEXT_PUBLIC_API_URL?.replace(/\/+$/, "");
 
   const load = useCallback(async () => {
-    const supabase = getSupabaseBrowserClient();
-    if (!supabase || !apiUrl) {
+    if (!getSupabaseBrowserClient() || !apiUrl) {
       setStatus("signed-out");
       return;
     }
-    const { data: { session } } = await supabase.auth.getSession();
-    if (!session?.access_token) {
-      setStatus("signed-out");
-      return;
-    }
+    setStatus("loading");
     try {
-      const response = await fetch(apiUrl + "/library", {
-        headers: { Authorization: "Bearer " + session.access_token },
+      const token = await getAccessToken();
+      if (!token) {
+        setStatus("signed-out");
+        return;
+      }
+      const response = await fetchWithTimeout(apiUrl + "/library?limit=6", {
+        headers: { Authorization: "Bearer " + token },
         cache: "no-store",
       });
       if (response.status === 401) {
         setStatus("signed-out");
         return;
       }
-      if (!response.ok) throw new Error("Your reading progress is temporarily unavailable.");
+      if (!response.ok) throw new Error(await apiErrorMessage(response, "Your reading progress is temporarily unavailable."));
       const data = await response.json() as LibraryData;
       setCards(data.continue_reading?.length ? data.continue_reading : data.caught_up || []);
       setStatus("ready");

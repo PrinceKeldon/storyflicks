@@ -32,6 +32,9 @@ CONTRIBUTE = (Rule("contribute", 40, 600),)
 REPORT = (Rule("report", 10, 600),)
 WRITE = (Rule("write", 120, 60),)
 ANY = (Rule("any", 300, 60),)
+# Reads are cheap and the Next.js server renders pages from one shared address,
+# so they get a much higher ceiling than writes.
+READ = (Rule("read", 1500, 60),)
 
 # Anonymous or spoofed-identity callers are also counted per IP at this multiple.
 IP_MULTIPLIER = 5
@@ -42,9 +45,9 @@ EXEMPT_PREFIXES = ("/health", "/api/internal/", "/api/support/stripe-webhook")
 def rules_for(method: str, path: str) -> tuple[Rule, ...]:
     if method in ("OPTIONS", "HEAD") or path.startswith(EXEMPT_PREFIXES):
         return ()
-    rules: list[Rule] = list(ANY)
     if method == "GET":
-        return tuple(rules)
+        return READ
+    rules: list[Rule] = list(ANY)
     if "/agent/chat" in path or "/manuscript/" in path:
         rules += AI
     elif "/assets/upload-url" in path or path.endswith("/assets/complete"):
@@ -107,7 +110,7 @@ class RateLimiter:
         return 0
 
     def _sweep(self, now: float) -> None:
-        longest = max(r.window for r in (*AI, *UPLOAD, *CHECKOUT, *CONTRIBUTE, *REPORT, *WRITE, *ANY))
+        longest = max(r.window for r in (*AI, *UPLOAD, *CHECKOUT, *CONTRIBUTE, *REPORT, *WRITE, *ANY, *READ))
         for k in [k for k, b in self.hits.items() if not b or b[-1] <= now - longest]:
             del self.hits[k]
         if len(self.hits) >= MAX_KEYS:  # still full: drop the oldest half

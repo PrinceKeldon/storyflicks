@@ -1,4 +1,5 @@
 "use client";
+import { getAccessToken, fetchWithTimeout, apiErrorMessage } from "@/lib/api-client";
 import RemoteImage from "@/components/remote-image";
 
 import Link from "next/link";
@@ -39,14 +40,14 @@ export default function Library() {
   const apiUrl=process.env.NEXT_PUBLIC_API_URL?.replace(/\/$/,"");
 
   const load=useCallback(async()=>{
-    const supabase=getSupabaseBrowserClient();
-    if(!supabase||!apiUrl){setStatus("error");setError("My Library is not configured yet.");return;}
-    const {data:{session}}=await supabase.auth.getSession();
-    if(!session?.access_token){setStatus("signed-out");return;}
+    if(!getSupabaseBrowserClient()||!apiUrl){setStatus("error");setError("My Library is not configured yet.");return;}
+    setStatus("loading");setError("");
     try{
-      const response=await fetch(`${apiUrl}/library`,{headers:{Authorization:`Bearer ${session.access_token}`},cache:"no-store"});
+      const token=await getAccessToken();
+      if(!token){setStatus("signed-out");return;}
+      const response=await fetchWithTimeout(`${apiUrl}/library`,{headers:{Authorization:`Bearer ${token}`},cache:"no-store"});
       if(response.status===401){setStatus("signed-out");return;}
-      if(!response.ok){const result=await response.json().catch(()=>({}));throw new Error(result.detail||"We couldn’t load your library.");}
+      if(!response.ok)throw new Error(await apiErrorMessage(response,"We couldn’t load your library."));
       setData(await response.json() as LibraryData);setStatus("ready");
     }catch(cause){setError(cause instanceof Error?cause.message:"Something went wrong.");setStatus("error");}
   },[apiUrl]);
