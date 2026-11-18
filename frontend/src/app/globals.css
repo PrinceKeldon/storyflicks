@@ -2218,27 +2218,58 @@ html[data-theme="dark"] body :is(input,textarea,select)::placeholder {
 }
 
 
-/* Reading Room pagination prototype — scoped to the episode reader. */
+/* Responsive Reading Room pagination.
+   Each CSS column is exactly the measured viewport width; the available height is
+   the space left after the real toolbar, settings and navigation controls. */
 .reader-mode-toggle{border:1px solid color-mix(in srgb,var(--reader-ink) 28%,transparent);background:transparent;color:var(--reader-ink);padding:7px 11px;border-radius:999px;font-size:16px;cursor:pointer;white-space:nowrap}
-.reader-page-viewport{width:100%;position:relative}
-.reader-page-viewport.is-paginated{height:calc(100dvh - 154px);min-height:420px;overflow-x:auto;overflow-y:hidden;overscroll-behavior-x:contain;scroll-snap-type:x mandatory;scrollbar-width:none;touch-action:pan-y}
+.reader-page-viewport{width:100%;min-width:0;position:relative}
+.reader-page-viewport.is-paginated{flex:1 1 auto;min-height:0;height:auto;overflow-x:auto;overflow-y:hidden;overscroll-behavior-x:contain;scroll-snap-type:x mandatory;scrollbar-width:none;touch-action:pan-y;scroll-behavior:smooth}
 .reader-page-viewport.is-paginated::-webkit-scrollbar{display:none}
 .reader-page-viewport.is-scrolling{height:auto;overflow:visible}
-.reader-page-viewport .reader-paged-content{box-sizing:border-box;width:calc(100vw - 40px);max-width:none;height:100%;margin:0;padding:28px 0 34px;column-width:calc(100vw - 40px);column-gap:0;column-fill:auto}
+.reader-page-viewport .reader-paged-content{box-sizing:border-box;width:100%;max-width:none;height:100%;margin:0;padding:clamp(14px,3vh,30px) 0;column-width:100%;column-gap:0;column-fill:auto}
 .reader-page-viewport .reader-paged-content>.reading-episode-heading,.reader-page-viewport .reader-paged-content>.reading-rule,.reader-page-viewport .reader-paged-content>.reading-asset,.reader-page-viewport .reader-paged-content>.reading-end{break-inside:avoid;column-span:none}
 .reader-page-viewport .reader-paged-content .reading-episode-heading,
 .reader-page-viewport .reader-paged-content .manuscript,
 .reader-page-viewport .reader-paged-content .reading-rule,
 .reader-page-viewport .reader-paged-content .reading-asset,
-.reader-page-viewport .reader-paged-content .reading-end{width:min(100% - 40px,690px);margin-left:auto;margin-right:auto}
+.reader-page-viewport .reader-paged-content .reading-end{width:min(calc(100% - 40px),690px);margin-left:auto;margin-right:auto}
 .reader-page-viewport .reader-paged-content .manuscript p,
 .reader-page-viewport .reader-paged-content .manuscript h2,
 .reader-page-viewport .reader-paged-content .manuscript blockquote{orphans:3;widows:3;break-inside:auto}
 .reader-page-viewport .reader-paged-content .reading-episode-heading{padding-top:12px}
-.reader-page-controls{height:62px;display:flex;align-items:center;justify-content:space-between;gap:14px;padding:0 max(20px,calc((100vw - 690px)/2));border-top:1px solid color-mix(in srgb,var(--reader-ink) 16%,transparent);border-bottom:1px solid color-mix(in srgb,var(--reader-ink) 16%,transparent);font:16px var(--font-dm-mono),'DM Mono',monospace;letter-spacing:.7px}
-.reader-page-controls button{border:0;background:transparent;color:var(--reader-ink);font:inherit;cursor:pointer;padding:10px 4px}
+.reader-page-viewport .reader-paged-content .reading-asset img{display:block;width:auto;max-width:100%;max-height:100%;height:auto;object-fit:contain;margin-inline:auto}
+.reader-page-controls{flex:0 0 auto;min-height:58px;display:flex;align-items:center;justify-content:space-between;gap:14px;padding:0 max(20px,calc((100% - 690px)/2));border-top:1px solid color-mix(in srgb,var(--reader-ink) 16%,transparent);border-bottom:1px solid color-mix(in srgb,var(--reader-ink) 16%,transparent);font:16px var(--font-dm-mono),'DM Mono',monospace;letter-spacing:.7px}
+.reader-page-controls button{border:0;background:transparent;color:var(--reader-ink);font:inherit;cursor:pointer;padding:10px 4px;min-height:44px}
 .reader-page-controls button:disabled{opacity:.35;cursor:not-allowed}
 .reader-page-controls span{white-space:nowrap}
 .reader-page-viewport.is-paginated .reading-page{break-after:auto}
-@media(max-width:650px){.reader-mode-toggle{padding:6px 8px;font-size:14px}.reader-page-viewport.is-paginated{height:calc(100dvh - 132px);min-height:380px}.reader-page-viewport .reader-paged-content{width:calc(100vw - 28px);column-width:calc(100vw - 28px);padding:18px 0 24px}.reader-page-viewport .reader-paged-content .reading-episode-heading,.reader-page-viewport .reader-paged-content .manuscript,.reader-page-viewport .reader-paged-content .reading-rule,.reader-page-viewport .reader-paged-content .reading-asset,.reader-page-viewport .reader-paged-content .reading-end{width:calc(100% - 24px)}.reader-page-controls{height:56px;padding:0 14px;font-size:14px}.reader-toolbar{flex-wrap:wrap}}
+.reading-room.is-paged{box-sizing:border-box;width:100%;height:100vh;height:100dvh;min-height:0;overflow:hidden;display:flex;flex-direction:column;padding-bottom:env(safe-area-inset-bottom)}
+.reading-room.is-paged>.reader-progress-track{position:relative;top:auto;flex:0 0 2px}
+.reading-room.is-paged>.reader-toolbar{flex:0 0 auto}
+.reading-room.is-paged>.reader-settings{position:relative;top:auto;z-index:4;flex:0 0 auto;max-height:min(38dvh,320px);overflow-y:auto}
+.reading-room.is-paged>.reader-page-viewport{flex:1 1 0;min-height:0}
+.reading-room.is-paged>.reader-page-controls{flex:0 0 auto}
+.reading-room.is-paged>.reader-footer{flex:0 0 auto;margin:0;padding:8px 5.3%;font-size:16px}
+@media(max-width:650px){
+ .reader-mode-toggle{padding:6px 9px;font-size:16px}
+ .reader-page-viewport .reader-paged-content{padding:12px 0}
+ .reader-page-viewport .reader-paged-content .reading-episode-heading,
+ .reader-page-viewport .reader-paged-content .manuscript,
+ .reader-page-viewport .reader-paged-content .reading-rule,
+ .reader-page-viewport .reader-paged-content .reading-asset,
+ .reader-page-viewport .reader-paged-content .reading-end{width:calc(100% - 28px)}
+ .reader-page-controls{min-height:54px;gap:8px;padding:0 12px;font-size:16px;letter-spacing:0}
+ .reader-toolbar{flex-wrap:wrap}
+ .reading-room.is-paged>.reader-toolbar{padding-top:max(9px,env(safe-area-inset-top))}
+}
+@media(max-width:430px){
+ .reader-page-controls button{padding-inline:2px;font-size:16px}
+ .reader-page-controls span{font-size:16px}
+ .reading-room.is-paged>.reader-toolbar{gap:6px}
+}
+@media(max-height:650px) and (orientation:landscape){
+ .reading-room.is-paged>.reader-toolbar{min-height:54px;padding-block:5px}
+ .reading-room.is-paged>.reader-page-controls{min-height:48px}
+ .reader-page-viewport .reader-paged-content{padding-block:8px}
+}
 @media(prefers-reduced-motion:reduce){.reader-page-viewport.is-paginated{scroll-behavior:auto}}
