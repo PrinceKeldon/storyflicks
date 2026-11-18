@@ -19,10 +19,10 @@ export default function BookmarkButton({ storyId, slug }: { storyId: string; slu
       const {data:{session}}=await supabase.auth.getSession();
       if(!session?.access_token){if(active)setState("signed-out");return;}
       try{
-        const response=await fetch(`${apiUrl}/library`,{headers:{Authorization:`Bearer ${session.access_token}`},cache:"no-store"});
+        const response=await fetch(`${apiUrl}/library/bookmarks/${storyId}`,{headers:{Authorization:`Bearer ${session.access_token}`},cache:"no-store"});
         if(!response.ok)throw new Error("Could not check your saved stories.");
-        const library=await response.json();
-        if(active)setState(library.saved?.some((item:{story:{id:string}})=>item.story.id===storyId)?"saved":"unsaved");
+        const result=await response.json() as {saved?:boolean};
+        if(active)setState(result.saved?"saved":"unsaved");
       }catch{if(active)setState("error");}
     }
     void check();
