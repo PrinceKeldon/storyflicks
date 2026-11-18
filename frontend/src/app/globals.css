@@ -2273,3 +2273,14 @@ html[data-theme="dark"] body :is(input,textarea,select)::placeholder {
  .reader-page-viewport .reader-paged-content{padding-block:8px}
 }
 @media(prefers-reduced-motion:reduce){.reader-page-viewport.is-paginated{scroll-behavior:auto}}
+
+/* Tablet and compact-phone toolbar wrapping: keep the controls in the viewport
+   rather than allowing the title, tools and navigation to force horizontal overflow. */
+@media(min-width:651px) and (max-width:900px){
+  .reading-room .reader-toolbar{flex-wrap:wrap;gap:8px 18px;padding:10px 22px}
+  .reading-room .reader-location{order:3;flex:1 0 100%;padding-top:2px}
+  .reading-room .reader-tools{margin-left:auto;gap:14px}
+}
+@media(max-width:430px){
+  .reading-room .reader-tools{flex-wrap:wrap;justify-content:flex-end;gap:6px}
+}
