@@ -280,6 +280,12 @@ export default function CreatorStudio(){
  async function saveEpisode(ev:FormEvent<HTMLFormElement>){ev.preventDefault();if(!workspace)return;if(!blocks.some(b=>b.text.trim())){setError("Add at least one text block before saving.");return;}setBusy("save-episode");setError("");
   const payload={season_id:null,sequence_number:Number(episode.sequence_number),title:episode.title,synopsis:episode.synopsis||null,content:{blocks:blocks.filter(b=>b.type==="separator"||b.type==="spacer"||b.text.trim())}};
   try{const path=episodeId?"/creator/stories/"+storyId+"/episodes/"+episodeId:"/creator/stories/"+storyId+"/episodes";const data=await request(path,{method:episodeId?"PUT":"POST",body:JSON.stringify(payload)}) as {episode_id:string;revision_number:number};
+   const typedSynopsis=(episode.synopsis||"").trim();
+   if(typedSynopsis&&typedSynopsis!==(selected?.synopsis||"").trim()){
+    // The chapter guide synopsis is saved on the episode itself, so it persists for published chapters too.
+    try{await request("/creator/stories/"+storyId+"/episodes/"+data.episode_id+"/synopsis",{method:"PATCH",body:JSON.stringify({synopsis:typedSynopsis})});}
+    catch(synopsisError){setError(message(synopsisError,"The draft was saved, but the section synopsis could not be saved."));}
+   }
    setNotice("Draft revision "+data.revision_number+" saved. The catalogue and reader-facing title are updated; the published manuscript remains unchanged until you publish this revision.");await loadWorkspace(storyId);setEpisodeId(data.episode_id);await loadRevisions(data.episode_id);
   }catch(e){setError(message(e,"Could not save episode."));}finally{setBusy("");}
  }
