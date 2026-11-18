@@ -4,9 +4,13 @@ from fastapi.middleware.cors import CORSMiddleware
 from app.api.routes import account, creator, creator_content, creator_assets, creator_dashboard, creator_revisions, episodes, internal, library, manuscript, materials, notifications, stories, studio_agent, support
 from app.core.config import settings
 from app.core.middleware import RequestSizeLimitMiddleware
+from app.core.rate_limit import RateLimitMiddleware
 
 app = FastAPI(title=settings.app_name, version="0.1.0")
 app.add_middleware(RequestSizeLimitMiddleware, max_bytes=3 * 1024 * 1024)
+if settings.rate_limit_enabled:
+    # Added after the size limiter and before CORS, so 429 responses still carry CORS headers.
+    app.add_middleware(RateLimitMiddleware, proxy_hops=settings.rate_limit_proxy_hops)
 
 app.add_middleware(
     CORSMiddleware,

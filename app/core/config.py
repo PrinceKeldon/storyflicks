@@ -29,6 +29,9 @@ class Settings(BaseSettings):
     frontend_base_url: str = "http://localhost:3000"
     story_assets_bucket: str = "story-assets"
     cors_origins: list[str] = ["http://localhost:3000"]
+    rate_limit_enabled: bool = True
+    # Number of trusted proxies in front of the API (Render adds one X-Forwarded-For hop).
+    rate_limit_proxy_hops: int = 1
 
     model_config = SettingsConfigDict(
         env_file=".env",
