@@ -321,6 +321,24 @@ async def get_library(
     }
 
 
+@router.get("/library/bookmarks/{story_id}")
+async def get_bookmark_status(
+    story_id: str,
+    user: AuthenticatedUser = Depends(get_current_user),
+):
+    """Return only whether this reader has saved the requested story."""
+    rows = await supabase.admin_get(
+        "bookmarks",
+        {
+            "select": "story_id",
+            "user_id": f"eq.{user.id}",
+            "story_id": f"eq.{story_id}",
+            "limit": "1",
+        },
+    )
+    return {"saved": bool(rows)}
+
+
 @router.post("/library/bookmarks/{story_id}")
 async def add_bookmark(
     story_id: str,
