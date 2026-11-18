@@ -321,9 +321,16 @@ export default function ReadingRoom({
     viewport.addEventListener("scroll", measure, { passive: true });
     measure();
     try {
-      const savedPage = Number(window.localStorage.getItem(`storyflicks-reader-page:${episodeId}`) || "0");
+      const storedPage = window.localStorage.getItem(`storyflicks-reader-page:${episodeId}`);
+      const serverPage = payload?.reading_progress?.last_position?.page;
+      const savedPage = storedPage !== null ? Number(storedPage) : (typeof serverPage === "number" ? serverPage : 0);
       if (Number.isFinite(savedPage) && savedPage > 0) {
-        requestAnimationFrame(() => viewport.scrollTo({ left: savedPage * viewport.clientWidth, behavior: "auto" }));
+        requestAnimationFrame(() => {
+          const pageWidth = Math.max(1, viewport.clientWidth);
+          const pageTotal = Math.max(1, Math.ceil((viewport.scrollWidth - 1) / pageWidth));
+          viewport.scrollTo({ left: Math.min(pageTotal - 1, savedPage) * pageWidth, behavior: "auto" });
+          requestAnimationFrame(updatePageMetrics);
+        });
       }
     } catch {
       // Start at the first page when storage is unavailable.
@@ -333,7 +340,7 @@ export default function ReadingRoom({
       observer.disconnect();
       viewport.removeEventListener("scroll", measure);
     };
-  }, [episodeId, readingMode, status, updatePageMetrics, fontScale, spacing, width, typeface]);
+  }, [episodeId, readingMode, status, updatePageMetrics, fontScale, spacing, width, typeface, payload]);
 
   useEffect(() => {
     if (readingMode !== "pages") return;
