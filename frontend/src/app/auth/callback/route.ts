@@ -2,15 +2,10 @@ import { createServerClient } from "@supabase/ssr";
 import { NextResponse, type NextRequest } from "next/server";
 import { cookies } from "next/headers";
 
+// Only same-site relative paths are allowed as the post-sign-in destination.
 function safeNext(value: string | null) {
   if (!value || !value.startsWith("/") || value.startsWith("//") || value.includes("\\")) return "/library";
-  try {
-    const destination = new URL(value, "https://storyflicks.live");
-    if (destination.origin !== "https://storyflicks.live") return "/library";
-    return `${destination.pathname}${destination.search}${destination.hash}`;
-  } catch {
-    return "/library";
-  }
+  return value;
 }
 
 export async function GET(request: NextRequest) {
