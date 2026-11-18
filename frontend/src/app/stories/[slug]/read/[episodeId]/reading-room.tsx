@@ -352,25 +352,29 @@ export default function ReadingRoom({
   }, [currentPage, goToPage, readingMode]);
 
   const handlePageTouchStart = (event: TouchEvent<HTMLDivElement>) => {
-    if (readingMode === "pages") touchStartX.current = event.changedTouches[0]?.clientX ?? null;
+    const touch = event.touches[0];
+    touchStart.current = readingMode === "pages" && event.touches.length === 1 && touch
+      ? { x: touch.clientX, y: touch.clientY }
+      : null;
   };
 
   const handlePageTouchEnd = (event: TouchEvent<HTMLDivElement>) => {
-    if (readingMode !== "pages" || touchStartX.current === null) return;
-    const endX = event.changedTouches[0]?.clientX ?? touchStartX.current;
-    const delta = endX - touchStartX.current;
-    touchStartX.current = null;
-    if (Math.abs(delta) < 45) return;
-    suppressTapAfterSwipe.current = true;
-    goToPage(currentPage + (delta < 0 ? 1 : -1));
+    const start = touchStart.current;
+    touchStart.current = null;
+    const touch = event.changedTouches[0];
+    if (readingMode !== "pages" || !start || !touch) return;
+    const deltaX = touch.clientX - start.x;
+    const deltaY = touch.clientY - start.y;
+    // A page turn requires a deliberate horizontal swipe, not a vertical reading gesture.
+    if (Math.abs(deltaX) < 50 || Math.abs(deltaX) < Math.abs(deltaY) * 1.4) return;
+    lastSwipeAt.current = Date.now();
+    goToPage(currentPage + (deltaX < 0 ? 1 : -1));
   };
 
   const handlePageTap = (event: MouseEvent<HTMLDivElement>) => {
-    if (suppressTapAfterSwipe.current) {
-      suppressTapAfterSwipe.current = false;
-      return;
-    }
-    if (readingMode !== "pages" || (event.target as HTMLElement).closest("a,button")) return;
+    if (Date.now() - lastSwipeAt.current < 450) return;
+    const target = event.target as HTMLElement;
+    if (readingMode !== "pages" || target.closest("a,button,input,textarea,select,label") || window.getSelection()?.toString()) return;
     const bounds = event.currentTarget.getBoundingClientRect();
     const x = event.clientX - bounds.left;
     if (x < bounds.width * 0.28) goToPage(currentPage - 1);
