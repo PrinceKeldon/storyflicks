@@ -2,11 +2,13 @@
 
 import { useEffect, useState, type ReactNode } from "react";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { migrateLegacySupabaseSession } from "@/lib/supabase";
 
 export default function AuthSessionProvider({ children }: { children: ReactNode }) {
   const [ready, setReady] = useState(false);
   const [migrationIssue, setMigrationIssue] = useState(false);
+  const router = useRouter();
 
   useEffect(() => {
     let active = true;
@@ -14,13 +16,14 @@ export default function AuthSessionProvider({ children }: { children: ReactNode 
       if (!active) return;
       setMigrationIssue(Boolean(result.error));
       setReady(true);
+      if (result.migrated) router.refresh();
     }).catch(() => {
       if (!active) return;
       setMigrationIssue(true);
       setReady(true);
     });
     return () => { active = false; };
-  }, []);
+  }, [router]);
 
   if (!ready) {
     return (
