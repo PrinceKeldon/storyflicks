@@ -1,4 +1,5 @@
 import base64
+from datetime import datetime
 import json
 import re
 
@@ -25,11 +26,12 @@ async def list_stories(
         "limit": str(limit + 1),
     }
 
+    filters = []
     if q:
         safe_query = " ".join(re.findall(r"[\\w-]+", q, flags=re.UNICODE))
         if safe_query:
-            params["or"] = (
-                f"(title.ilike.*{safe_query}*,"
+            filters.append(
+                f"or(title.ilike.*{safe_query}*,"
                 f"tagline.ilike.*{safe_query}*,"
                 f"synopsis.ilike.*{safe_query}*)"
             )
@@ -48,14 +50,20 @@ async def list_stories(
             cursor_id = cursor_data["id"]
             if not isinstance(cursor_published_at, str) or not isinstance(cursor_id, str):
                 raise ValueError("Invalid cursor fields")
+            datetime.fromisoformat(cursor_published_at.replace("Z", "+00:00"))
             if not re.fullmatch(r"[0-9a-fA-F-]{36}", cursor_id):
                 raise ValueError("Invalid cursor ID")
         except (ValueError, KeyError, TypeError, json.JSONDecodeError) as exc:
             raise HTTPException(status_code=400, detail="Invalid catalogue cursor.") from exc
-        params["or"] = (
-            f"(published_at.lt.{cursor_published_at},"
+        filters.append(
+            f"or(published_at.lt.{cursor_published_at},"
             f"and(published_at.eq.{cursor_published_at},id.lt.{cursor_id}))"
         )
+
+    if len(filters) == 1:
+        params["or"] = filters[0][3:]
+    elif len(filters) > 1:
+        params["and"] = "(" + ",".join(filters) + ")"
 
     rows = await supabase.admin_get("stories", params)
     has_more = len(rows) > limit
