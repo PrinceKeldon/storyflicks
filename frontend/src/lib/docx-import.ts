@@ -31,12 +31,11 @@ const WORD_NAMESPACE = "http://schemas.openxmlformats.org/wordprocessingml/2006/
 // WordprocessingML attributes are namespace-qualified (for example w:val).
 // getAttribute("val") does not match w:val in browser XML DOMs, which caused
 // explicit false values to be interpreted as true and discarded paragraph layout.
-function wordAttribute(node: Element | null | undefined, name: string): string | null {
+export function wordAttribute(node: Element | null | undefined, name: string): string | null {
   if (!node) return null;
-  return node.getAttributeNS(WORD_NAMESPACE, name)
-    ?? node.getAttribute(name)
-    ?? Array.from(node.attributes).find((attribute) => attribute.localName === name)?.value
-    ?? null;
+  // The fallback intentionally reads only an unqualified attribute. Matching
+  // localName alone could accidentally accept an attribute from another namespace.
+  return node.getAttributeNS(WORD_NAMESPACE, name) ?? node.getAttribute(name) ?? null;
 }
 
 function readU16(view: DataView, offset: number) { return view.getUint16(offset, true); }
@@ -87,7 +86,7 @@ function child(parent: Element | null, name: string): Element | null {
 function descendants(parent: Element, name: string): Element[] {
   return Array.from(parent.getElementsByTagNameNS("*", name));
 }
-function onOffNode(node: Element | null): boolean | undefined {
+export function onOffNode(node: Element | null): boolean | undefined {
   if (!node) return undefined;
   const value = wordAttribute(node, "val");
   return value === "0" || value === "false" || value === "none" || value === "nil" ? false : true;
@@ -203,7 +202,8 @@ export async function importDocx(file: File): Promise<ImportedManuscriptBlock[]>
         const flag = direct !== undefined ? direct : inherited;
         if (flag !== undefined) runValue[key] = flag;
       }
-      const vertical = (child(rPr, "vertAlign") || inheritedProperty(runStyleChain, "vertAlign", "rPr") || inheritedProperty(pStyleChain, "vertAlign", "rPr")) ? wordAttribute(child(rPr, "vertAlign") || inheritedProperty(runStyleChain, "vertAlign", "rPr") || inheritedProperty(pStyleChain, "vertAlign", "rPr"), "val") : null;
+      const verticalNode = child(rPr, "vertAlign") || inheritedProperty(runStyleChain, "vertAlign", "rPr") || inheritedProperty(pStyleChain, "vertAlign", "rPr");
+      const vertical = wordAttribute(verticalNode, "val");
       if (vertical === "superscript") runValue.superscript = true;
       if (vertical === "subscript") runValue.subscript = true;
       runs.push(runValue);
