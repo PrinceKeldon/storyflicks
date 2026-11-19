@@ -296,6 +296,12 @@ async def approve_proposal(proposal_id: UUID, user: AuthenticatedUser = Depends(
             await _finish(pid, "failed", error=str(exc)[:900])
             raise HTTPException(409, f"The edits could not be applied: {exc}") from exc
 
+        # If the approved edit changes the opening section-title block, persist
+        # that title in episode metadata as well as in the manuscript revision.
+        chapter_title = agent_edits.chapter_title_from_edits(
+            new_content, payload.get("edits") or [], latest.get("title") or episode["title"]
+        )
+
         blocks = agent_edits.content_blocks(new_content)
         if len(blocks) > MAX_BLOCKS or len(json.dumps(new_content, ensure_ascii=False).encode()) > MAX_CONTENT_BYTES:
             await _finish(pid, "failed", error="The edited chapter would exceed the size limit.")
@@ -308,7 +314,7 @@ async def approve_proposal(proposal_id: UUID, user: AuthenticatedUser = Depends(
                 "p_story_id": episode["story_id"],
                 "p_season_id": episode.get("season_id"),
                 "p_sequence_number": episode["sequence_number"],
-                "p_title": latest.get("title") or episode["title"],
+                "p_title": chapter_title,
                 "p_synopsis": latest.get("synopsis"),
                 "p_content": new_content,
             },
@@ -329,7 +335,11 @@ async def approve_proposal(proposal_id: UUID, user: AuthenticatedUser = Depends(
 
     return {
         "status": "applied",
-        "message": "Saved as a new draft revision. If the chapter is published, readers still see the published text until you publish this revision.",
+        "message": (
+            f"Saved as a new draft revision. Chapter title: {chapter_title}."
+            if chapter_title != (latest.get("title") or episode["title"])
+            else "Saved as a new draft revision. If the chapter is published, readers still see the published text until you publish this revision."
+        ),
         "applied_revision_id": saved[0]["id"] if saved else None,
     }
 
