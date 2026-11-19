@@ -32,7 +32,7 @@ async function getCatalogue(): Promise<{ stories: DiscoverStory[]; unavailable: 
   try {
     const [response, featuredResponse] = await Promise.all([
       fetch(apiUrl + "/stories", { next: { revalidate: 60 } }),
-      fetch(apiUrl + "/discovery/featured", { next: { revalidate: 60 } }),
+      fetch(apiUrl + "/discovery/featured", { cache: "no-store" }),
     ]);
     if (!response.ok) throw new Error("Catalogue request failed.");
     const data = await response.json();
