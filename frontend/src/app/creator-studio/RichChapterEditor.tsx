@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useRef } from "react";
-import type { CSSProperties, ClipboardEvent, FormEvent } from "react";
+import type { CSSProperties, ClipboardEvent } from "react";
 import type { ImportedManuscriptBlock, ManuscriptRun } from "@/lib/docx-import";
 
 type Block = ImportedManuscriptBlock;
@@ -178,9 +178,6 @@ export default function RichChapterEditor({ blocks, onChange, placeholder = "Pas
     update();
   }
 
-  function submit(_event: FormEvent) {
-    update();
-  }
 
   return (
     <div
@@ -194,7 +191,7 @@ export default function RichChapterEditor({ blocks, onChange, placeholder = "Pas
       data-placeholder={placeholder}
       onInput={update}
       onPaste={paste}
-      onBlur={submit}
+      onBlur={update}
     />
   );
 }
