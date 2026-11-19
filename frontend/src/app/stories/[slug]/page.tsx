@@ -46,7 +46,7 @@ export default async function StoryDetailPage({ params }: { params: Promise<{ sl
   const episodes = result.episodes;
   const structuredData = {
     "@context": "https://schema.org",
-    "@type": "CreativeWorkSeries",
+    "@type": story.content_format === "series" ? "CreativeWorkSeries" : "Book",
     name: story.title,
     url: `${SITE_URL}/stories/${encodeURIComponent(slug)}`,
     ...(story.author_name ? { author: { "@type": "Person", name: story.author_name } } : {}),
@@ -73,16 +73,16 @@ export default async function StoryDetailPage({ params }: { params: Promise<{ sl
   return (
     <main className="app-shell detail-shell">
       {structuredData && <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(structuredData).replace(/</g, "\\u003c") }} />}
-      <header className="detail-top"><Link href="/" className="back-link">← Back to Discover</Link><span className="detail-label">STORYFLICKS ORIGINAL</span></header>
+      <header className="detail-top"><Link href="/" className="back-link">← Back to Discover</Link><span className="detail-label">{story.origin_type === "storyflicks_original" ? "STORYFLICKS ORIGINAL" : story.origin_type === "previously_published" ? "PREVIOUSLY PUBLISHED" : "INDEPENDENT STORY"}</span></header>
       <section className="story-intro">
         <div className={story?.cover_url ? "story-poster has-cover" : "story-poster"} aria-label={`${story?.title ?? "Story"} book cover artwork`}>
-          {story?.cover_url ? <RemoteImage className="story-cover-image" src={story.cover_url} alt={`${story.title} book cover`} fill sizes="(max-width: 700px) 80vw, 360px" priority /> : <><span className="poster-kicker">{"A STORYFLICKS ORIGINAL"}</span><span className="poster-title">{story.title}</span><span className="poster-foot">STORYFLICKS ORIGINAL</span></>}
+          {story?.cover_url ? <RemoteImage className="story-cover-image" src={story.cover_url} alt={`${story.title} book cover`} fill sizes="(max-width: 700px) 80vw, 360px" priority /> : <><span className="poster-kicker">{story.origin_type === "storyflicks_original" ? "A STORYFLICKS ORIGINAL" : story.origin_type === "previously_published" ? "PREVIOUSLY PUBLISHED" : "INDEPENDENT STORY"}</span><span className="poster-title">{story.title}</span><span className="poster-foot">{story.origin_type === "storyflicks_original" ? "STORYFLICKS ORIGINAL" : story.origin_type === "previously_published" ? "PREVIOUSLY PUBLISHED" : "INDEPENDENT STORY"}</span></>}
         </div>
         <div className="story-info">
           
           <h1>{story.title}</h1>
           {story?.author_name && <p className="story-author-byline">By {story.author_name}</p>}
-          <p className="story-tagline">{story.tagline || "A new STORYFLICKS original."}</p>
+          {story.tagline && <p className="story-tagline">{story.tagline}</p>}
           <p className="story-synopsis">{story.synopsis || "Story details are coming soon."}</p>
           <div className="story-facts"><span>{episodes.length} PUBLISHED {sectionLabelPlural.toUpperCase()}</span><span>{(story?.completion_status || "ongoing").toUpperCase()}</span><span>{story?.first_episode_free === false ? "ACCESS REQUIRED" : "FREE READING · UNLOCK THE NEXT EPISODE WITH YOUR REACTION"}</span></div>
           {displayedGenres.length ? <p className="story-genres">{displayedGenres.join(" · ")}</p> : null}

@@ -269,6 +269,8 @@ class CreatorStorySubmission(BaseModel):
     genres: list[str] = Field(default_factory=list, max_length=5)
     section_label: str = Field(default="Episode", min_length=1, max_length=32)
     section_label_plural: str = Field(default="Episodes", min_length=1, max_length=40)
+    origin_type: Literal["storyflicks_original", "previously_published", "independent"] = "independent"
+    content_format: Literal["standalone", "series"] = "standalone"
 
     @field_validator("section_label", "section_label_plural")
     @classmethod
@@ -325,12 +327,24 @@ class CreatorEpisodeSubmission(BaseModel):
         return value
 
 
+async def _save_story_identity_metadata(story_id: str, submission: CreatorStorySubmission) -> None:
+    await supabase.admin_patch(
+        "stories",
+        {"id": f"eq.{story_id}"},
+        {
+            "origin_type": submission.origin_type,
+            "content_format": submission.content_format,
+            "updated_at": datetime.now(timezone.utc).isoformat(),
+        },
+    )
+
+
 @router.post("/creator/stories")
 async def create_creator_story(
     submission: CreatorStorySubmission,
     user: AuthenticatedUser = Depends(get_current_user),
 ):
-    return await supabase.user_rpc(
+    result = await supabase.user_rpc(
         "save_creator_story_v4",
         {
             "p_story_id": None,
@@ -346,6 +360,10 @@ async def create_creator_story(
         },
         user.access_token,
     )
+    story_id = result.get("story_id") if isinstance(result, dict) else None
+    if story_id:
+        await _save_story_identity_metadata(str(story_id), submission)
+    return result
 
 
 @router.put("/creator/stories/{story_id}")
@@ -354,7 +372,7 @@ async def update_creator_story(
     submission: CreatorStorySubmission,
     user: AuthenticatedUser = Depends(get_current_user),
 ):
-    return await supabase.user_rpc(
+    result = await supabase.user_rpc(
         "save_creator_story_v4",
         {
             "p_story_id": str(story_id),
@@ -370,6 +388,8 @@ async def update_creator_story(
         },
         user.access_token,
     )
+    await _save_story_identity_metadata(str(story_id), submission)
+    return result
 
 
 class CreatorEpisodeTitleSubmission(BaseModel):
