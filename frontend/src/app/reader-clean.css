@@ -108,3 +108,7 @@ html[data-theme] body .library-story-info { position: relative; }
   font: 600 12px var(--font-dm-mono), 'DM Mono', monospace; letter-spacing: 1px;
 }
 html[data-theme] body .library-progress-track span, html[data-theme] body .personalised-progress-track span { background: var(--sf-turquoise) !important; }
+
+/* One standard text alignment for manuscript body text, whatever the source document used (justified, mirrored pages, etc.) */
+.reading-room { --manuscript-text-align: left; }
+.reading-room .manuscript p, .reading-room .manuscript blockquote, .reading-room .manuscript h2 { text-align: var(--manuscript-text-align); }
