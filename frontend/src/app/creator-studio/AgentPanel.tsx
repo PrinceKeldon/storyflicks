@@ -168,7 +168,7 @@ export default function AgentPanel({ storyId, stories, request, onApplied }: Pro
         const proposals = detail.proposals ?? [];
         if (proposals.length) {
           const lastAssistant = restored.map((message, index) => ({ message, index }))
-            .filter(item => item.message.role === "model").at(-1);
+            .filter(item => item.message.role === "model").slice(-1)[0];
           if (lastAssistant) restored[lastAssistant.index] = { ...restored[lastAssistant.index], proposals };
           else restored.push({ id: `restored-proposals-${matching[0].id}`, role: "model", content: "Saved proposals", proposals });
         }
