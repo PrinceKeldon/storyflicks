@@ -2381,11 +2381,11 @@ html[data-theme="dark"] body :is(input,textarea,select)::placeholder {
   text-align-last: left;
 }
 
-/* The source contains deliberate print-layout indents (including dialogue).
-   Preserve them at normal reader widths, but prevent them consuming most of a
-   phone column. First-line text-indent remains untouched. */
-@media (max-width: 600px) {
-  .reading-room.story-crossing-ubuntu {
-    --reader-paragraph-indent-limit: 1.5em;
-  }
+/* The definitive PDF's text measure is about 407pt (543 CSS px at the
+   reader's 16px base size). Keep that measure at desktop widths and let it
+   contract with the column on phones and tablets. */
+.reading-room.story-crossing-ubuntu .manuscript {
+  width: min(calc(100% - 40px), 543px);
+  max-width: 543px;
+  margin-inline: auto;
 }
