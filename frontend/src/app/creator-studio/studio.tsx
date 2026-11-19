@@ -328,13 +328,6 @@ export default function CreatorStudio(){
  async function completion(value:"ongoing"|"completed"){if(!workspace)return;setBusy("completion");try{await request("/creator/stories/"+storyId+"/completion-status",{method:"PATCH",body:JSON.stringify({completion_status:value})});setNotice("Story marked "+value+".");await loadWorkspace(storyId);await loadDashboard();}catch(e){setError(message(e,"Could not update completion status."));}finally{setBusy("");}}
  function addEpisode(){if(!workspace)return;setEpisodeId("");setRevisions([]);setRevisionId("");setEpisode({sequence_number:Math.max(0,...workspace.episodes.map(e=>e.sequence_number))+1,title:"",synopsis:""});setBlocks([{type:"paragraph",text:""}]);setNotice(`New ${sectionLabel.toLowerCase()} draft.`);}
  function chooseRevision(r:Revision){setPatchTarget(null);setRevisionId(r.id);setEpisode(old=>({...old,title:r.title,synopsis:selected?.synopsis??r.synopsis??""}));const b=blocksFrom(r.content);setBlocks(b.length?b:[{type:"paragraph",text:""}]);}
- function updateManuscriptBlockText(blockIndex:number,nextText:string){
-  const previous=blocks[blockIndex]?.text||"";if(previous===nextText)return;
-  let start=0;while(start<previous.length&&start<nextText.length&&previous[start]===nextText[start])start++;
-  let oldEnd=previous.length,newEnd=nextText.length;
-  while(oldEnd>start&&newEnd>start&&previous[oldEnd-1]===nextText[newEnd-1]){oldEnd--;newEnd--;}
-  applyManuscriptPatch({blockIndex,start,end:oldEnd,text:previous.slice(start,oldEnd)},nextText.slice(start,newEnd));
- }
  function applyManuscriptPatch(target:{blockIndex:number;start:number;end:number;text:string},replacement:string):boolean{
   const block=blocks[target.blockIndex];if(!block||block.text.slice(target.start,target.end)!==target.text)return false;
   const nextText=block.text.slice(0,target.start)+replacement+block.text.slice(target.end);
