@@ -7,6 +7,7 @@ import LegalLinks from "@/app/legal-links";
 import { useCallback, useEffect, useMemo, useState, type FormEvent, type ReactNode } from "react";
 import { getSupabaseBrowserClient } from "@/lib/supabase";
 import { importDocx, type ImportedManuscriptBlock } from "@/lib/docx-import";
+import { splitChapterTitle } from "@/lib/chapter-title";
 import ManuscriptImportAssistant from "./ManuscriptImportAssistant";
 import StoryMaterialsManager from "./StoryMaterialsManager";
 import CreatorTrash from "./CreatorTrash";
@@ -254,7 +255,13 @@ export default function CreatorStudio(){
    if(file.name.toLowerCase().endsWith(".docx")) next=await importDocx(file);
    else {const raw=await file.text();next=raw.split(/\r?\n\s*\r?\n/).map((source)=>{const match=source.match(/^[\t ]+/);const leading=match?.[0]||"";const indent=Math.min(8,Math.floor([...leading].reduce((n,ch)=>n+(ch==="\t"?4:1),0)/2));const text=source.replace(/^[\t ]+/,"").replace(/[\t ]+$/,"");return {type:"paragraph" as const,text,indent};}).filter(block=>block.text.trim());}
    if(!next.length){setError("The selected file did not contain readable text.");return;}
-   setBlocks(next);setNotice(next.length+" manuscript blocks imported with available formatting. Review the preview before saving.");
+   const split=splitChapterTitle(next,episode.title);
+   const emptyTitle=!episode.title.trim()||/^untitled/i.test(episode.title.trim());
+   setBlocks(split.blocks as Block[]);
+   if(split.removed&&split.title&&emptyTitle)setEpisode(v=>({...v,title:split.title as string}));
+   setNotice(split.removed
+    ?(emptyTitle?`Title “${split.title}” taken from the document and set as the ${sectionLabel.toLowerCase()} title. `:`Removed the heading “${split.removedText}” from the text so the title isn’t repeated. Your title field was left as it was. `)+`${split.blocks.length} blocks imported. Review the preview before saving.`
+    :next.length+" manuscript blocks imported with available formatting. Review the preview before saving.");
   }catch(e){setError(message(e,"The manuscript file could not be read."));}
  }
  async function createStory(ev:FormEvent<HTMLFormElement>){ev.preventDefault();setBusy("create");setError("");try{const data=await request("/creator/stories",{method:"POST",body:JSON.stringify({...newStory,genres:parseGenres(newStory.genres)})}) as {story_id:string};setNewStoryOpen(false);setStoryId(data.story_id);setTab("episodes");setNotice("Story workspace created. Add your first section when ready.");setNewStory({title:"",author_name:"",slug:"",tagline:"",synopsis:"",genres:"",first_episode_free:true,section_label:"Episode",section_label_plural:"Episodes"});await loadDashboard();setStoryId(data.story_id);}catch(e){setError(message(e,"Could not create story."));}finally{setBusy("");}}
