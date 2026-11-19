@@ -46,7 +46,8 @@ function storyDescription(story: DiscoverStory) {
 
 export default async function DiscoverPage() {
   const { stories, unavailable } = await getCatalogue();
-  // The API returns published stories newest-first; feature the latest publication rather than pinning one title forever.\n  const featured = stories[0] ?? null;
+  // The API returns published stories newest-first; feature the latest publication rather than pinning one title forever.
+  const featured = stories[0] ?? null;
   const moreStories = stories.filter((story) => story.slug !== featured?.slug);
   const publishedCount = stories.length;
 
