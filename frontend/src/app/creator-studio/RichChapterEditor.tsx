@@ -138,6 +138,7 @@ function parseEditor(root: HTMLElement): Block[] {
   const nodes = top.length ? top : [root];
   return nodes.flatMap(element => {
     const el = element as HTMLElement;
+    if (el.tagName === "DIV" && Array.from(el.children).some(child => ["P", "DIV", "H1", "H2", "H3", "H4", "H5", "H6", "BLOCKQUOTE", "UL", "OL"].includes(child.tagName))) return parseEditor(el);
     if (el.tagName === "UL" || el.tagName === "OL") {
       return Array.from(el.children).filter(item => item.tagName === "LI").map((item, index) => {
         const runs = inlineRuns(item);
@@ -149,7 +150,7 @@ function parseEditor(root: HTMLElement): Block[] {
     const type = el.dataset.blockType === "separator" ? "separator" : el.dataset.blockType === "spacer" ? "spacer" : /^H[1-6]$/.test(el.tagName) ? "heading" : el.tagName === "BLOCKQUOTE" ? "quote" : "paragraph";
     if (type === "separator") return [{ type: "separator", text: "" } as Block];
     if (type === "spacer") return [{ type: "spacer", text: "" } as Block];
-    const runs = Array.from(el.childNodes).flatMap(node => inlineRuns(node));
+    const runs = inlineRuns(el);
     const text = runs.map(run => run.text).join("");
     const style = el.style;
     const indentFirstLine = cssLength(style.textIndent, "em");
