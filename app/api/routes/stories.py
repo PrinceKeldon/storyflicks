@@ -24,7 +24,7 @@ async def list_stories(
     cursor: str | None = Query(default=None, max_length=512),
 ):
     params = {
-        "select": "id,slug,title,author_name,tagline,synopsis,genres,cover_path,publication_status,completion_status,first_episode_free,section_label,section_label_plural,published_at,updated_at",
+        "select": "id,slug,title,author_name,tagline,synopsis,genres,cover_path,publication_status,completion_status,first_episode_free,section_label,section_label_plural,origin_type,content_format,published_at,updated_at",
         "publication_status": "eq.published",
         "deleted_at": "is.null",
         "order": "published_at.desc.nullslast,id.desc",
@@ -109,7 +109,7 @@ async def get_story(slug: str = Path(pattern=r"^[a-z0-9]+(-[a-z0-9]+)*$", max_le
     rows = await supabase.admin_get(
         "stories",
         {
-            "select": "id,slug,title,author_name,tagline,synopsis,genres,cover_path,publication_status,first_episode_free,section_label,section_label_plural,published_at,updated_at",
+            "select": "id,slug,title,author_name,tagline,synopsis,genres,cover_path,publication_status,first_episode_free,section_label,section_label_plural,origin_type,content_format,published_at,updated_at",
             "slug": f"eq.{slug}",
             "publication_status": "eq.published",
             "deleted_at": "is.null",
