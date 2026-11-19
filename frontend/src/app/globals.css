@@ -2372,3 +2372,20 @@ html[data-theme="dark"] body :is(input,textarea,select)::placeholder {
   width: min(calc(100% - 40px), 690px);
   min-width: 0;
 }
+
+
+/* Crossing Ubuntu follows the source's justified body-text rhythm. Explicit
+   per-paragraph alignment remains authoritative through its inline style. */
+.reading-room.story-crossing-ubuntu .manuscript .manuscript-paragraph {
+  text-align: justify;
+  text-align-last: left;
+}
+
+/* The source contains deliberate print-layout indents (including dialogue).
+   Preserve them at normal reader widths, but prevent them consuming most of a
+   phone column. First-line text-indent remains untouched. */
+@media (max-width: 600px) {
+  .reading-room.story-crossing-ubuntu {
+    --reader-paragraph-indent-limit: 1.5em;
+  }
+}
