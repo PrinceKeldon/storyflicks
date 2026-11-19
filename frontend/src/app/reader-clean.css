@@ -86,3 +86,25 @@ html body .reading-room .reader-page-controls { min-height: 46px; }
 .reading-room .reading-sample-cta { display: grid; gap: 12px; justify-items: center; text-align: center; padding: 24px 12px; max-width: 34rem; margin-inline: auto; }
 .reading-room .reading-sample-cta p { margin: 0; }
 .reading-room .reading-sample-cta .eyebrow { color: var(--reader-muted) !important; }
+
+/* ---------- Red accents (small, on purpose) ---------- */
+.catalogue-rail .search-result-art { position: relative; }
+.new-badge {
+  position: absolute; top: 0; right: 0; z-index: 2;
+  background: var(--sf-red); color: #fff; padding: 4px 9px;
+  font: 600 12px var(--font-dm-mono), 'DM Mono', monospace; letter-spacing: 1px;
+}
+html[data-theme] body .catalogue-section .section-heading h2 span { color: var(--sf-red) !important; font-weight: 700; font-size: 1.25em; line-height: 0; }
+html[data-theme] body .catalogue-rail .search-result-art .new-badge { color: #fff !important; }
+html[data-theme] body .browse-row h2 span { color: var(--sf-red) !important; font-style: italic; }
+html[data-theme] body .subtle-link:hover { color: var(--sf-red) !important; }
+html[data-theme] body .subtle-link:hover span { color: var(--sf-red) !important; }
+html[data-theme="light"] body .subtle-link:hover { border-bottom-color: var(--sf-red); }
+html[data-theme] body :is(.primary-button, .join-button):hover { background: var(--sf-red) !important; border-color: var(--sf-red) !important; color: #000 !important; }
+html[data-theme] body .library-story-info { position: relative; }
+.up-next-tag {
+  display: inline-block; align-self: flex-start; margin-bottom: 8px; padding: 3px 8px;
+  background: var(--sf-red); color: #fff;
+  font: 600 12px var(--font-dm-mono), 'DM Mono', monospace; letter-spacing: 1px;
+}
+html[data-theme] body .library-progress-track span, html[data-theme] body .personalised-progress-track span { background: var(--sf-turquoise) !important; }
