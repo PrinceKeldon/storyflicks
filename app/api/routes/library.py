@@ -1,7 +1,7 @@
 from collections import defaultdict
 from typing import Literal
 
-from fastapi import APIRouter, Depends
+from fastapi import APIRouter, Depends, Query
 from pydantic import BaseModel
 
 from app.api.deps import get_current_user, supabase
@@ -15,21 +15,57 @@ def in_filter(values: set[str]) -> str:
     return f"in.({','.join(sorted(values))})"
 
 
+ID_CHUNK = 100
+Shelf = Literal[
+    "continue_reading", "not_started", "caught_up", "completed", "saved", "reactions", "reviews"
+]
+DEFAULT_PAGE = 12
+
+
+async def fetch_in_chunks(table: str, params: dict[str, str], column: str, ids: set[str]):
+    """Look rows up by id in bounded batches so long id lists never overflow the request URL."""
+    rows: list[dict] = []
+    ordered = sorted(ids)
+    for start in range(0, len(ordered), ID_CHUNK):
+        rows += await supabase.admin_get_all(
+            table, {**params, column: in_filter(set(ordered[start:start + ID_CHUNK]))}
+        )
+    return rows
+
+
+def page_of(items: list, offset: int, limit: int) -> dict:
+    window = items[offset:offset + limit]
+    return {
+        "items": window,
+        "total": len(items),
+        "offset": offset,
+        "has_more": offset + len(window) < len(items),
+    }
+
+
 @router.get("/library")
 async def get_library(
     user: AuthenticatedUser = Depends(get_current_user),
+    shelf: Shelf | None = None,
+    offset: int = Query(0, ge=0, le=100_000),
+    limit: int = Query(DEFAULT_PAGE, ge=1, le=48),
 ):
+    """The reader's library, one page per shelf.
+
+    Without `shelf` the first page of every shelf is returned together with totals.
+    With `shelf` only that shelf's next page is returned (used by "Show more").
+    """
     # Every query is scoped to the authenticated reader.
-    bookmarks = await supabase.admin_get(
+    bookmarks = await supabase.admin_get_all(
         "bookmarks",
         {
             "select": "story_id,created_at",
             "user_id": f"eq.{user.id}",
-            "order": "created_at.desc",
+            "order": "created_at.desc,story_id.asc",
         },
     )
 
-    progress = await supabase.admin_get(
+    progress = await supabase.admin_get_all(
         "reading_progress",
         {
             "select": (
@@ -37,29 +73,29 @@ async def get_library(
                 "started_at,completed_at,updated_at"
             ),
             "user_id": f"eq.{user.id}",
-            "order": "updated_at.desc",
+            "order": "updated_at.desc,episode_id.asc",
         },
     )
 
-    entitlements = await supabase.admin_get(
+    entitlements = await supabase.admin_get_all(
         "episode_entitlements",
         {
             "select": "episode_id,grant_reason,source_episode_id,granted_at",
             "user_id": f"eq.{user.id}",
-            "order": "granted_at.desc",
+            "order": "granted_at.desc,episode_id.asc",
         },
     )
 
-    reactions = await supabase.admin_get(
+    reactions = await supabase.admin_get_all(
         "reader_reactions",
         {
             "select": "id,episode_id,reaction_id,created_at",
             "user_id": f"eq.{user.id}",
-            "order": "created_at.desc",
+            "order": "created_at.desc,id.asc",
         },
     )
 
-    reviews = await supabase.admin_get(
+    reviews = await supabase.admin_get_all(
         "reviews",
         {
             "select": (
@@ -68,7 +104,7 @@ async def get_library(
             ),
             "user_id": f"eq.{user.id}",
             "status": "eq.submitted",
-            "order": "submitted_at.desc",
+            "order": "submitted_at.desc,id.asc",
         },
     )
 
@@ -88,15 +124,17 @@ async def get_library(
 
     episodes = []
     if episode_ids:
-        episodes = await supabase.admin_get(
+        episodes = await fetch_in_chunks(
             "episodes",
             {
                 "select": (
                     "id,story_id,sequence_number,title,"
                     "publication_status,published_at"
                 ),
-                "id": in_filter(episode_ids),
+                "order": "id.asc",
             },
+            "id",
+            episode_ids,
         )
 
     episode_map = {item["id"]: item for item in episodes}
@@ -109,28 +147,31 @@ async def get_library(
     published_episodes = []
 
     if story_ids:
-        stories = await supabase.admin_get(
+        stories = await fetch_in_chunks(
             "stories",
             {
                 "select": (
                     "id,slug,title,author_name,tagline,synopsis,cover_path,"
                     "publication_status,completion_status,section_label,section_label_plural"
                 ),
-                "id": in_filter(story_ids),
+                "order": "id.asc",
             },
+            "id",
+            story_ids,
         )
 
-        published_episodes = await supabase.admin_get(
+        published_episodes = await fetch_in_chunks(
             "episodes",
             {
                 "select": (
                     "id,story_id,sequence_number,title,"
                     "publication_status,published_at"
                 ),
-                "story_id": in_filter(story_ids),
                 "publication_status": "eq.published",
-                "order": "sequence_number.asc",
+                "order": "story_id.asc,sequence_number.asc",
             },
+            "story_id",
+            story_ids,
         )
 
     story_map = {
@@ -252,72 +293,72 @@ async def get_library(
         elif story_id in bookmarked_ids:
             not_started.append(card)
 
-    # Resolve editorial reaction labels and emojis.
-    reaction_ids = {
-        item["reaction_id"]
-        for item in reactions
-    }
+    # Contributions: keep only rows whose episode is known, then page before the
+    # heavier lookups so large histories are not shipped in one response.
+    valid_reactions = [item for item in reactions if item["episode_id"] in episode_map]
+    valid_reviews = [item for item in reviews if item["episode_id"] in episode_map]
 
-    definitions = []
-    if reaction_ids:
-        definitions = await supabase.admin_get(
-            "reaction_definitions",
-            {
-                "select": "id,code,statement,emoji,category,sort_order",
-                "id": in_filter(reaction_ids),
-            },
-        )
+    definitions = await supabase.admin_get_all(
+        "reaction_definitions",
+        {"select": "id,code,statement,emoji,category,sort_order", "order": "id.asc"},
+    )
+    definition_map = {item["id"]: item for item in definitions}
 
-    definition_map = {
-        item["id"]: item
-        for item in definitions
-    }
-
-    reaction_contributions = []
-    for item in reactions:
-        episode = episode_map.get(item["episode_id"])
-        if not episode:
-            continue
-
+    def reaction_item(item):
         definition = definition_map.get(item["reaction_id"])
         if not definition:
-            continue
-
-        story = story_map.get(episode["story_id"])
-
-        reaction_contributions.append({
+            return None
+        episode = episode_map[item["episode_id"]]
+        return {
             "id": item["id"],
             "created_at": item["created_at"],
             "reaction": definition,
             "episode": episode,
-            "story": story,
-        })
+            "story": story_map.get(episode["story_id"]),
+        }
 
-    review_contributions = []
-    for item in reviews:
-        episode = episode_map.get(item["episode_id"])
-        if not episode:
-            continue
+    def review_item(item):
+        episode = episode_map[item["episode_id"]]
+        return {**item, "episode": episode, "story": story_map.get(episode["story_id"])}
 
-        story = story_map.get(episode["story_id"])
+    reaction_contributions = [row for row in map(reaction_item, valid_reactions) if row]
+    review_contributions = [review_item(item) for item in valid_reviews]
 
-        review_contributions.append({
-            **item,
-            "episode": episode,
-            "story": story,
-        })
-
-    return {
+    shelves = {
         "continue_reading": continue_reading,
         "not_started": not_started,
         "caught_up": caught_up,
         "completed": completed,
         "saved": saved,
+        "reactions": reaction_contributions,
+        "reviews": review_contributions,
+    }
+
+    if shelf:
+        return page_of(shelves[shelf], offset, limit)
+
+    pages = {name: page_of(items, 0, limit) for name, items in shelves.items()}
+    story_total = len({
+        card["story"]["id"]
+        for name in ("continue_reading", "not_started", "caught_up", "completed", "saved")
+        for card in shelves[name]
+    })
+
+    # Shelves stay plain lists (first page) so existing callers keep working;
+    # `totals` and `has_more` describe what is not yet loaded.
+    return {
+        "continue_reading": pages["continue_reading"]["items"],
+        "not_started": pages["not_started"]["items"],
+        "caught_up": pages["caught_up"]["items"],
+        "completed": pages["completed"]["items"],
+        "saved": pages["saved"]["items"],
         "contributions": {
-            "reactions": reaction_contributions,
-            "reviews": review_contributions,
+            "reactions": pages["reactions"]["items"],
+            "reviews": pages["reviews"]["items"],
         },
-        "entitlements": entitlements,
+        "totals": {name: page["total"] for name, page in pages.items()},
+        "has_more": {name: page["has_more"] for name, page in pages.items()},
+        "story_total": story_total,
     }
 
 
