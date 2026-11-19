@@ -104,10 +104,13 @@ function blockText(block: ContentBlock) {
 function manuscriptBlockStyle(block: ContentBlock) {
   const legacyIndent = typeof block.indent === "number" ? block.indent * 0.75 : 0;
   return {
-    marginLeft: typeof block.indentLeft === "number" ? String(block.indentLeft) + "em" : undefined,
-    marginRight: typeof block.indentRight === "number" ? String(block.indentRight) + "em" : undefined,
+    // Page margins and mirrored (inside/outside) indents belong to print layout, so the reader ignores left/right offsets and
+    // keeps one standard text measure. Hanging indents (lists) are the exception: they need their left offset to hold together.
+    marginLeft: typeof block.indentHanging === "number" && typeof block.indentLeft === "number" ? String(block.indentLeft) + "em" : undefined,
+    marginRight: undefined,
     textIndent: typeof block.indentFirstLine === "number" ? String(block.indentFirstLine) + "em" : typeof block.indentHanging === "number" ? "-" + String(block.indentHanging) + "em" : legacyIndent ? String(legacyIndent) + "em" : undefined,
-    textAlign: block.align || undefined,
+    // Body text uses the reader's single alignment (--manuscript-text-align). Only deliberate centred or right-aligned lines survive.
+    textAlign: block.align === "center" || block.align === "right" ? block.align : undefined,
     marginTop: typeof block.spacingBefore === "number" ? String(block.spacingBefore) + "pt" : undefined,
     marginBottom: typeof block.spacingAfter === "number" ? String(block.spacingAfter) + "pt" : undefined,
     lineHeight: "var(--manuscript-line-height, 1.6)",
