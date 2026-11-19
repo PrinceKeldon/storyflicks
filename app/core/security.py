@@ -45,3 +45,12 @@ async def get_current_user(
         email=payload.get("email"),
         access_token=token,
     )
+
+
+async def get_optional_user(
+    credentials: HTTPAuthorizationCredentials | None = Depends(bearer_scheme),
+) -> AuthenticatedUser | None:
+    """Signed-in reader if a bearer token is sent, otherwise None (public sample reading)."""
+    if credentials is None:
+        return None
+    return await get_current_user(credentials)

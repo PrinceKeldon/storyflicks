@@ -8,7 +8,7 @@ from uuid import UUID
 from fastapi import APIRouter, Depends, HTTPException
 from pydantic import BaseModel, Field, field_validator
 
-from app.api.deps import get_current_user, supabase
+from app.api.deps import get_current_user, get_optional_user, supabase
 from app.core.security import AuthenticatedUser
 from app.services.storage import public_storage_url
 
@@ -104,6 +104,16 @@ async def get_episode_and_story(episode_id: UUID):
     return episode, stories[0]
 
 
+def is_open_sample(episode: dict, story: dict) -> bool:
+    """The free first episode of a published story, readable without an account."""
+    return bool(
+        story["publication_status"] == "published"
+        and episode["publication_status"] == "published"
+        and episode["sequence_number"] == 1
+        and story.get("first_episode_free")
+    )
+
+
 async def reader_can_access(user_id: str, episode: dict, story: dict) -> bool:
     if (
         story["publication_status"] != "published"
@@ -127,12 +137,73 @@ async def reader_can_access(user_id: str, episode: dict, story: dict) -> bool:
     return bool(entitlements)
 
 
+async def build_sample_payload(episode: dict, story: dict) -> dict:
+    asset_rows, navigation_episodes = await asyncio.gather(
+        supabase.admin_get(
+            "episode_assets",
+            {
+                "select": "id,asset_type,storage_path,alt_text,metadata,position",
+                "episode_id": f"eq.{episode['id']}",
+                "order": "position.asc",
+            },
+        ),
+        supabase.admin_get_all(
+            "episodes",
+            {
+                "select": "id,title,sequence_number,publication_status",
+                "story_id": f"eq.{story['id']}",
+                "publication_status": "eq.published",
+                "deleted_at": "is.null",
+                "order": "sequence_number.asc",
+            },
+        ),
+    )
+    next_item = next(
+        (item for item in navigation_episodes if item["sequence_number"] > episode["sequence_number"]),
+        None,
+    )
+    return {
+        "sample": True,
+        "story": {
+            "id": story["id"],
+            "slug": story["slug"],
+            "title": story["title"],
+            "section_label": story.get("section_label") or "Episode",
+            "section_label_plural": story.get("section_label_plural") or "Episodes",
+        },
+        "episode": {
+            "id": episode["id"],
+            "sequence_number": episode["sequence_number"],
+            "title": episode["title"],
+            "synopsis": episode.get("synopsis"),
+            "content": episode["content"],
+            "assets": [
+                {**asset, "public_url": public_storage_url(asset.get("storage_path"))}
+                for asset in asset_rows
+            ],
+        },
+        "next_episode": (
+            {"id": next_item["id"], "title": next_item["title"], "sequence_number": next_item["sequence_number"]}
+            if next_item
+            else None
+        ),
+        "previous_episode": None,
+        "reading_progress": None,
+    }
+
+
 @router.get("/episodes/{episode_id}")
 async def read_episode(
     episode_id: UUID,
-    user: AuthenticatedUser = Depends(get_current_user),
+    user: AuthenticatedUser | None = Depends(get_optional_user),
 ):
     episode, story = await get_episode_and_story(episode_id)
+
+    if user is None:
+        # Signed-out readers get the open sample (free first episode) and nothing else.
+        if not is_open_sample(episode, story):
+            raise HTTPException(status_code=401, detail="Sign in to read this section.")
+        return await build_sample_payload(episode, story)
 
     if not await reader_can_access(user.id, episode, story):
         # Explain the actual contribution prerequisite when the episode is

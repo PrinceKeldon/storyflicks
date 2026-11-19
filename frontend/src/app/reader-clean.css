@@ -82,3 +82,8 @@ html[data-theme="light"] body .welcome-row p.welcome-note mark { color: #000 !im
 html body .reading-room .reader-page-controls,
 html body .reading-room .reader-page-controls :is(button, span) { font-size: 13px !important; letter-spacing: .06em !important; }
 html body .reading-room .reader-page-controls { min-height: 46px; }
+
+/* Signed-out sample: end-of-chapter invitation. */
+.reading-room .reading-sample-cta { display: grid; gap: 12px; justify-items: center; text-align: center; padding: 24px 12px; max-width: 34rem; margin-inline: auto; }
+.reading-room .reading-sample-cta p { margin: 0; }
+.reading-room .reading-sample-cta .eyebrow { color: var(--reader-muted) !important; }
