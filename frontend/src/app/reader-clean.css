@@ -112,3 +112,8 @@ html[data-theme] body .library-progress-track span, html[data-theme] body .perso
 /* One standard text alignment for manuscript body text, whatever the source document used (justified, mirrored pages, etc.) */
 .reading-room { --manuscript-text-align: left; }
 .reading-room .manuscript p, .reading-room .manuscript blockquote, .reading-room .manuscript h2 { text-align: var(--manuscript-text-align); }
+/* Author preview: the real Reading Room, full screen over Creator Studio */
+.studio-reader-preview { position: fixed; inset: 0; z-index: 1000; overflow: auto; background: #000; }
+
+/* The preview's back control is a <button>; match the link version used in the real Reading Room */
+.reading-room button.reader-bar-back { background: transparent; border: 0; box-shadow: none; color: inherit; font: inherit; cursor: pointer; padding: 0; }
