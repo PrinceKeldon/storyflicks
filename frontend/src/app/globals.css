@@ -2372,20 +2372,3 @@ html[data-theme="dark"] body :is(input,textarea,select)::placeholder {
   width: min(calc(100% - 40px), 690px);
   min-width: 0;
 }
-
-
-/* Crossing Ubuntu follows the source's justified body-text rhythm. Explicit
-   per-paragraph alignment remains authoritative through its inline style. */
-.reading-room.story-crossing-ubuntu .manuscript .manuscript-paragraph {
-  text-align: justify;
-  text-align-last: left;
-}
-
-/* The definitive PDF's text measure is about 407pt (543 CSS px at the
-   reader's 16px base size). Keep that measure at desktop widths and let it
-   contract with the column on phones and tablets. */
-.reading-room.story-crossing-ubuntu .manuscript {
-  width: min(calc(100% - 40px), 543px);
-  max-width: 543px;
-  margin-inline: auto;
-}
