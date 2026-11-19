@@ -163,6 +163,22 @@ class ToolTests(Base):
         proposal = self.db.tables["studio_agent_proposals"][0]
         self.assertEqual(proposal["payload"]["proposed_chapter_title"], "New Title")
 
+    def test_proposal_carries_title_preview_for_imported_docx_heading2(self):
+        content = {"blocks": [
+            {"type": "paragraph", "sectionTitle": True, "text": "17"},
+            {"type": "paragraph", "text": "Naisi", "sourceFormatting": {
+                "paragraphPropertiesXml": '<w:pPr><w:pStyle w:val="Heading2"/></w:pPr>'
+            }},
+            para("The story begins."),
+        ]}
+        self.db.tables["episode_revisions"][0]["content"] = content
+        result = self.propose(edits=[{
+            "block_index": 1, "old_text": "Naisi", "new_text": "New Title"
+        }])
+        self.assertEqual(result["status"], "pending_author_approval")
+        proposal = self.db.tables["studio_agent_proposals"][0]
+        self.assertEqual(proposal["payload"]["proposed_chapter_title"], "New Title")
+
     def test_unknown_tool_and_bad_args_do_not_raise(self):
         self.assertIn("error", run(agent_tools.run_tool(self.ctx, "delete_everything", {})))
         self.assertIn("error", run(agent_tools.run_tool(self.ctx, "get_episode_text", {"episode_id": "nope"})))
