@@ -26,6 +26,19 @@ export type ImportedManuscriptBlock = {
   sourceFormatting?: { paragraphPropertiesXml?: string; paragraphStyleXml?: string[]; documentDefaultsXml?: string };
 };
 
+const WORD_NAMESPACE = "http://schemas.openxmlformats.org/wordprocessingml/2006/main";
+
+// WordprocessingML attributes are namespace-qualified (for example w:val).
+// getAttribute("val") does not match w:val in browser XML DOMs, which caused
+// explicit false values to be interpreted as true and discarded paragraph layout.
+export function wordAttribute(node: Element | null | undefined, name: string): string | null {
+  if (!node) return null;
+  // Regression coverage for this lookup runs in frontend/tests/docx-import.test.mjs.
+// The fallback intentionally reads only an unqualified attribute. Matching
+  // localName alone could accidentally accept an attribute from another namespace.
+  return node.getAttributeNS(WORD_NAMESPACE, name) ?? node.getAttribute(name) ?? null;
+}
+
 function readU16(view: DataView, offset: number) { return view.getUint16(offset, true); }
 function readU32(view: DataView, offset: number) { return view.getUint32(offset, true); }
 
@@ -74,9 +87,9 @@ function child(parent: Element | null, name: string): Element | null {
 function descendants(parent: Element, name: string): Element[] {
   return Array.from(parent.getElementsByTagNameNS("*", name));
 }
-function onOffNode(node: Element | null): boolean | undefined {
+export function onOffNode(node: Element | null): boolean | undefined {
   if (!node) return undefined;
-  const value = node.getAttribute("val");
+  const value = wordAttribute(node, "val");
   return value === "0" || value === "false" || value === "none" || value === "nil" ? false : true;
 }
 function onOff(parent: Element | null, name: string): boolean | undefined {
@@ -106,7 +119,7 @@ export async function importDocx(file: File): Promise<ImportedManuscriptBlock[]>
   const defaultProperty = (property: string, group: "pPr" | "rPr") => child(group === "pPr" ? defaultParagraphProperties : defaultRunProperties, property);
   const styleById = new Map<string, Element>();
   if (stylesRoot) for (const style of descendants(stylesRoot, "style")) {
-    const id = style.getAttribute("styleId");
+    const id = wordAttribute(style, "styleId");
     if (id) styleById.set(id, style);
   }
   const styleChain = (id: string | null): Element[] => {
@@ -116,7 +129,7 @@ export async function importDocx(file: File): Promise<ImportedManuscriptBlock[]>
       const style = styleById.get(current);
       if (!style) break;
       chain.push(style);
-      current = child(style, "basedOn")?.getAttribute("val") || "";
+      current = wordAttribute(child(style, "basedOn"), "val") || "";
     }
     return chain;
   };
@@ -132,21 +145,21 @@ export async function importDocx(file: File): Promise<ImportedManuscriptBlock[]>
   let documentDefaultsAttached = false;
   for (const paragraph of paragraphs) {
     const pPr = child(paragraph, "pPr");
-    const pStyleId = child(pPr, "pStyle")?.getAttribute("val") || "";
+    const pStyleId = wordAttribute(child(pPr, "pStyle"), "val") || "";
     const pStyle = pStyleId.toLowerCase();
     const pStyleChain = styleChain(pStyleId);
     const alignmentNode = child(pPr, "jc") || inheritedProperty(pStyleChain, "jc", "pPr") || defaultProperty("jc", "pPr");
-    const alignment = alignmentNode?.getAttribute("val");
+    const alignment = wordAttribute(alignmentNode, "val");
     const ind = child(pPr, "ind") || inheritedProperty(pStyleChain, "ind", "pPr") || defaultProperty("ind", "pPr");
-    const left = twips(ind?.getAttribute("left") || ind?.getAttribute("start") || null);
-    const firstLine = twips(ind?.getAttribute("firstLine") || null);
-    const hanging = twips(ind?.getAttribute("hanging") || null);
-    const right = twips(ind?.getAttribute("right") || ind?.getAttribute("end") || null);
+    const left = twips(wordAttribute(ind, "left") || wordAttribute(ind, "start") || null);
+    const firstLine = twips(wordAttribute(ind, "firstLine") || null);
+    const hanging = twips(wordAttribute(ind, "hanging") || null);
+    const right = twips(wordAttribute(ind, "right") || wordAttribute(ind, "end") || null);
     const spacing = child(pPr, "spacing") || inheritedProperty(pStyleChain, "spacing", "pPr") || defaultProperty("spacing", "pPr");
-    const before = twips(spacing?.getAttribute("before") || null);
-    const after = twips(spacing?.getAttribute("after") || null);
-    const lineRaw = spacing?.getAttribute("line");
-    const lineRule = spacing?.getAttribute("lineRule");
+    const before = twips(wordAttribute(spacing, "before") || null);
+    const after = twips(wordAttribute(spacing, "after") || null);
+    const lineRaw = wordAttribute(spacing, "line");
+    const lineRule = wordAttribute(spacing, "lineRule");
     const lineSpacing = lineRaw ? (lineRule === "auto" || !lineRule ? Number(lineRaw) / 240 : Number(lineRaw) / 20) : undefined;
     const runs: ManuscriptRun[] = [];
     for (const run of descendants(paragraph, "r")) {
@@ -159,7 +172,7 @@ export async function importDocx(file: File): Promise<ImportedManuscriptBlock[]>
       }
       if (!text) continue;
       const runValue: ManuscriptRun = { text };
-      const runStyleId = child(rPr, "rStyle")?.getAttribute("val") || "";
+      const runStyleId = wordAttribute(child(rPr, "rStyle"), "val") || "";
       const runStyleChain = styleChain(runStyleId);
       const runStyleXmls = runStyleChain.map((style) => new XMLSerializer().serializeToString(style));
       if (rPr || runStyleXmls.length) runValue.sourceFormatting = {
@@ -167,11 +180,11 @@ export async function importDocx(file: File): Promise<ImportedManuscriptBlock[]>
         ...(runStyleXmls.length ? { runStyleXmls } : {}),
       };
       const property = (name: string) => child(rPr, name) || inheritedProperty(runStyleChain, name, "rPr") || inheritedProperty(pStyleChain, name, "rPr") || defaultProperty(name, "rPr");
-      const color = property("color")?.getAttribute("val");
-      const highlight = property("highlight")?.getAttribute("val");
-      const sizeRaw = property("sz")?.getAttribute("val");
+      const color = wordAttribute(property("color"), "val");
+      const highlight = wordAttribute(property("highlight"), "val");
+      const sizeRaw = wordAttribute(property("sz"), "val");
       const fonts = property("rFonts");
-      const fontFamily = fonts?.getAttribute("ascii") || fonts?.getAttribute("hAnsi") || fonts?.getAttribute("eastAsia");
+      const fontFamily = wordAttribute(fonts, "ascii") || wordAttribute(fonts, "hAnsi") || wordAttribute(fonts, "eastAsia");
       const smallCaps = onOff(rPr, "smallCaps") ?? onOffNode(inheritedProperty(runStyleChain, "smallCaps", "rPr")) ?? onOffNode(inheritedProperty(pStyleChain, "smallCaps", "rPr")) ?? onOffNode(defaultProperty("smallCaps", "rPr"));
       const allCaps = onOff(rPr, "caps") ?? onOffNode(inheritedProperty(runStyleChain, "caps", "rPr")) ?? onOffNode(inheritedProperty(pStyleChain, "caps", "rPr")) ?? onOffNode(defaultProperty("caps", "rPr"));
       if (color || highlight || sizeRaw || fontFamily || smallCaps !== undefined || allCaps !== undefined) runValue.formatting = {
@@ -190,7 +203,8 @@ export async function importDocx(file: File): Promise<ImportedManuscriptBlock[]>
         const flag = direct !== undefined ? direct : inherited;
         if (flag !== undefined) runValue[key] = flag;
       }
-      const vertical = (child(rPr, "vertAlign") || inheritedProperty(runStyleChain, "vertAlign", "rPr") || inheritedProperty(pStyleChain, "vertAlign", "rPr"))?.getAttribute("val");
+      const verticalNode = child(rPr, "vertAlign") || inheritedProperty(runStyleChain, "vertAlign", "rPr") || inheritedProperty(pStyleChain, "vertAlign", "rPr");
+      const vertical = wordAttribute(verticalNode, "val");
       if (vertical === "superscript") runValue.superscript = true;
       if (vertical === "subscript") runValue.subscript = true;
       runs.push(runValue);
@@ -200,7 +214,7 @@ export async function importDocx(file: File): Promise<ImportedManuscriptBlock[]>
     const sectionBreak = !!child(pPr, "sectPr");
     const isSectionBreak = sectionBreak;
     const outlineNode = child(pPr, "outlineLvl") || inheritedProperty(pStyleChain, "outlineLvl", "pPr");
-    const outlineLevelRaw = outlineNode?.getAttribute("val");
+    const outlineLevelRaw = wordAttribute(outlineNode, "val");
     const outlineLevel = outlineLevelRaw !== null && outlineLevelRaw !== undefined ? Number(outlineLevelRaw) : undefined;
     const isHeading = /^heading[1-6]$/.test(pStyle) || pStyle === "title" || pStyle === "subtitle" || (outlineLevel !== undefined && Number.isFinite(outlineLevel) && outlineLevel <= 5);
     const visibleRuns = runs.filter((run) => run.text.trim().length > 0);
