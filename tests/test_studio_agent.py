@@ -153,6 +153,32 @@ class ToolTests(Base):
         self.assertIn("error", self.propose(episode_id=OTHER_EP))
         self.assertEqual(self.db.tables["studio_agent_proposals"], [])
 
+    def test_proposal_carries_title_preview_when_opening_section_heading_changes(self):
+        content = {"blocks": [{"type": "paragraph", "sectionTitle": True, "text": "1. Old Title"}]}
+        self.db.tables["episode_revisions"][0]["content"] = content
+        result = self.propose(edits=[{
+            "block_index": 0, "old_text": "1. Old Title", "new_text": "1. New Title"
+        }])
+        self.assertEqual(result["status"], "pending_author_approval")
+        proposal = self.db.tables["studio_agent_proposals"][0]
+        self.assertEqual(proposal["payload"]["proposed_chapter_title"], "New Title")
+
+    def test_proposal_carries_title_preview_for_imported_docx_heading2(self):
+        content = {"blocks": [
+            {"type": "paragraph", "sectionTitle": True, "text": "17"},
+            {"type": "paragraph", "text": "Naisi", "sourceFormatting": {
+                "paragraphPropertiesXml": '<w:pPr><w:pStyle w:val="Heading2"/></w:pPr>'
+            }},
+            para("The story begins."),
+        ]}
+        self.db.tables["episode_revisions"][0]["content"] = content
+        result = self.propose(edits=[{
+            "block_index": 1, "old_text": "Naisi", "new_text": "New Title"
+        }])
+        self.assertEqual(result["status"], "pending_author_approval")
+        proposal = self.db.tables["studio_agent_proposals"][0]
+        self.assertEqual(proposal["payload"]["proposed_chapter_title"], "New Title")
+
     def test_unknown_tool_and_bad_args_do_not_raise(self):
         self.assertIn("error", run(agent_tools.run_tool(self.ctx, "delete_everything", {})))
         self.assertIn("error", run(agent_tools.run_tool(self.ctx, "get_episode_text", {"episode_id": "nope"})))
@@ -227,9 +253,26 @@ class ApprovalTests(Base):
         self.assertEqual(result["status"], "applied")
         [(name, payload)] = self.db.rpc_calls
         self.assertEqual(name, "save_creator_episode")
+        self.assertEqual(payload["p_title"], "One")
         self.assertEqual(payload["p_content"]["blocks"][0]["text"], "The dog sat.")
         self.assertEqual(self.db.tables["studio_agent_proposals"][0]["status"], "applied")
         self.assertEqual(self.db.tables["episode_revisions"][0]["content"]["blocks"][0]["text"], "The cat sat.")
+
+    def test_approve_title_edit_updates_episode_title_metadata_and_revision(self):
+        content = {"blocks": [{"type": "paragraph", "sectionTitle": True, "text": "1. Old Title"}]}
+        revision = self.db.tables["episode_revisions"][0]
+        revision["content"] = content
+        proposal = self.db.tables["studio_agent_proposals"][0]
+        proposal["payload"].update({
+            "base_hash": agent_edits.content_hash(content),
+            "edits": [{"block_index": 0, "old_text": "1. Old Title", "new_text": "1. New Title"}],
+        })
+        result = self.approve()
+        self.assertEqual(result["status"], "applied")
+        [(name, payload)] = self.db.rpc_calls
+        self.assertEqual(name, "save_creator_episode")
+        self.assertEqual(payload["p_title"], "New Title")
+        self.assertEqual(self.db.tables["episode_revisions"][-1]["title"], "New Title")
 
     def test_second_approval_conflicts_and_does_not_save_twice(self):
         self.approve()

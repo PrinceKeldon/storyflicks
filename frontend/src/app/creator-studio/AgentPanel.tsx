@@ -7,12 +7,13 @@ type Change = { episode_id: string; title: string; from_number: number; to_numbe
 type ProposalItem = {
   id: string; kind: string; status: string; title: string; rationale: string; episode_id: string | null; error?: string | null;
   payload: {
-    chapter_title?: string; sequence_number?: number; edits?: Edit[];
+    chapter_title?: string; proposed_chapter_title?: string; sequence_number?: number; edits?: Edit[];
     review_headline?: string; review_excerpt?: string; body?: string; changes?: Change[];
   };
 };
 type Activity = { tool: string; summary: string };
 type Source = { title: string; url: string };
+type Conversation = { id: string; title: string; story_id: string | null; updated_at: string };
 type Message = { id: string; role: "user" | "model"; content: string; tool_activity?: Activity[]; sources?: Source[]; proposals?: ProposalItem[] };
 type Props = {
   storyId: string;
@@ -82,6 +83,9 @@ function ProposalCard({ proposal, request, onChange, onApplied }: {
         <small>{proposal.kind === "chapter_renumber" ? "CHAPTER NUMBERS" : `${proposal.payload.sequence_number ? `CHAPTER ${proposal.payload.sequence_number} · ` : ""}${(proposal.payload.chapter_title ?? "").toUpperCase()}`} · {proposal.status.toUpperCase()}</small>
       </header>
       {proposal.rationale && <p className="sf-agent-rationale">{proposal.rationale}</p>}
+      {proposal.payload.proposed_chapter_title && proposal.payload.proposed_chapter_title !== proposal.payload.chapter_title && (
+        <p className="sf-agent-rationale">CHAPTER TITLE: <del>{proposal.payload.chapter_title}</del> <ins>{proposal.payload.proposed_chapter_title}</ins></p>
+      )}
       {edits.map((edit, index) => <EditDiff key={index} edit={edit} />)}
       {proposal.kind === "review_reply" && (
         <div className="sf-agent-edit">
@@ -115,17 +119,67 @@ export default function AgentPanel({ storyId, stories, request, onApplied }: Pro
   const selectedTitle = stories.find(story => story.id === selectedTitleId) ?? null;
   const [messages, setMessages] = useState<Message[]>([]);
   const [conversationId, setConversationId] = useState<string | null>(null);
+  const [conversations, setConversations] = useState<Conversation[]>([]);
   const [draft, setDraft] = useState("");
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState("");
   const endRef = useRef<HTMLDivElement>(null);
 
-  // Each conversation is scoped to the selected title, or to the general workspace.
+  const openConversation = useCallback(async (id: string) => {
+    const data = (await request(`/creator/agent/conversations/${id}`)) as {
+      messages: Message[]; proposals: ProposalItem[];
+    };
+    const restored = [...(data.messages ?? [])];
+    const proposals = data.proposals ?? [];
+    if (proposals.length) {
+      const lastAssistant = restored.map((message, index) => ({ message, index }))
+         .filter(item => item.message.role === "model").slice(-1)[0];
+      if (lastAssistant) {
+        restored[lastAssistant.index] = { ...restored[lastAssistant.index], proposals };
+      } else {
+        restored.push({ id: `restored-proposals-${id}`, role: "model", content: "Saved proposals", proposals });
+      }
+    }
+    setConversationId(id);
+    setMessages(restored);
+    setError("");
+  }, [request]);
+
+  // Restore the most recent saved conversation for this title whenever the
+  // assistant opens or the author changes working context.
   useEffect(() => {
+    let cancelled = false;
     setMessages([]);
     setConversationId(null);
     setError("");
-  }, [selectedTitleId]);
+    (async () => {
+      const data = (await request("/creator/agent/conversations")) as { conversations: Conversation[] };
+      const matching = (data.conversations ?? []).filter(item =>
+        item.story_id === (selectedTitleId === "general" ? null : selectedTitleId)
+      );
+      if (cancelled) return;
+      setConversations(matching);
+      if (matching.length) {
+        const detail = (await request(`/creator/agent/conversations/${matching[0].id}`)) as {
+          messages: Message[]; proposals: ProposalItem[];
+        };
+        if (cancelled) return;
+        const restored = [...(detail.messages ?? [])];
+        const proposals = detail.proposals ?? [];
+        if (proposals.length) {
+          const lastAssistant = restored.map((message, index) => ({ message, index }))
+            .filter(item => item.message.role === "model").slice(-1)[0];
+          if (lastAssistant) restored[lastAssistant.index] = { ...restored[lastAssistant.index], proposals };
+          else restored.push({ id: `restored-proposals-${matching[0].id}`, role: "model", content: "Saved proposals", proposals });
+        }
+        setConversationId(matching[0].id);
+        setMessages(restored);
+      }
+    })().catch(err => {
+      if (!cancelled) setError(err instanceof Error ? err.message : "Saved conversations could not be restored.");
+    });
+    return () => { cancelled = true; };
+  }, [selectedTitleId, request]);
 
   useEffect(() => {
     endRef.current?.scrollIntoView({ block: "end" });
@@ -170,6 +224,7 @@ export default function AgentPanel({ storyId, stories, request, onApplied }: Pro
   return (
     <section className="studio-content sf-agent">
       <div className="studio-workspace-select sf-agent-context"><label htmlFor="sf-agent-title">WORKING CONTEXT<select id="sf-agent-title" value={selectedTitleId} onChange={event => setSelectedTitleId(event.target.value)}><option value="general">General — all titles / uncategorised</option>{stories.map(story => <option key={story.id} value={story.id}>{story.title}</option>)}</select></label><small>{selectedTitle ? `Focused on ${selectedTitle.title}` : "General workspace context"}</small></div>
+      {conversations.length > 1 && <div className="studio-workspace-select sf-agent-context"><label htmlFor="sf-agent-conversation">SAVED CONVERSATION<select id="sf-agent-conversation" value={conversationId ?? ""} onChange={event => { if (event.target.value) void openConversation(event.target.value); }}><option value="">Choose a conversation…</option>{conversations.map(item => <option key={item.id} value={item.id}>{item.title}</option>)}</select></label></div>}
       <div className="studio-section-heading"><div>
         <p className="eyebrow">YOUR EDITOR AND ASSISTANT</p>
         <h2>Studio assistant<span>.</span></h2>
