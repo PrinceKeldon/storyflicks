@@ -60,8 +60,7 @@ function renderRuns(block: ContentBlock, theme: ReaderThemeName = "paper") {
     return <span key={index} style={{
       color: readableRunColour(formatting?.color, theme),
       backgroundColor: formatting?.highlight?.toLowerCase(),
-      fontSize: typeof formatting?.fontSizePt === "number" ? formatting.fontSizePt + "pt" : undefined,
-      fontFamily: formatting?.fontFamily,
+      // Font family and size are standardised by the reader (typeface, text size and dyslexia settings), never taken from the manuscript.
       fontVariant: formatting?.smallCaps ? "small-caps" : undefined,
       textTransform: formatting?.allCaps ? "uppercase" : undefined,
     }}>{node}</span>;
