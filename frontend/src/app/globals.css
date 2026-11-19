@@ -378,6 +378,15 @@ button{font:inherit}
 .studio-sidebar-empty{padding:15px;color:#8d968c;font-size:16px;line-height:1.6}
 .studio-editor-column{min-width:0}
 .studio-episode-editor{margin-bottom:14px}
+/* Single-field chapter authoring: the author edits prose, never internal blocks. */
+.studio-chapter-body-field{display:flex;flex-direction:column;gap:9px;width:100%;margin:14px 0 8px}
+.studio-chapter-body-field .studio-field-label{font:16px var(--font-dm-mono), 'DM Mono',monospace;letter-spacing:.7px;color:#c3ccc0}
+.studio-chapter-body-input{display:block;width:100%;min-height:560px;padding:20px 22px;border:1px solid #414b43;background:#111514;color:#f2eee5;font:17px/1.8 var(--font-playfair), 'Playfair Display',Georgia,serif;white-space:pre-wrap;resize:vertical;tab-size:4}
+.studio-chapter-body-input:focus{outline:2px solid var(--mint);outline-offset:2px;border-color:var(--mint)}
+.studio-chapter-body-input::placeholder{color:#899288}
+html[data-theme="light"] .studio-chapter-body-input{background:#fff;color:#171916;border-color:#aeb8ad}
+html[data-theme="light"] .studio-chapter-body-field .studio-field-label{color:#252a24}
+
 .studio-block-heading{display:flex;justify-content:space-between;align-items:center;gap:15px;margin:25px 0 13px}
 .studio-block-heading>div{display:flex;flex-direction:column;gap:5px}.studio-block-heading span{font:16px var(--font-dm-mono), 'DM Mono',monospace;letter-spacing:1px;color:#c3ccc0}.studio-block-heading small{font-size:16px;color:#8f998e}
 .studio-block-heading button{border:0;background:transparent;color:var(--mint);font-size:16px;cursor:pointer}
