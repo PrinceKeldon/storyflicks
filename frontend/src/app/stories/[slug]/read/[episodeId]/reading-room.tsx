@@ -100,14 +100,11 @@ function blockText(block: ContentBlock) {
   return "";
 }
 
-function manuscriptBlockStyle(block: ContentBlock, scaleHorizontalIndentToColumn = false) {
+function manuscriptBlockStyle(block: ContentBlock) {
   const legacyIndent = typeof block.indent === "number" ? block.indent * 0.75 : 0;
-  const horizontalIndent = (value: number) => scaleHorizontalIndentToColumn
-    ? `${(value * 16 / 543) * 100}%`
-    : `${value}em`;
   return {
-    marginLeft: typeof block.indentLeft === "number" ? horizontalIndent(block.indentLeft) : undefined,
-    marginRight: typeof block.indentRight === "number" ? horizontalIndent(block.indentRight) : undefined,
+    marginLeft: typeof block.indentLeft === "number" ? String(block.indentLeft) + "em" : undefined,
+    marginRight: typeof block.indentRight === "number" ? String(block.indentRight) + "em" : undefined,
     textIndent: typeof block.indentFirstLine === "number" ? String(block.indentFirstLine) + "em" : typeof block.indentHanging === "number" ? "-" + String(block.indentHanging) + "em" : legacyIndent ? String(legacyIndent) + "em" : undefined,
     textAlign: block.align || undefined,
     marginTop: typeof block.spacingBefore === "number" ? String(block.spacingBefore) + "pt" : undefined,
@@ -491,7 +488,7 @@ export default function ReadingRoom({
   if (status === "error" || !payload) return <main className="reader-state"><span className="reader-state-mark">SF.</span><p className="eyebrow">A SMALL INTERRUPTION</p><h1>We couldn’t open this episode.</h1><p>{error}</p><Link className="text-button" href={`/stories/${slug}`}>← Back to {payload?.story.title || "the story"}</Link></main>;
 
   return (
-    <main className={`reading-room theme-${theme}${readingMode === "pages" ? " is-paged" : ""}${slug === "crossing-ubuntu" ? " story-crossing-ubuntu" : ""}`}>
+    <main className={`reading-room theme-${theme}${readingMode === "pages" ? " is-paged" : ""}`}>
       <div className="reader-progress-track"><span style={{ width: `${progress}%` }} /></div>
       <header className="reader-bar">
         <Link className="reader-bar-back" href={`/stories/${slug}`} aria-label={`Back to ${payload.story.title}`}>←</Link>
@@ -554,7 +551,7 @@ export default function ReadingRoom({
             if (!text && kind !== "paragraph") return null;
             // Line spacing is the only manuscript formatting value STORYFLICKS standardises.
             // Every other imported paragraph property is applied as-authored.
-            const style = manuscriptBlockStyle(block, payload.story.slug === "crossing-ubuntu");
+            const style = manuscriptBlockStyle(block);
             if (kind.includes("heading") || kind === "title") return <h2 style={style} key={index}>{renderRuns(block)}</h2>;
             if (kind.includes("quote")) return <blockquote style={style} key={index}>{renderRuns(block)}</blockquote>;
             if (kind === "dialogue") return <p className="manuscript-dialogue" style={style} key={index}>{renderRuns(block)}</p>;
