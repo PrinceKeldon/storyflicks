@@ -333,7 +333,10 @@ async def propose_episode_edit(ctx: AgentContext, args: dict[str, Any]) -> dict[
         content = revision.get("content")
         if not isinstance(content, dict):
             raise ToolError("This chapter's content could not be read.")
-        agent_edits.apply_edits(content, edits)  # dry run: every edit must apply exactly
+        proposed_content = agent_edits.apply_edits(content, edits)  # dry run: every edit must apply exactly
+        proposed_chapter_title = agent_edits.chapter_title_from_edits(
+            proposed_content, edits, revision.get("title") or episode["title"]
+        )
         enriched = agent_edits.add_context(content, edits)
     except agent_edits.EditError as exc:
         raise ToolError(str(exc)) from exc
@@ -353,6 +356,7 @@ async def propose_episode_edit(ctx: AgentContext, args: dict[str, Any]) -> dict[
             "base_revision_number": revision["revision_number"],
             "base_hash": agent_edits.content_hash(content),
             "chapter_title": revision.get("title") or episode["title"],
+            "proposed_chapter_title": proposed_chapter_title,
             "sequence_number": episode["sequence_number"],
             "edits": enriched,
         },
