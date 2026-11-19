@@ -10,7 +10,8 @@
     "build": "next build",
     "start": "next start",
     "lint": "ESLINT_USE_FLAT_CONFIG=false eslint .",
-    "typecheck": "tsc --noEmit"
+    "typecheck": "tsc --noEmit",
+    "test:docx-import": "node --experimental-strip-types --test tests/docx-import.test.mjs"
   },
   "dependencies": {
     "next": "15.5.29",
