@@ -62,21 +62,20 @@ html body :is(.footer, .library-footer, .user-settings-footer, .studio-footer, .
 .reading-room .reader-pop-options button.selected { background: var(--reader-ink); color: var(--reader-bg); border-color: var(--reader-ink); }
 .reading-room .reader-pop-options strong { min-width: 44px; text-align: center; font-weight: 600; }
 
-/* ---- 4. Home tagline: a handwritten line under the headline -------------- */
-html[data-theme] body .welcome-row { display: block; }
+/* ---- 4. Home intro: one headline, one quiet handwritten line ------------- */
+html[data-theme] body .welcome-row { display: block; padding: 44px 0 36px; }
 html[data-theme] body .welcome-row p.welcome-note {
-  margin: 20px 0 0; max-width: none; font-family: var(--font-hand), 'Caveat', cursive !important; font-weight: 600 !important;
-  font-size: clamp(28px, 3.6vw, 42px) !important; line-height: 1.15 !important; letter-spacing: 0 !important; transform: rotate(-1.5deg); transform-origin: left center; color: inherit !important;
+  margin: 18px 0 0; max-width: none; font-family: var(--font-hand), 'Caveat', cursive !important; font-weight: 500 !important;
+  font-size: clamp(21px, 2.1vw, 25px) !important; line-height: 1.25 !important; letter-spacing: 0 !important;
+  opacity: .9; transform: rotate(-1deg); transform-origin: left center; color: inherit !important;
 }
-html[data-theme] body .welcome-row p.welcome-note span { display: block; opacity: .85; font-size: inherit !important; font-family: inherit !important; }
-html[data-theme] body .welcome-row p.welcome-note mark {
-  display: inline; font-size: inherit !important; font-family: inherit !important; background: transparent; color: inherit !important; font-weight: 600;
-  padding: 0 .12em; box-decoration-break: clone; -webkit-box-decoration-break: clone;
-}
-html[data-theme="dark"] body .welcome-row p.welcome-note { color: #f4f1e8 !important; }
-html[data-theme="dark"] body .welcome-row p.welcome-note mark { color: #ffd23f !important; text-decoration: underline wavy #19c9c0 2px; text-underline-offset: 6px; }
-html[data-theme="light"] body .welcome-row p.welcome-note { color: #000 !important; }
-html[data-theme="light"] body .welcome-row p.welcome-note mark { color: #000 !important; background: #ffd23f; }
+html[data-theme] body .welcome-row p.welcome-note span,
+html[data-theme] body .welcome-row p.welcome-note mark { display: inline; background: transparent; font: inherit !important; color: inherit !important; padding: 0; }
+@media (max-width: 620px) { html[data-theme] body .welcome-row p.welcome-note span { display: block; } }
+html[data-theme="dark"] body .welcome-row p.welcome-note { color: #cfcabd !important; }
+html[data-theme="dark"] body .welcome-row p.welcome-note mark { color: #ffd23f !important; }
+html[data-theme="light"] body .welcome-row p.welcome-note { color: #3a362c !important; }
+html[data-theme="light"] body .welcome-row p.welcome-note mark { color: #000 !important; font-weight: 600 !important; }
 
 /* Page navigation stays, but quieter. */
 html body .reading-room .reader-page-controls,
