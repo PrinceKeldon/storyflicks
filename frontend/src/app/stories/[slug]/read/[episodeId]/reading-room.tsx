@@ -103,8 +103,8 @@ function blockText(block: ContentBlock) {
 function manuscriptBlockStyle(block: ContentBlock) {
   const legacyIndent = typeof block.indent === "number" ? block.indent * 0.75 : 0;
   return {
-    marginLeft: typeof block.indentLeft === "number" ? String(block.indentLeft) + "em" : undefined,
-    marginRight: typeof block.indentRight === "number" ? String(block.indentRight) + "em" : undefined,
+    marginLeft: typeof block.indentLeft === "number" ? `min(${block.indentLeft}em, var(--reader-paragraph-indent-limit, ${block.indentLeft}em))` : undefined,
+    marginRight: typeof block.indentRight === "number" ? `min(${block.indentRight}em, var(--reader-paragraph-indent-limit, ${block.indentRight}em))` : undefined,
     textIndent: typeof block.indentFirstLine === "number" ? String(block.indentFirstLine) + "em" : typeof block.indentHanging === "number" ? "-" + String(block.indentHanging) + "em" : legacyIndent ? String(legacyIndent) + "em" : undefined,
     textAlign: block.align || undefined,
     marginTop: typeof block.spacingBefore === "number" ? String(block.spacingBefore) + "pt" : undefined,
@@ -488,7 +488,7 @@ export default function ReadingRoom({
   if (status === "error" || !payload) return <main className="reader-state"><span className="reader-state-mark">SF.</span><p className="eyebrow">A SMALL INTERRUPTION</p><h1>We couldn’t open this episode.</h1><p>{error}</p><Link className="text-button" href={`/stories/${slug}`}>← Back to {payload?.story.title || "the story"}</Link></main>;
 
   return (
-    <main className={`reading-room theme-${theme}${readingMode === "pages" ? " is-paged" : ""}`}>
+    <main className={`reading-room theme-${theme}${readingMode === "pages" ? " is-paged" : ""}${slug === "crossing-ubuntu" ? " story-crossing-ubuntu" : ""}`}>
       <div className="reader-progress-track"><span style={{ width: `${progress}%` }} /></div>
       <header className="reader-bar">
         <Link className="reader-bar-back" href={`/stories/${slug}`} aria-label={`Back to ${payload.story.title}`}>←</Link>
