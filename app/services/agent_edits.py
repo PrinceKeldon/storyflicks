@@ -52,7 +52,7 @@ def chapter_title_from_edits(content: dict[str, Any], edits: list[dict[str, Any]
         heading = str(block.get("text") or "").strip()
         # Manuscripts commonly include the chapter number in the heading itself.
         import re
-        heading = re.sub(r"^\\s*\\d+\\s*[.)\\-:]\\s*", "", heading).strip()
+        heading = re.sub(r"^\s*\d+\s*[.)\-:]\s*", "", heading).strip()
         if heading:
             return heading[:200]
     return str(fallback or "").strip()
