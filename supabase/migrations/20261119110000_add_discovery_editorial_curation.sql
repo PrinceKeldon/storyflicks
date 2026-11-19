@@ -46,3 +46,6 @@ alter table public.discovery_settings enable row level security;
 alter table public.discovery_curators enable row level security;
 revoke all on public.discovery_settings from anon, authenticated;
 revoke all on public.discovery_curators from anon, authenticated;
+
+-- The API uses the service role for these server-side tables; no client roles receive access.
+grant all on public.discovery_settings, public.discovery_curators to service_role;
