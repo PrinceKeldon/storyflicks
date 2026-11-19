@@ -9,7 +9,7 @@ import { getAccessToken, fetchWithTimeout, apiErrorMessage } from "@/lib/api-cli
 type Episode = { id: string; sequence_number: number; title: string };
 type Progress = { episode_id: string; progress_percent: number; completed_at: string | null; updated_at: string };
 type StoryCard = {
-  story: { id: string; slug: string; title: string; author_name?: string | null; tagline: string | null; synopsis: string | null; completion_status: string; cover_url: string | null; section_label?: string | null; section_label_plural?: string | null };
+  story: { id: string; slug: string; title: string; author_name?: string | null; tagline: string | null; synopsis: string | null; completion_status: string; origin_type?: "storyflicks_original" | "previously_published" | "independent" | null; content_format?: "standalone" | "series" | null; cover_url: string | null; section_label?: string | null; section_label_plural?: string | null };
   last_read_episode: Episode | null;
   latest_published_episode: Episode;
   first_published_episode: Episode;
@@ -92,13 +92,13 @@ export default function PersonalisedShelf() {
       ) : card && target ? (
         <article className="personalised-story-card">
           <Link className={"personalised-story-art" + (card.story.cover_url ? " has-cover" : "")} href={"/stories/" + card.story.slug} aria-label={"Explore " + card.story.title}>
-            {card.story.cover_url ? <RemoteImage className="personalised-cover-image" src={card.story.cover_url} alt={card.story.title + " book cover"} fill sizes="(max-width: 640px) 100vw, 220px" /> : <><span>STORYFLICKS ORIGINAL</span><strong>{card.story.title}</strong><i>{card.story.completion_status === "completed" ? "COMPLETE" : "ONGOING"}</i></>}
+            {card.story.cover_url ? <RemoteImage className="personalised-cover-image" src={card.story.cover_url} alt={card.story.title + " book cover"} fill sizes="(max-width: 640px) 100vw, 220px" /> : <><span>{card.story.origin_type==="storyflicks_original"?"STORYFLICKS ORIGINAL":card.story.origin_type==="previously_published"?"PREVIOUSLY PUBLISHED":"INDEPENDENT STORY"}</span><strong>{card.story.title}</strong><i>{card.story.completion_status === "completed" ? "COMPLETE" : "ONGOING"}</i></>}
           </Link>
           <div className="personalised-story-copy">
             <p className="eyebrow">{card.story.completion_status === "completed" ? "YOUR COMPLETED STORY" : "YOUR READING JOURNEY"}</p>
             <h3>{card.story.title}</h3>
             {card.story.author_name && <p className="catalogue-author-byline">By {card.story.author_name}</p>}
-            <p>{card.story.tagline || card.story.synopsis || "An original STORYFLICKS story."}</p>
+            <p>{card.story.synopsis || card.story.tagline || "Explore the story and discover its world."}</p>
             <div className="personalised-progress-meta"><span>{card.completed_episode_count} OF {card.published_episode_count} {(card.story.section_label_plural || "Episodes").toUpperCase()} READ</span><span>{Math.round(percent)}%</span></div>
             <div className="personalised-progress-track"><span style={{ width: percent + "%" }} /></div>
             <div className="personalised-story-footer"><span>{(card.story.section_label || "Episode").toUpperCase()} {String(target.sequence_number).padStart(2, "0")} · {target.title}</span><Link href={"/stories/" + card.story.slug + "/read/" + target.id}>{card.available_episode ? "Continue reading" : card.last_read_episode ? `Return to ${(card.story.section_label || "Episode").toLowerCase()}` : "Start reading"} <span>↗</span></Link></div>
