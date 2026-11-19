@@ -237,6 +237,7 @@ class ApprovalTests(Base):
         self.assertEqual(result["status"], "applied")
         [(name, payload)] = self.db.rpc_calls
         self.assertEqual(name, "save_creator_episode")
+        self.assertEqual(payload["p_title"], "One")
         self.assertEqual(payload["p_content"]["blocks"][0]["text"], "The dog sat.")
         self.assertEqual(self.db.tables["studio_agent_proposals"][0]["status"], "applied")
         self.assertEqual(self.db.tables["episode_revisions"][0]["content"]["blocks"][0]["text"], "The cat sat.")
