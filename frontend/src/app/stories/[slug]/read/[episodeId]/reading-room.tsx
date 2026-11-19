@@ -100,11 +100,14 @@ function blockText(block: ContentBlock) {
   return "";
 }
 
-function manuscriptBlockStyle(block: ContentBlock) {
+function manuscriptBlockStyle(block: ContentBlock, scaleHorizontalIndentToColumn = false) {
   const legacyIndent = typeof block.indent === "number" ? block.indent * 0.75 : 0;
+  const horizontalIndent = (value: number) => scaleHorizontalIndentToColumn
+    ? `${(value * 16 / 543) * 100}%`
+    : `${value}em`;
   return {
-    marginLeft: typeof block.indentLeft === "number" ? `min(${block.indentLeft}em, var(--reader-paragraph-indent-limit, ${block.indentLeft}em))` : undefined,
-    marginRight: typeof block.indentRight === "number" ? `min(${block.indentRight}em, var(--reader-paragraph-indent-limit, ${block.indentRight}em))` : undefined,
+    marginLeft: typeof block.indentLeft === "number" ? horizontalIndent(block.indentLeft) : undefined,
+    marginRight: typeof block.indentRight === "number" ? horizontalIndent(block.indentRight) : undefined,
     textIndent: typeof block.indentFirstLine === "number" ? String(block.indentFirstLine) + "em" : typeof block.indentHanging === "number" ? "-" + String(block.indentHanging) + "em" : legacyIndent ? String(legacyIndent) + "em" : undefined,
     textAlign: block.align || undefined,
     marginTop: typeof block.spacingBefore === "number" ? String(block.spacingBefore) + "pt" : undefined,
@@ -551,7 +554,7 @@ export default function ReadingRoom({
             if (!text && kind !== "paragraph") return null;
             // Line spacing is the only manuscript formatting value STORYFLICKS standardises.
             // Every other imported paragraph property is applied as-authored.
-            const style = manuscriptBlockStyle(block);
+            const style = manuscriptBlockStyle(block, payload.story.slug === "crossing-ubuntu");
             if (kind.includes("heading") || kind === "title") return <h2 style={style} key={index}>{renderRuns(block)}</h2>;
             if (kind.includes("quote")) return <blockquote style={style} key={index}>{renderRuns(block)}</blockquote>;
             if (kind === "dialogue") return <p className="manuscript-dialogue" style={style} key={index}>{renderRuns(block)}</p>;
