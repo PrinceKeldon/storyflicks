@@ -164,9 +164,9 @@ html[data-theme="light"] body .genre-list a:nth-child(3n+2):hover { background: 
 /* Cover colour cycling, shared by the Home rail, Search results and Library cards */
 html[data-theme="light"] body .catalogue-rail .search-result-art { border: 2px solid #000; background: var(--sf-yellow); color: #000 !important; box-shadow: 4px 4px 0 #000; }
 html[data-theme="light"] body .catalogue-rail .search-result-art :is(span, small) { color: inherit !important; }
-html[data-theme="light"] body .catalogue-rail .search-result-card:nth-child(4n+2) .search-result-art { background: var(--sf-turquoise); }
-html[data-theme="light"] body .catalogue-rail .search-result-card:nth-child(4n+3) .search-result-art { background: var(--sf-red); }
-html[data-theme="light"] body .catalogue-rail .search-result-card:nth-child(4n+4) .search-result-art { background: #000; color: var(--sf-yellow) !important; }
+html[data-theme="light"] body .catalogue-rail .search-result-card:is([data-tone="1"],[data-tone="4"]) .search-result-art { background: var(--sf-turquoise); }
+html[data-theme="light"] body .catalogue-rail .search-result-card:is([data-tone="2"],[data-tone="5"]) .search-result-art { background: var(--sf-red); }
+html[data-theme="light"] body .catalogue-rail .search-result-card[data-tone="3"] .search-result-art { background: #000; color: var(--sf-yellow) !important; }
 html[data-theme="light"] body .catalogue-rail .search-result-art.has-cover { background: #000; }
 html[data-theme="light"] body .catalogue-rail .search-result-copy h3 { color: #000 !important; }
 html[data-theme="light"] body .catalogue-rail .catalogue-author-byline { color: #000 !important; }
@@ -252,12 +252,12 @@ html[data-theme] body .library-story-art:not(.has-cover) { background: var(--sf-
 html[data-theme] body .library-story-art:not(.has-cover)::before { background: #000 !important; width: 8px; height: auto; top: 0; bottom: 0; left: 14px; opacity: 1; }
 html[data-theme] body .library-story-art:not(.has-cover)::after { display: none; }
 html[data-theme] body .library-story-art:not(.has-cover) :is(strong, i, .library-art-index) { color: #000 !important; text-shadow: none; }
-html[data-theme] body .library-story-card:nth-child(4n+2) .library-story-art:not(.has-cover) { background: var(--sf-turquoise) !important; }
-html[data-theme] body .library-story-card:nth-child(4n+3) .library-story-art:not(.has-cover) { background: var(--sf-red) !important; }
-html[data-theme="dark"] body .library-story-card:nth-child(4n+4) .library-story-art:not(.has-cover) { background: var(--sf-white) !important; }
-html[data-theme="light"] body .library-story-card:nth-child(4n+4) .library-story-art:not(.has-cover) { background: #000 !important; }
-html[data-theme="light"] body .library-story-card:nth-child(4n+4) .library-story-art:not(.has-cover)::before { background: var(--sf-turquoise) !important; }
-html[data-theme="light"] body .library-story-card:nth-child(4n+4) .library-story-art:not(.has-cover) :is(strong, i, .library-art-index) { color: #fff !important; }
+html[data-theme] body .library-story-card:is([data-tone="1"],[data-tone="4"]) .library-story-art:not(.has-cover) { background: var(--sf-turquoise) !important; }
+html[data-theme] body .library-story-card:is([data-tone="2"],[data-tone="5"]) .library-story-art:not(.has-cover) { background: var(--sf-red) !important; }
+html[data-theme="dark"] body .library-story-card[data-tone="3"] .library-story-art:not(.has-cover) { background: var(--sf-white) !important; }
+html[data-theme="light"] body .library-story-card[data-tone="3"] .library-story-art:not(.has-cover) { background: #000 !important; }
+html[data-theme="light"] body .library-story-card[data-tone="3"] .library-story-art:not(.has-cover)::before { background: var(--sf-turquoise) !important; }
+html[data-theme="light"] body .library-story-card[data-tone="3"] .library-story-art:not(.has-cover) :is(strong, i, .library-art-index) { color: #fff !important; }
 
 html[data-theme] body .library-progress-track { height: 8px; border-radius: 999px; overflow: hidden; background: var(--p-line); }
 html[data-theme="light"] body .library-progress-track { background: #fff; border: 2px solid #000; height: 12px; }

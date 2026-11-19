@@ -141,11 +141,11 @@ html[data-theme="dark"] body .personalised-story-footer a:hover { background: #f
 
 html[data-theme="dark"] body .catalogue-rail .search-result-art { border: 2px solid var(--sf-yellow); background: var(--sf-yellow); color: #000 !important; }
 html[data-theme="dark"] body .catalogue-rail .search-result-art :is(span, small) { color: inherit !important; }
-html[data-theme="dark"] body .catalogue-rail .search-result-card:nth-child(6n+2) .search-result-art { background: #000; border-color: var(--sf-turquoise); color: var(--sf-turquoise) !important; }
-html[data-theme="dark"] body .catalogue-rail .search-result-card:nth-child(6n+3) .search-result-art { background: var(--sf-red); border-color: var(--sf-red); }
-html[data-theme="dark"] body .catalogue-rail .search-result-card:nth-child(6n+4) .search-result-art { background: var(--sf-white); border-color: var(--sf-white); }
-html[data-theme="dark"] body .catalogue-rail .search-result-card:nth-child(6n+5) .search-result-art { background: var(--sf-turquoise); border-color: var(--sf-turquoise); }
-html[data-theme="dark"] body .catalogue-rail .search-result-card:nth-child(6n+6) .search-result-art { background: #000; border-color: var(--sf-yellow); color: var(--sf-yellow) !important; }
+html[data-theme="dark"] body .catalogue-rail .search-result-card[data-tone="1"] .search-result-art { background: #000; border-color: var(--sf-turquoise); color: var(--sf-turquoise) !important; }
+html[data-theme="dark"] body .catalogue-rail .search-result-card[data-tone="2"] .search-result-art { background: var(--sf-red); border-color: var(--sf-red); }
+html[data-theme="dark"] body .catalogue-rail .search-result-card[data-tone="3"] .search-result-art { background: var(--sf-white); border-color: var(--sf-white); }
+html[data-theme="dark"] body .catalogue-rail .search-result-card[data-tone="4"] .search-result-art { background: var(--sf-turquoise); border-color: var(--sf-turquoise); }
+html[data-theme="dark"] body .catalogue-rail .search-result-card[data-tone="5"] .search-result-art { background: #000; border-color: var(--sf-yellow); color: var(--sf-yellow) !important; }
 html[data-theme="dark"] body .catalogue-rail .search-result-art.has-cover { background: #000; }
 html[data-theme="dark"] body .catalogue-rail .search-result-copy .eyebrow { color: var(--sf-yellow) !important; }
 html[data-theme="dark"] body .catalogue-rail .search-result-copy h3 { color: #fff !important; }

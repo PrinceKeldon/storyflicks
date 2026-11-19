@@ -4,6 +4,7 @@ import PersonalisedShelf from "./personalised-shelf";
 import CreatorStudioNavLink from "./creator-studio-nav-link";
 import AccountNavigation from "./account-navigation";
 import LegalLinks from "./legal-links";
+import { coverTone, isRecent } from "@/lib/cover-tone";
 
 type DiscoverStory = {
   id: string;
@@ -112,8 +113,9 @@ export default async function DiscoverPage() {
           </div>
           <div className="search-results catalogue-rail">
             {moreStories.slice(0, 6).map((story) => (
-              <Link key={story.id || story.slug} className="search-result-card" href={"/stories/" + story.slug}>
+              <Link key={story.id || story.slug} className="search-result-card" data-tone={coverTone(story.slug)} href={"/stories/" + story.slug}>
                 <div className={story.cover_url ? "search-result-art has-cover" : "search-result-art"} role="img" aria-label={story.title + " book cover artwork"}>
+                  {isRecent(story.published_at) && <b className="new-badge">NEW</b>}
                   {story.cover_url ? <RemoteImage className="catalogue-cover-image" src={story.cover_url} alt={story.title + " book cover"} fill sizes="(max-width: 640px) 45vw, 200px" /> : <><span>{story.title}</span><small>STORYFLICKS ORIGINAL</small></>}
                 </div>
                 <div className="search-result-copy">
@@ -130,7 +132,7 @@ export default async function DiscoverPage() {
       )}
 
       <section className="browse-row">
-        <div><p className="eyebrow">FIND YOUR KIND OF STORY</p><h2>What are you in the mood for?</h2></div>
+        <div><p className="eyebrow">FIND YOUR KIND OF STORY</p><h2>What are you in the <span>mood</span> for?</h2></div>
         <div className="genre-list"><Link href="/search?genre=Drama">Drama <span>↗</span></Link><Link href="/search?genre=Thriller">Thriller <span>↗</span></Link><Link href="/search?genre=Romance">Romance <span>↗</span></Link><Link href="/search?genre=Mystery">Mystery <span>↗</span></Link></div>
       </section>
 
