@@ -73,7 +73,8 @@ function cleanNode(node: Node, target: Document): Node | null {
     return fragment;
   }
   const element = target.createElement(node.tagName.toLowerCase());
-  const style = Array.from(node.style).filter(property => allowedStyles.has(property)).map(property => property + ":" + node.style.getPropertyValue(property)).join(";");
+  const styledNode = node as HTMLElement;
+  const style = Array.from(styledNode.style).filter(property => allowedStyles.has(property)).map(property => property + ":" + styledNode.style.getPropertyValue(property)).join(";");
   if (style) element.setAttribute("style", style);
   for (const child of Array.from(node.childNodes)) {
     const cleaned = cleanNode(child, target);
