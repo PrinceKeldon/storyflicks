@@ -2080,10 +2080,10 @@ html[data-theme="light"] body {
 html[data-theme="dark"] body {
   color: #ffffff !important;
 }
-html[data-theme="light"] body *:not(.reading-room, .reading-room *) {
+html[data-theme="light"] body *:not(.reading-room, .reading-room *, .studio-rich-chapter-editor, .studio-rich-chapter-editor *) {
   color: #000000 !important;
 }
-html[data-theme="dark"] body *:not(.reading-room, .reading-room *) {
+html[data-theme="dark"] body *:not(.reading-room, .reading-room *, .studio-rich-chapter-editor, .studio-rich-chapter-editor *) {
   color: #ffffff !important;
 }
 html[data-theme="light"] body :is(input,textarea,select)::placeholder {
@@ -2385,6 +2385,10 @@ html[data-theme="dark"] body :is(input,textarea,select)::placeholder {
 
 /* The chapter editor is rich text: keep it visually aligned with the former body field. */
 .studio-rich-chapter-editor {
+  /* The editor is a white writing surface in either app theme. Keep its text dark,
+     while allowing pasted inline colour formatting to remain visible. */
+  background: #ffffff;
+  color: #111111;
   width: 100%;
   min-height: 32rem;
   max-height: 70vh;
@@ -2392,8 +2396,8 @@ html[data-theme="dark"] body :is(input,textarea,select)::placeholder {
   padding: 1rem 1.1rem;
   border: 1px solid var(--studio-border, #b9b9b9);
   border-radius: 0.65rem;
-  background: var(--studio-field-bg, var(--surface, #fff));
-  color: var(--studio-text, #111);
+  background: #ffffff;
+  color: #111111;
   font: inherit;
   line-height: 1.6;
   white-space: pre-wrap;
@@ -2406,7 +2410,7 @@ html[data-theme="dark"] body :is(input,textarea,select)::placeholder {
 }
 .studio-rich-chapter-editor:empty::before {
   content: attr(data-placeholder);
-  color: var(--studio-muted, #666);
+  color: #555555;
   pointer-events: none;
 }
 .studio-rich-chapter-editor > :first-child { margin-top: 0; }
