@@ -124,7 +124,16 @@ function inlineRuns(node: Node, inherited: Partial<ManuscriptRun> = {}): Manuscr
   return Array.from(node.childNodes).flatMap(child => inlineRuns(child, next));
 }
 
-function cssLength(value: string, unit: "em" | "pt"): number | undefined {\n  const match = value.trim().match(/^(-?\\d+(?:\\.\\d+)?)(pt|px|in|cm|mm|pc|em|rem)$/i);\n  if (!match) return undefined;\n  const amount = Number(match[1]);\n  const factor: Record<string, number> = { pt: 1, px: 0.75, in: 72, cm: 28.3464567, mm: 2.83464567, pc: 12, em: 12, rem: 12 };\n  const points = amount * factor[match[2].toLowerCase()];\n  return unit === "pt" ? points : points / 12;\n}\n\nfunction parseEditor(root: HTMLElement): Block[] {
+function cssLength(value: string, unit: "em" | "pt"): number | undefined {
+  const match = value.trim().match(/^(-?\d+(?:\.\d+)?)(pt|px|in|cm|mm|pc|em|rem)$/i);
+  if (!match) return undefined;
+  const amount = Number(match[1]);
+  const factor: Record<string, number> = { pt: 1, px: 0.75, in: 72, cm: 28.3464567, mm: 2.83464567, pc: 12, em: 12, rem: 12 };
+  const points = amount * factor[match[2].toLowerCase()];
+  return unit === "pt" ? points : points / 12;
+}
+
+function parseEditor(root: HTMLElement): Block[] {
   const top = Array.from(root.children);
   const nodes = top.length ? top : [root];
   return nodes.flatMap(element => {
@@ -135,11 +144,11 @@ function cssLength(value: string, unit: "em" | "pt"): number | undefined {\n  co
     const runs = Array.from(el.childNodes).flatMap(node => inlineRuns(node));
     const text = runs.map(run => run.text).join("");
     const style = el.style;
-    const indentFirstLine = style.textIndent && style.textIndent.endsWith("em") ? Number.parseFloat(style.textIndent) : undefined;
-    const indentLeft = style.marginLeft && style.marginLeft.endsWith("em") ? Number.parseFloat(style.marginLeft) : undefined;
-    const indentRight = style.marginRight && style.marginRight.endsWith("em") ? Number.parseFloat(style.marginRight) : undefined;
-    const spacingBefore = style.marginTop && style.marginTop.endsWith("pt") ? Number.parseFloat(style.marginTop) : undefined;
-    const spacingAfter = style.marginBottom && style.marginBottom.endsWith("pt") ? Number.parseFloat(style.marginBottom) : undefined;
+    const indentFirstLine = cssLength(style.textIndent, "em");
+    const indentLeft = cssLength(style.marginLeft, "em");
+    const indentRight = cssLength(style.marginRight, "em");
+    const spacingBefore = cssLength(style.marginTop, "pt");
+    const spacingAfter = cssLength(style.marginBottom, "pt");
     const block: Block = {
       type, text,
       ...(runs.length ? { runs } : {}),
@@ -177,7 +186,7 @@ export default function RichChapterEditor({ blocks, onChange, placeholder = "Pas
     const clipboard = event.clipboardData;
     const html = clipboard.getData("text/html");
     const plain = clipboard.getData("text/plain");
-    const insertion = html ? sanitiseHtml(html) : plain.split(/\r\n?|\n/).map(line => "<p>" + escapeHtml(line) + "</p>").join("");
+    const insertion = html ? sanitiseHtml(html) : plain.replace(/\r\n?/g, "\n").split(/\n[ \t]*\n+/).map(paragraph => "<p>" + escapeHtml(paragraph).replace(/\n/g, "<br>") + "</p>").join("");
     document.execCommand("insertHTML", false, insertion);
     update();
   }
