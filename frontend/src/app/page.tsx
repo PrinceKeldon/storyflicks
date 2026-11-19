@@ -30,13 +30,14 @@ async function getCatalogue(): Promise<{ stories: DiscoverStory[]; unavailable: 
   if (!apiUrl) return { stories: [], unavailable: true, curated: null };
 
   try {
-    const [response, featuredResponse] = await Promise.all([
-      fetch(apiUrl + "/stories", { next: { revalidate: 60 } }),
-      fetch(apiUrl + "/discovery/featured", { cache: "no-store" }),
-    ]);
+    // The featured pick is optional: if it is slow or failing, the catalogue still renders.
+    const featuredRequest = fetch(apiUrl + "/discovery/featured", { next: { revalidate: 60 }, signal: AbortSignal.timeout(4000) })
+      .then(async (featuredResponse) => (featuredResponse.ok ? await featuredResponse.json() : null))
+      .catch(() => null);
+    const response = await fetch(apiUrl + "/stories", { next: { revalidate: 60 } });
     if (!response.ok) throw new Error("Catalogue request failed.");
     const data = await response.json();
-    const featuredData = featuredResponse.ok ? await featuredResponse.json() : null;
+    const featuredData = await featuredRequest;
     return {
       stories: Array.isArray(data.items) ? data.items : [],
       unavailable: false,

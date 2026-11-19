@@ -3,6 +3,7 @@
 import { useEffect, useRef } from "react";
 import type { CSSProperties, ClipboardEvent } from "react";
 import type { ImportedManuscriptBlock, ManuscriptRun } from "@/lib/docx-import";
+import { parseColour, readableRunColour } from "@/lib/run-colour";
 
 type Block = ImportedManuscriptBlock;
 type Props = {
@@ -13,6 +14,13 @@ type Props = {
 
 const allowedTags = new Set(["P", "DIV", "H1", "H2", "H3", "H4", "H5", "H6", "BLOCKQUOTE", "BR", "STRONG", "B", "EM", "I", "U", "S", "STRIKE", "SUB", "SUP", "SPAN", "UL", "OL", "LI"]);
 const allowedStyles = new Set(["text-align", "text-indent", "margin-left", "margin-right", "margin-top", "margin-bottom", "font-weight", "font-style", "text-decoration", "color", "background-color", "font-size", "font-family", "vertical-align", "font-variant", "text-transform"]);
+
+/** Word and Google Docs write their default font, size and "black" onto every pasted run; the reader controls those. */
+function pastedDefault(property: string, value: string) {
+  if (property === "font-family" || property === "font-size") return true;
+  if (property === "color") return parseColour(value) === null || readableRunColour(value, "paper") === undefined;
+  return false;
+}
 
 function escapeHtml(value: string) {
   return value.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;");
@@ -74,7 +82,7 @@ function cleanNode(node: Node, target: Document): Node | null {
   }
   const element = target.createElement(node.tagName.toLowerCase());
   const styledNode = node as HTMLElement;
-  const style = Array.from(styledNode.style).filter(property => allowedStyles.has(property)).map(property => property + ":" + styledNode.style.getPropertyValue(property)).join(";");
+  const style = Array.from(styledNode.style).filter(property => allowedStyles.has(property) && !pastedDefault(property, styledNode.style.getPropertyValue(property))).map(property => property + ":" + styledNode.style.getPropertyValue(property)).join(";");
   if (style) element.setAttribute("style", style);
   for (const child of Array.from(node.childNodes)) {
     const cleaned = cleanNode(child, target);
@@ -134,9 +142,30 @@ function cssLength(value: string, unit: "em" | "pt"): number | undefined {
   return unit === "pt" ? points : points / 12;
 }
 
+const BLOCK_TAGS = new Set(["P", "DIV", "H1", "H2", "H3", "H4", "H5", "H6", "BLOCKQUOTE", "UL", "OL"]);
+
+/** Top-level nodes of the editor, with loose text and inline runs (e.g. a typed first line) wrapped as paragraphs. */
+function topLevelElements(root: HTMLElement): HTMLElement[] {
+  const result: HTMLElement[] = [];
+  let loose: Node[] = [];
+  const flush = () => {
+    if (!loose.some(node => (node.textContent || "").trim() || (node instanceof Element && node.tagName === "BR"))) { loose = []; return; }
+    const paragraph = root.ownerDocument.createElement("p");
+    for (const node of loose) paragraph.appendChild(node.cloneNode(true));
+    result.push(paragraph);
+    loose = [];
+  };
+  for (const node of Array.from(root.childNodes)) {
+    if (node instanceof HTMLElement && BLOCK_TAGS.has(node.tagName)) { flush(); result.push(node); }
+    else if (node instanceof HTMLElement && node.dataset.blockType) { flush(); result.push(node); }
+    else loose.push(node);
+  }
+  flush();
+  return result;
+}
+
 function parseEditor(root: HTMLElement): Block[] {
-  const top = Array.from(root.children);
-  const nodes = top.length ? top : [root];
+  const nodes = topLevelElements(root);
   return nodes.flatMap(element => {
     const el = element as HTMLElement;
     if (el.tagName === "DIV" && Array.from(el.children).some(child => ["P", "DIV", "H1", "H2", "H3", "H4", "H5", "H6", "BLOCKQUOTE", "UL", "OL"].includes(child.tagName))) return parseEditor(el);

@@ -1,6 +1,7 @@
 "use client";
 
 import RemoteImage from "@/components/remote-image";
+import { readableRunColour, type ReaderThemeName } from "@/lib/run-colour";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import ReactionPanel from "../../react/[episodeId]/reaction-panel";
@@ -41,7 +42,7 @@ function extractBlocks(content: unknown): ContentBlock[] {
   return [];
 }
 
-function renderRuns(block: ContentBlock) {
+function renderRuns(block: ContentBlock, theme: ReaderThemeName = "paper") {
   if (!Array.isArray(block.runs) || !block.runs.length) {
     const text = blockText(block);
     const content = block.bold && block.italic ? <strong><em>{text}</em></strong> : block.bold ? <strong>{text}</strong> : block.italic ? <em>{text}</em> : text;
@@ -57,7 +58,7 @@ function renderRuns(block: ContentBlock) {
     if (run.bold) node = <strong>{node}</strong>;
     const formatting = run.formatting;
     return <span key={index} style={{
-      color: formatting?.color,
+      color: readableRunColour(formatting?.color, theme),
       backgroundColor: formatting?.highlight?.toLowerCase(),
       fontSize: typeof formatting?.fontSizePt === "number" ? formatting.fontSizePt + "pt" : undefined,
       fontFamily: formatting?.fontFamily,
@@ -537,9 +538,9 @@ export default function ReadingRoom({
             />
           )}
           <div className="reading-kicker">{payload.story.title} <span>·</span> {(payload.story.section_label || "Episode").toUpperCase()} {String(payload.episode.sequence_number).padStart(2, "0")}</div>
-          <h1 className="reading-episode-title" style={{ ...manuscriptBlockStyle(sourceTitleBlock || {}), fontWeight: sourceTitleBlock?.bold || (sourceTitleRuns.length > 0 && sourceTitleRuns.every((run) => run.bold)) ? 700 : 500, fontStyle: sourceTitleBlock?.italic || (sourceTitleRuns.length > 0 && sourceTitleRuns.every((run) => run.italic)) ? "italic" : undefined, textAlign: "center", fontFamily: "'Playfair Display', Georgia, serif", color: sourceTitleRunFormat?.color }}>{payload.episode.title}</h1>
+          <h1 className="reading-episode-title" style={{ ...manuscriptBlockStyle(sourceTitleBlock || {}), fontWeight: sourceTitleBlock?.bold || (sourceTitleRuns.length > 0 && sourceTitleRuns.every((run) => run.bold)) ? 700 : 500, fontStyle: sourceTitleBlock?.italic || (sourceTitleRuns.length > 0 && sourceTitleRuns.every((run) => run.italic)) ? "italic" : undefined, textAlign: "center", fontFamily: "'Playfair Display', Georgia, serif", color: readableRunColour(sourceTitleRunFormat?.color, theme) }}>{payload.episode.title}</h1>
         </div>
-        {leadingBlocks.length > 0 && <div className="manuscript" style={{ fontSize: `${fontScale}%` }}>{leadingBlocks.map((block, index) => <p key={"leading-" + index} style={manuscriptBlockStyle(block)}>{renderRuns(block)}</p>)}</div>}
+        {leadingBlocks.length > 0 && <div className="manuscript" style={{ fontSize: `${fontScale}%` }}>{leadingBlocks.map((block, index) => <p key={"leading-" + index} style={manuscriptBlockStyle(block)}>{renderRuns(block, theme)}</p>)}</div>}
         <div className="reading-rule"><span>✦</span></div>
         <div className="manuscript" style={{ fontSize: `${fontScale}%` }}>
           {blocks.map((block, index) => {
@@ -552,11 +553,11 @@ export default function ReadingRoom({
             // Line spacing is the only manuscript formatting value STORYFLICKS standardises.
             // Every other imported paragraph property is applied as-authored.
             const style = manuscriptBlockStyle(block);
-            if (kind.includes("heading") || kind === "title") return <h2 style={style} key={index}>{renderRuns(block)}</h2>;
-            if (kind.includes("quote")) return <blockquote style={style} key={index}>{renderRuns(block)}</blockquote>;
-            if (kind === "dialogue") return <p className="manuscript-dialogue" style={style} key={index}>{renderRuns(block)}</p>;
-            if (kind === "emphasis") return <p className="manuscript-emphasis" style={style} key={index}>{renderRuns(block)}</p>;
-            return <p className={`manuscript-paragraph${index === firstBodyParagraphIndex ? " has-drop-cap" : ""}`} style={style} key={index}>{renderRuns(block)}</p>;
+            if (kind.includes("heading") || kind === "title") return <h2 style={style} key={index}>{renderRuns(block, theme)}</h2>;
+            if (kind.includes("quote")) return <blockquote style={style} key={index}>{renderRuns(block, theme)}</blockquote>;
+            if (kind === "dialogue") return <p className="manuscript-dialogue" style={style} key={index}>{renderRuns(block, theme)}</p>;
+            if (kind === "emphasis") return <p className="manuscript-emphasis" style={style} key={index}>{renderRuns(block, theme)}</p>;
+            return <p className={`manuscript-paragraph${index === firstBodyParagraphIndex ? " has-drop-cap" : ""}`} style={style} key={index}>{renderRuns(block, theme)}</p>;
           })}
         </div>
         {bodyAssets.map((asset) => <figure className="reading-asset" key={asset.id}><img loading="lazy" decoding="async" src={asset.public_url!} alt={asset.alt_text || "Story illustration"} /></figure>)}
