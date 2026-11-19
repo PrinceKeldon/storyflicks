@@ -52,21 +52,21 @@ def chapter_title_from_edits(content: dict[str, Any], edits: list[dict[str, Any]
             continue
         block = blocks[index]
         paragraph_xml = str((block.get("sourceFormatting") or {}).get("paragraphPropertiesXml") or "")
-        is_heading2 = bool(re.search(r'<w:pStyle\\b[^>]*w:val=["\\']Heading2["\\']', paragraph_xml))
+        is_heading2 = bool(re.search(r'<w:pStyle\b[^>]*w:val=["\\']Heading2["\\']', paragraph_xml))
         if not block.get("sectionTitle") and not is_heading2:
             continue
         heading = str(block.get("text") or "").strip()
         # A numeric section marker is not the chapter title; use the next
         # explicitly styled Heading2 paragraph when present.
-        if block.get("sectionTitle") and re.fullmatch(r"\\d+", heading):
+        if block.get("sectionTitle") and re.fullmatch(r"\d+", heading):
             for candidate in blocks[index + 1:min(index + 3, len(blocks))]:
                 candidate_xml = str((candidate.get("sourceFormatting") or {}).get("paragraphPropertiesXml") or "")
-                if re.search(r'<w:pStyle\\b[^>]*w:val=["\\']Heading2["\\']', candidate_xml):
+                if re.search(r'<w:pStyle\b[^>]*w:val=["\\']Heading2["\\']', candidate_xml):
                     heading = str(candidate.get("text") or "").strip()
                     break
             else:
                 continue
-        heading = re.sub(r"^\\s*\\d+\\s*[.)\\-:]\\s*", "", heading).strip()
+        heading = re.sub(r"^\s*\d+\s*[.)\\-:]\s*", "", heading).strip()
         if heading:
             return heading[:200]
     return str(fallback or "").strip()
