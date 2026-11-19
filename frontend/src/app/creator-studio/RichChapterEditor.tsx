@@ -115,7 +115,7 @@ function inlineRuns(node: Node, inherited: Partial<ManuscriptRun> = {}): Manuscr
   const formatting = {
     ...(style.color ? { color: style.color } : {}),
     ...(style.backgroundColor ? { highlight: style.backgroundColor } : {}),
-    ...(style.fontSize ? { fontSizePt: Number.parseFloat(style.fontSize) * (style.fontSize.endsWith("pt") ? 1 : 0.75) } : {}),
+    ...(style.fontSize ? { fontSizePt: cssLength(style.fontSize, "pt") } : {}),
     ...(style.fontFamily ? { fontFamily: style.fontFamily.replace(/^['"]|['"]$/g, "") } : {}),
     ...(style.fontVariant === "small-caps" ? { smallCaps: true } : {}),
     ...(style.textTransform === "uppercase" ? { allCaps: true } : {}),
@@ -138,6 +138,14 @@ function parseEditor(root: HTMLElement): Block[] {
   const nodes = top.length ? top : [root];
   return nodes.flatMap(element => {
     const el = element as HTMLElement;
+    if (el.tagName === "UL" || el.tagName === "OL") {
+      return Array.from(el.children).filter(item => item.tagName === "LI").map((item, index) => {
+        const runs = inlineRuns(item);
+        const prefix = el.tagName === "OL" ? (index + 1) + ". " : "• ";
+        const text = runs.map(run => run.text).join("");
+        return { type: "paragraph", text: prefix + text, runs: [{ text: prefix }, ...runs], indentLeft: 1.25, indentHanging: 1 } as Block;
+      });
+    }
     const type = el.dataset.blockType === "separator" ? "separator" : el.dataset.blockType === "spacer" ? "spacer" : /^H[1-6]$/.test(el.tagName) ? "heading" : el.tagName === "BLOCKQUOTE" ? "quote" : "paragraph";
     if (type === "separator") return [{ type: "separator", text: "" } as Block];
     if (type === "spacer") return [{ type: "spacer", text: "" } as Block];
