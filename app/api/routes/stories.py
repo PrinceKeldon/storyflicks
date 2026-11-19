@@ -222,7 +222,7 @@ async def set_discovery_featured(
     )
     if not curators:
         raise HTTPException(403, "Discovery curation permission is required.")
-    story_id = submission.story_id
+    story_id = str(submission.story_id) if submission.story_id else None
     if story_id:
         stories = await supabase.admin_get(
             "stories",
