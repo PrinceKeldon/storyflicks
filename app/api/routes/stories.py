@@ -181,7 +181,7 @@ async def get_story(slug: str = Path(pattern=r"^[a-z0-9]+(-[a-z0-9]+)*$", max_le
 
 
 class FeaturedStorySubmission(BaseModel):
-    story_id: str | None = None
+    story_id: UUID | None = None
     kicker: str = Field(default="FEATURED STORY", min_length=1, max_length=80)
 
 
