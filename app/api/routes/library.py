@@ -152,7 +152,7 @@ async def get_library(
             {
                 "select": (
                     "id,slug,title,author_name,tagline,synopsis,cover_path,"
-                    "publication_status,completion_status,section_label,section_label_plural"
+                    "publication_status,completion_status,section_label,section_label_plural,origin_type,content_format"
                 ),
                 "order": "id.asc",
             },
