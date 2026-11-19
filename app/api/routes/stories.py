@@ -4,7 +4,11 @@ import json
 import re
 from uuid import UUID
 
-from fastapi import APIRouter, HTTPException, Path, Query
+from fastapi import APIRouter, Depends, HTTPException, Path, Query
+from pydantic import BaseModel, Field
+
+from app.api.deps import get_current_user
+from app.core.security import AuthenticatedUser
 
 from app.api.deps import supabase
 from app.services.storage import public_storage_url
@@ -174,3 +178,67 @@ async def get_story(slug: str = Path(pattern=r"^[a-z0-9]+(-[a-z0-9]+)*$", max_le
     )
     story["cover_url"] = public_storage_url(story.get("cover_path"))
     return {"story": story, "episodes": episodes, "materials": materials}
+
+
+class FeaturedStorySubmission(BaseModel):
+    story_id: str | None = None
+    kicker: str = Field(default="FEATURED STORY", min_length=1, max_length=80)
+
+
+@router.get("/discovery/featured")
+async def get_discovery_featured():
+    settings_rows = await supabase.admin_get(
+        "discovery_settings",
+        {"select": "featured_story_id,featured_kicker", "id": "eq.true", "limit": "1"},
+    )
+    if not settings_rows or not settings_rows[0].get("featured_story_id"):
+        return {"story": None, "kicker": "FEATURED STORY"}
+    settings = settings_rows[0]
+    rows = await supabase.admin_get(
+        "stories",
+        {
+            "select": "id,slug,title,author_name,tagline,synopsis,genres,cover_path,publication_status,completion_status,first_episode_free,section_label,section_label_plural,origin_type,content_format,published_at",
+            "id": f"eq.{settings['featured_story_id']}",
+            "publication_status": "eq.published",
+            "deleted_at": "is.null",
+            "limit": "1",
+        },
+    )
+    if not rows:
+        return {"story": None, "kicker": settings.get("featured_kicker") or "FEATURED STORY"}
+    story = rows[0]
+    story["cover_url"] = public_storage_url(story.get("cover_path"))
+    return {"story": story, "kicker": settings.get("featured_kicker") or "FEATURED STORY"}
+
+
+@router.put("/creator/discovery/featured")
+async def set_discovery_featured(
+    submission: FeaturedStorySubmission,
+    user: AuthenticatedUser = Depends(get_current_user),
+):
+    curators = await supabase.admin_get(
+        "discovery_curators",
+        {"user_id": f"eq.{user.id}", "select": "user_id", "limit": "1"},
+    )
+    if not curators:
+        raise HTTPException(403, "Discovery curation permission is required.")
+    story_id = submission.story_id
+    if story_id:
+        stories = await supabase.admin_get(
+            "stories",
+            {
+                "id": f"eq.{story_id}",
+                "publication_status": "eq.published",
+                "deleted_at": "is.null",
+                "select": "id",
+                "limit": "1",
+            },
+        )
+        if not stories:
+            raise HTTPException(404, "Choose a published story to feature.")
+    await supabase.admin_patch(
+        "discovery_settings",
+        {"id": "eq.true"},
+        {"featured_story_id": story_id, "featured_kicker": submission.kicker.strip(), "updated_at": datetime.now().astimezone().isoformat()},
+    )
+    return {"featured_story_id": story_id, "featured_kicker": submission.kicker.strip()}
