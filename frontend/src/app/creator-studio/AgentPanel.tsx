@@ -22,15 +22,6 @@ type Props = {
   onApplied: () => void | Promise<void>;
 };
 
-const SUGGESTIONS = [
-  "Give me an overview of how this story is doing.",
-  "Check chapter 1 for typos and awkward sentences, and propose fixes.",
-  "Draft replies to my newest reader reviews.",
-  "Check my chapter numbering for gaps or duplicates and propose a fix.",
-  "Summarise what readers are saying in recent reviews.",
-  "Search the manuscript for inconsistencies in character names.",
-];
-
 function EditDiff({ edit }: { edit: Edit }) {
   return (
     <div className="sf-agent-edit">
@@ -244,11 +235,6 @@ export default function AgentPanel({ storyId, stories, request, onApplied }: Pro
       </div></div>
 
       <div className="sf-agent-thread" aria-live="polite">
-        {!messages.length && (
-          <div className="sf-agent-suggestions">
-            {SUGGESTIONS.map(text => <button key={text} type="button" className="studio-text-action" onClick={() => void send(text)} disabled={busy}>{text}</button>)}
-          </div>
-        )}
         {messages.map(message => (
           <div key={message.id} className={`sf-agent-message sf-agent-${message.role}`}>
             <small>{message.role === "user" ? "YOU" : "ASSISTANT"}</small>
