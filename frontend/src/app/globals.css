@@ -2422,3 +2422,6 @@ html[data-theme="dark"] body :is(input,textarea,select)::placeholder {
 .studio-rich-chapter-editor [data-block-type="separator"] {
   text-align: center;
 }
+
+/* Featured synopsis is a distinct, readable block from the optional promotional tagline. */
+.feature-synopsis{font-size:17px;line-height:1.7;color:#e0ddd6;margin:10px 0 18px;max-width:60ch}
