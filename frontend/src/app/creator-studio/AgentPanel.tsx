@@ -7,7 +7,7 @@ type Change = { episode_id: string; title: string; from_number: number; to_numbe
 type ProposalItem = {
   id: string; kind: string; status: string; title: string; rationale: string; episode_id: string | null; error?: string | null;
   payload: {
-    chapter_title?: string; sequence_number?: number; edits?: Edit[];
+    chapter_title?: string; proposed_chapter_title?: string; sequence_number?: number; edits?: Edit[];
     review_headline?: string; review_excerpt?: string; body?: string; changes?: Change[];
   };
 };
@@ -83,6 +83,9 @@ function ProposalCard({ proposal, request, onChange, onApplied }: {
         <small>{proposal.kind === "chapter_renumber" ? "CHAPTER NUMBERS" : `${proposal.payload.sequence_number ? `CHAPTER ${proposal.payload.sequence_number} · ` : ""}${(proposal.payload.chapter_title ?? "").toUpperCase()}`} · {proposal.status.toUpperCase()}</small>
       </header>
       {proposal.rationale && <p className="sf-agent-rationale">{proposal.rationale}</p>}
+      {proposal.payload.proposed_chapter_title && proposal.payload.proposed_chapter_title !== proposal.payload.chapter_title && (
+        <p className="sf-agent-rationale">CHAPTER TITLE: <del>{proposal.payload.chapter_title}</del> <ins>{proposal.payload.proposed_chapter_title}</ins></p>
+      )}
       {edits.map((edit, index) => <EditDiff key={index} edit={edit} />)}
       {proposal.kind === "review_reply" && (
         <div className="sf-agent-edit">
@@ -130,7 +133,7 @@ export default function AgentPanel({ storyId, stories, request, onApplied }: Pro
     const proposals = data.proposals ?? [];
     if (proposals.length) {
       const lastAssistant = restored.map((message, index) => ({ message, index }))
-        .filter(item => item.message.role === "model").at(-1);
+         .filter(item => item.message.role === "model").slice(-1)[0];
       if (lastAssistant) {
         restored[lastAssistant.index] = { ...restored[lastAssistant.index], proposals };
       } else {
