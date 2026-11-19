@@ -17,37 +17,51 @@ type DiscoverStory = {
   synopsis: string | null;
   genres: string[];
   completion_status: string | null;
+  origin_type?: "storyflicks_original" | "previously_published" | "independent" | null;
+  content_format?: "standalone" | "series" | null;
   published_at?: string | null;
   cover_url?: string | null;
 };
 
 const navItems = ["Discover", "My Library"];
 
-async function getCatalogue(): Promise<{ stories: DiscoverStory[]; unavailable: boolean }> {
+async function getCatalogue(): Promise<{ stories: DiscoverStory[]; unavailable: boolean; curated: { story: DiscoverStory | null; kicker: string } | null }> {
   const apiUrl = process.env.NEXT_PUBLIC_API_URL?.replace(/\/+$/, "");
-  if (!apiUrl) return { stories: [], unavailable: true };
+  if (!apiUrl) return { stories: [], unavailable: true, curated: null };
 
   try {
-    const response = await fetch(apiUrl + "/stories", { next: { revalidate: 60 } });
+    const [response, featuredResponse] = await Promise.all([
+      fetch(apiUrl + "/stories", { next: { revalidate: 60 } }),
+      fetch(apiUrl + "/discovery/featured", { next: { revalidate: 60 } }),
+    ]);
     if (!response.ok) throw new Error("Catalogue request failed.");
     const data = await response.json();
+    const featuredData = featuredResponse.ok ? await featuredResponse.json() : null;
     return {
       stories: Array.isArray(data.items) ? data.items : [],
       unavailable: false,
+      curated: featuredData && featuredData.story ? featuredData : null,
     };
   } catch {
-    return { stories: [], unavailable: true };
+    return { stories: [], unavailable: true, curated: null };
   }
 }
 
 function storyDescription(story: DiscoverStory) {
-  return story.tagline || story.synopsis || "Discover this STORYFLICKS original.";
+  return story.synopsis || story.tagline || "Explore the story and discover its world.";
+}
+function originLabel(story: DiscoverStory) {
+  if (story.origin_type === "storyflicks_original") return story.content_format === "series" ? "A STORYFLICKS ORIGINAL SERIES" : "A STORYFLICKS ORIGINAL STORY";
+  if (story.origin_type === "previously_published") return "PREVIOUSLY PUBLISHED";
+  return "INDEPENDENT STORY";
+}
+function formatLabel(story: DiscoverStory) {
+  return story.content_format === "series" ? "SERIES" : "STANDALONE STORY";
 }
 
 export default async function DiscoverPage() {
-  const { stories, unavailable } = await getCatalogue();
-  // The API returns published stories newest-first; feature the latest publication rather than pinning one title forever.
-  const featured = stories[0] ?? null;
+  const { stories, unavailable, curated } = await getCatalogue();
+  const featured = curated?.story ?? stories[0] ?? null;
   const moreStories = stories.filter((story) => story.slug !== featured?.slug);
   const publishedCount = stories.length;
 
@@ -75,15 +89,16 @@ export default async function DiscoverPage() {
       {featured ? (
         <section className="featured" aria-labelledby="featured-title">
           <div className="featured-copy">
-            <div className="feature-kicker"><span className="live-dot" /> {featured.slug === "the-priest" ? "FEATURED STORY" : "DISCOVER THIS STORY"}</div>
-            <p className="feature-overline">AN ORIGINAL STORYFLICKS SERIES</p>
+            <div className="feature-kicker"><span className="live-dot" /> {curated?.kicker || "FEATURED STORY"}</div>
+            <p className="feature-overline">{originLabel(featured)}</p>
             <h2 id="featured-title">{featured.title}</h2>
             {featured.author_name && <p className="feature-author-byline">By {featured.author_name}</p>}
-            <p className="feature-tagline">{storyDescription(featured)}</p>
-            <p className="feature-meta">{featured.genres?.join(" · ").toUpperCase() || "STORYFLICKS ORIGINAL"} <b>·</b> {(featured.completion_status || "ONGOING").toUpperCase()} <b>·</b> EPISODIC</p>
+            {featured.tagline && <p className="feature-tagline">{featured.tagline}</p>}
+            <p className="feature-synopsis">{storyDescription(featured)}</p>
+            <p className="feature-meta">{featured.genres?.join(" · ").toUpperCase() || "STORY"} <b>·</b> {(featured.completion_status || "ONGOING").toUpperCase()} <b>·</b> {formatLabel(featured)}</p>
             <div className="feature-actions">
               <Link className="primary-button" href={"/stories/" + featured.slug}>Explore the story <span>↗</span></Link>
-              <Link className="text-button" href={"/stories/" + featured.slug + "#episodes"}>View {(featured.section_label_plural || "Episodes").toLowerCase()} guide <span>→</span></Link>
+              <Link className="text-button" href={"/stories/" + featured.slug + "#episodes"}>View {(featured.section_label_plural || "Chapters").toLowerCase()} guide <span>→</span></Link>
             </div>
           </div>
           <div className={featured.cover_url ? "feature-art has-cover" : "feature-art"} role="img" aria-label={featured.title + " book cover artwork"}>
@@ -92,7 +107,7 @@ export default async function DiscoverPage() {
             <div className="art-cross" />
             <div className="art-caption">STORIES THAT STAY<br />WITH YOU</div>
             <div className="art-title"><strong>{featured.title}</strong></div>
-            <div className="art-index">STORYFLICKS ORIGINAL</div>
+            <div className="art-index">{originLabel(featured)}</div>
           </div>
           <div className="feature-index"><span>01</span><i /> {String(publishedCount).padStart(2, "0")}</div>
         </section>
@@ -117,10 +132,10 @@ export default async function DiscoverPage() {
               <Link key={story.id || story.slug} className="search-result-card" data-tone={coverTone(story.slug)} href={"/stories/" + story.slug}>
                 <div className={story.cover_url ? "search-result-art has-cover" : "search-result-art"} role="img" aria-label={story.title + " book cover artwork"}>
                   {isRecent(story.published_at) && <b className="new-badge">NEW</b>}
-                  {story.cover_url ? <RemoteImage className="catalogue-cover-image" src={story.cover_url} alt={story.title + " book cover"} fill sizes="(max-width: 640px) 45vw, 200px" /> : <><span>{story.title}</span><small>STORYFLICKS ORIGINAL</small></>}
+                  {story.cover_url ? <RemoteImage className="catalogue-cover-image" src={story.cover_url} alt={story.title + " book cover"} fill sizes="(max-width: 640px) 45vw, 200px" /> : <><span>{story.title}</span><small>{originLabel(story)}</small></>}
                 </div>
                 <div className="search-result-copy">
-                  <p className="eyebrow">{story.genres?.join(" · ") || "STORYFLICKS ORIGINAL"} <span>·</span> {(story.completion_status || "EPISODIC").toUpperCase()}</p>
+                  <p className="eyebrow">{story.genres?.join(" · ") || "STORY"} <span>·</span> {(story.completion_status || "ONGOING").toUpperCase()} <span>·</span> {formatLabel(story)}</p>
                   <h3>{story.title}</h3>
                   {story.author_name && <p className="catalogue-author-byline">By {story.author_name}</p>}
                   <p>{storyDescription(story)}</p>
