@@ -67,6 +67,32 @@ function renderRuns(block: ContentBlock) {
   });
 }
 
+/** Letters and digits only, lower-cased, so "A Deadly Ambush." and "a deadly ambush" compare equal. */
+function titleKey(value: string) {
+  return value.normalize("NFKD").replace(/[^\p{L}\p{N}]+/gu, "").toLowerCase();
+}
+
+/**
+ * Index of the block that repeats the chapter title inside the manuscript, or -1.
+ * Importer-flagged blocks win. Otherwise the first non-empty block is treated as the title
+ * when it repeats the episode title ("A Deadly Ambush", "Chapter 1: A Deadly Ambush", "1. A Deadly Ambush"),
+ * so the title is never printed twice and never receives the drop cap.
+ */
+function findSourceTitleIndex(blocks: ContentBlock[], episodeTitle: string, sequence?: number) {
+  const flagged = blocks.findIndex((block) => block.sectionTitle === true);
+  if (flagged >= 0) return flagged;
+  const wanted = titleKey(episodeTitle);
+  if (!wanted) return -1;
+  const first = blocks.findIndex((block) => blockText(block).trim() !== "");
+  if (first < 0 || first > 3) return -1;
+  const text = blockText(blocks[first]).trim();
+  if (text.length > 160) return -1;
+  const label = titleKey(text);
+  const numbered = sequence ? [`chapter${sequence}`, `episode${sequence}`, `part${sequence}`, `${sequence}`] : [];
+  const candidates = [wanted, ...numbered.map((prefix) => prefix + wanted)];
+  return candidates.includes(label) ? first : -1;
+}
+
 function blockText(block: ContentBlock) {
   if (typeof block.text === "string") return block.text;
   if (typeof block.content === "string") return block.content;
@@ -410,7 +436,7 @@ export default function ReadingRoom({
   const episodeArtwork = payload?.episode.assets?.find((asset) => asset.asset_type === "inline_image" && asset.public_url);
   const bodyAssets = payload?.episode.assets?.filter((asset) => asset.public_url && asset.id !== episodeArtwork?.id) || [];
   const blocks = useMemo(() => extractBlocks(payload?.episode.content), [payload]);
-  const sourceTitleIndex = blocks.findIndex((block) => block.sectionTitle === true);
+  const sourceTitleIndex = findSourceTitleIndex(blocks, payload?.episode.title || "", payload?.episode.sequence_number);
   const sourceTitleBlock = sourceTitleIndex >= 0 ? blocks[sourceTitleIndex] : undefined;
   const sourceTitleRuns = sourceTitleBlock?.runs || [];
   const sourceTitleRunFormat = sourceTitleRuns[0]?.formatting;
