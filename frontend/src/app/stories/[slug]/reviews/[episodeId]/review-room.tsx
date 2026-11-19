@@ -1,4 +1,5 @@
 "use client";
+import { failureMessage } from "@/lib/api-client";
 
 import Link from "next/link";
 import { useRouter } from "next/navigation";
@@ -79,7 +80,7 @@ export default function ReviewRoom({ slug, episodeId }: { slug: string; episodeI
       if (response.status === 401) { setStatus("signed-out"); return; }
       if (!response.ok) {
         const result = await response.json().catch(() => ({}));
-        throw new Error(result.detail || "We couldn’t load this discussion.");
+        throw new Error(failureMessage(response, result.detail, "We couldn’t load this discussion."));
       }
       setData(await response.json() as Payload);
       setStatus("ready");
@@ -130,7 +131,7 @@ export default function ReviewRoom({ slug, episodeId }: { slug: string; episodeI
         headers: { Authorization: `Bearer ${session.access_token}` },
       });
       const result = await response.json().catch(() => ({}));
-      if (!response.ok) throw new Error(result.detail || "Your vote could not be saved.");
+      if (!response.ok) throw new Error(failureMessage(response, result.detail, "Your vote could not be saved."));
       setData((current) => current ? {
         ...current,
         reviews: current.reviews.map((item) => item.id === review.id

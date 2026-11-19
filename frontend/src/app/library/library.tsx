@@ -1,5 +1,5 @@
 "use client";
-import { getAccessToken, fetchWithTimeout, apiErrorMessage } from "@/lib/api-client";
+import { getAccessToken, fetchWithTimeout, apiErrorMessage, failureMessage } from "@/lib/api-client";
 import RemoteImage from "@/components/remote-image";
 
 import Link from "next/link";
@@ -94,7 +94,7 @@ export default function Library() {
     setRemoving(storyId);setError("");
     try{
       const response=await fetch(`${apiUrl}/library/bookmarks/${storyId}`,{method:"DELETE",headers:{Authorization:`Bearer ${session.access_token}`}});
-      if(!response.ok){const result=await response.json().catch(()=>({}));throw new Error(result.detail||"This story could not be removed.");}
+      if(!response.ok){const result=await response.json().catch(()=>({}));throw new Error(failureMessage(response,result.detail,"This story could not be removed."));}
       setData(current=>{if(!current)return current;const wasSaved=current.saved.some(card=>card.story.id===storyId);const wasListed=current.not_started.some(card=>card.story.id===storyId);return {...current,saved:current.saved.filter(card=>card.story.id!==storyId),not_started:current.not_started.filter(card=>card.story.id!==storyId),totals:{...current.totals,saved:current.totals.saved-(wasSaved?1:0),not_started:current.totals.not_started-(wasListed?1:0)}};});
     }catch(cause){setError(cause instanceof Error?cause.message:"Something went wrong.");}finally{setRemoving(null);}
   }
