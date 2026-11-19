@@ -35,6 +35,16 @@ export const playfair = localFont({
   ],
 });
 
+// Handwritten accent for the home tagline.
+export const caveat = localFont({
+  variable: "--font-hand",
+  display: "swap",
+  src: [
+    { path: "./fonts/caveat-latin-500-normal.woff2", weight: "500", style: "normal" },
+    { path: "./fonts/caveat-latin-600-normal.woff2", weight: "600", style: "normal" },
+  ],
+});
+
 // Reader typeface options: only downloaded when a reader picks them.
 export const sourceSerif = localFont({
   variable: "--font-source-serif",
@@ -58,4 +68,4 @@ export const atkinson = localFont({
   ],
 });
 
-export const fontVariables = [dmSans, dmMono, playfair, sourceSerif, atkinson].map(font => font.variable).join(" ");
+export const fontVariables = [dmSans, dmMono, playfair, caveat, sourceSerif, atkinson].map(font => font.variable).join(" ");

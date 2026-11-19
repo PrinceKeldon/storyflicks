@@ -127,6 +127,12 @@ export default function ReadingRoom({
   const touchStart = useRef<{ x: number; y: number } | null>(null);
   const lastSwipeAt = useRef(0);
   const [showSettings, setShowSettings] = useState(false);
+  useEffect(() => {
+    if (!showSettings) return;
+    const close = (event: KeyboardEvent) => { if (event.key === "Escape") setShowSettings(false); };
+    window.addEventListener("keydown", close);
+    return () => window.removeEventListener("keydown", close);
+  }, [showSettings]);
   const saveTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const pendingProgress = useRef<{ scrollY: number; percent: number; page?: number } | null>(null);
   const preferencesTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -456,38 +462,37 @@ export default function ReadingRoom({
   return (
     <main className={`reading-room theme-${theme}${readingMode === "pages" ? " is-paged" : ""}`}>
       <div className="reader-progress-track"><span style={{ width: `${progress}%` }} /></div>
-      <header className="reader-toolbar">
-        <Link className="reader-brand" href="/">STORY<span>FLICKS</span><i>.</i></Link>
-        <div className="reader-location"><Link href={`/stories/${slug}`}>{payload.story.title}</Link><span>/</span><span>{(payload.story.section_label || "Episode").toUpperCase()} {String(payload.episode.sequence_number).padStart(2, "0")}</span></div>
-        <div className="reader-tools">
+      <header className="reader-bar">
+        <Link className="reader-bar-back" href={`/stories/${slug}`} aria-label={`Back to ${payload.story.title}`}>←</Link>
+        <div className="reader-bar-title"><Link href={`/stories/${slug}`}>{payload.story.title}</Link><span>{(payload.story.section_label || "Episode").toUpperCase()} {String(payload.episode.sequence_number).padStart(2, "0")}</span></div>
+        <div className="reader-bar-tools">
           {payload.previous_episode && (
             <Link
-              className="reader-episode-back"
+              className="reader-bar-btn"
               href={`/stories/${slug}/read/${payload.previous_episode.id}`}
               aria-label={`Go to previous ${payload.story.section_label || "section"} ${payload.previous_episode.sequence_number}: ${payload.previous_episode.title}`}
             >
-              ← Previous
+              ‹<span> {String(payload.previous_episode.sequence_number).padStart(2, "0")}</span>
             </Link>
           )}
-          <span className="reader-progress-label">{progress}%</span>
-          <button className="reader-tool-button" onClick={() => setShowSettings((value) => !value)} aria-expanded={showSettings}>Aa <span>Reading settings</span></button>
-          <button className="reader-mode-toggle" type="button" onClick={() => {
+          <span className="reader-bar-progress" aria-label={`${progress} percent read`}>{progress}%</span>
+          <button className="reader-bar-btn" type="button" onClick={() => {
             if (readingMode === "scroll") {
               window.scrollTo(0, 0);
               setReadingMode("pages");
             } else {
               setReadingMode("scroll");
             }
-          }} aria-label={readingMode === "pages" ? "Switch to continuous scrolling" : "Switch to paginated reading"}>{readingMode === "pages" ? "Scrolling" : "Pages"}</button>
-          <Link className="reader-exit" href={`/stories/${slug}`}>Exit</Link>
+          }} aria-label={readingMode === "pages" ? "Switch to continuous scrolling" : "Switch to paginated reading"}>{readingMode === "pages" ? "Scroll" : "Pages"}</button>
+          <button className="reader-bar-btn reader-bar-aa" type="button" onClick={() => setShowSettings((value) => !value)} aria-expanded={showSettings} aria-label="Reading settings">Aa</button>
         </div>
       </header>
-      {showSettings && <section className="reader-settings" aria-label="Reading settings">
-        <div><span>APPEARANCE</span><div className="setting-options">{(["paper", "sepia", "night"] as const).map((value) => <button key={value} className={theme === value ? "selected" : ""} onClick={() => setTheme(value)}>{value}</button>)}</div></div>
-        <div><span>TYPEFACE</span><div className="setting-options">{([["classic", "Classic"], ["modern", "Modern"], ["sans", "Sans"], ["dyslexia", "Dyslexia-friendly"]] as const).map(([value, label]) => <button key={value} className={typeface === value ? "selected" : ""} onClick={() => setTypeface(value)}>{label}</button>)}</div></div>
-        <div><span>TEXT SIZE</span><div className="setting-options"><button onClick={() => setFontScale((v) => Math.max(85, v - 5))} aria-label="Smaller text">A−</button><strong>{fontScale}%</strong><button onClick={() => setFontScale((v) => Math.min(130, v + 5))} aria-label="Larger text">A+</button></div></div>
-        <div><span>LINE SPACING</span><div className="setting-options"><button className={spacing === "comfortable" ? "selected" : ""} onClick={() => setSpacing("comfortable")}>Comfortable</button><button className={spacing === "relaxed" ? "selected" : ""} onClick={() => setSpacing("relaxed")}>Relaxed</button></div></div>
-        <div><span>READING WIDTH</span><div className="setting-options"><button className={width === "narrow" ? "selected" : ""} onClick={() => setWidth("narrow")}>Narrow</button><button className={width === "comfortable" ? "selected" : ""} onClick={() => setWidth("comfortable")}>Comfortable</button><button className={width === "wide" ? "selected" : ""} onClick={() => setWidth("wide")}>Wide</button></div></div>
+      {showSettings && <section className="reader-pop" aria-label="Reading settings">
+        <div><span>APPEARANCE</span><div className="reader-pop-options">{(["paper", "sepia", "night"] as const).map((value) => <button key={value} className={theme === value ? "selected" : ""} onClick={() => setTheme(value)}>{value}</button>)}</div></div>
+        <div><span>TYPEFACE</span><div className="reader-pop-options">{([["classic", "Classic"], ["modern", "Modern"], ["sans", "Sans"], ["dyslexia", "Dyslexia-friendly"]] as const).map(([value, label]) => <button key={value} className={typeface === value ? "selected" : ""} onClick={() => setTypeface(value)}>{label}</button>)}</div></div>
+        <div><span>TEXT SIZE</span><div className="reader-pop-options"><button onClick={() => setFontScale((v) => Math.max(85, v - 5))} aria-label="Smaller text">A−</button><strong>{fontScale}%</strong><button onClick={() => setFontScale((v) => Math.min(130, v + 5))} aria-label="Larger text">A+</button></div></div>
+        <div><span>LINE SPACING</span><div className="reader-pop-options"><button className={spacing === "comfortable" ? "selected" : ""} onClick={() => setSpacing("comfortable")}>Comfortable</button><button className={spacing === "relaxed" ? "selected" : ""} onClick={() => setSpacing("relaxed")}>Relaxed</button></div></div>
+        <div><span>READING WIDTH</span><div className="reader-pop-options"><button className={width === "narrow" ? "selected" : ""} onClick={() => setWidth("narrow")}>Narrow</button><button className={width === "comfortable" ? "selected" : ""} onClick={() => setWidth("comfortable")}>Comfortable</button><button className={width === "wide" ? "selected" : ""} onClick={() => setWidth("wide")}>Wide</button></div></div>
       </section>}
       <div className={`reader-page-viewport ${readingMode === "pages" ? "is-paginated" : "is-scrolling"}`} ref={pageViewportRef} onClick={handlePageTap} onTouchStart={handlePageTouchStart} onTouchEnd={handlePageTouchEnd} onTouchCancel={() => { touchStart.current = null; }}>
       <article className={`reading-page reading-width-${width} reading-spacing-${spacing} ${readingMode === "pages" ? "reader-paged-content" : ""}`} data-font={typeface}>
@@ -545,7 +550,6 @@ export default function ReadingRoom({
         <span aria-live="polite">PAGE {String(currentPage + 1).padStart(2, "0")} / {String(pageCount).padStart(2, "0")}</span>
         <button type="button" onClick={() => goToPage(currentPage + 1)} disabled={currentPage >= pageCount - 1}>Next →</button>
       </nav>}
-      <footer className="reader-footer"><span>STORYFLICKS</span><span>Stories worth staying for.</span><span>© 2026</span></footer>
       {isTransitioning && (
         <div className="reader-transition" role="status" aria-live="polite" aria-atomic="true">
           <div className="reader-transition-content">

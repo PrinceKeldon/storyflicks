@@ -3,6 +3,7 @@ import "./globals.css";
 import "./storyflicks-design-system.css";
 import "./redesign.css";
 import "./redesign-pages.css";
+import "./reader-clean.css";
 import ThemeProvider from "./theme-provider";
 import AuthSessionProvider from "./auth-session-provider";
 import { SITE_URL } from "../lib/stories";
