@@ -35,24 +35,38 @@ def content_blocks(content: Any) -> list[dict[str, Any]]:
 
 
 def chapter_title_from_edits(content: dict[str, Any], edits: list[dict[str, Any]], fallback: str) -> str:
-    """Return a chapter title when an approved edit changes its opening section heading.
+    """Return the title when an approved edit changes the opening chapter heading.
 
-    Only the first three manuscript blocks are considered: later section headings
-    are internal headings, not chapter metadata. The heading must be explicitly
-    marked sectionTitle so ordinary prose edits cannot rename a chapter.
+    Imported DOCX manuscripts can store the chapter number in a sectionTitle
+    block and the actual title in the immediately following Heading2 paragraph.
+    Other manuscripts use a single sectionTitle block. Only these explicit
+    opening-heading structures are eligible; ordinary prose edits cannot rename
+    a chapter.
     """
+    import re
+
     blocks = content_blocks(content)
     for edit in edits:
         index = edit.get("block_index")
         if not isinstance(index, int) or index < 0 or index > 2 or index >= len(blocks):
             continue
         block = blocks[index]
-        if not block.get("sectionTitle"):
+        paragraph_xml = str((block.get("sourceFormatting") or {}).get("paragraphPropertiesXml") or "")
+        is_heading2 = bool(re.search(r'<w:pStyle\\b[^>]*w:val=["\\']Heading2["\\']', paragraph_xml))
+        if not block.get("sectionTitle") and not is_heading2:
             continue
         heading = str(block.get("text") or "").strip()
-        # Manuscripts commonly include the chapter number in the heading itself.
-        import re
-        heading = re.sub(r"^\s*\d+\s*[.)\-:]\s*", "", heading).strip()
+        # A numeric section marker is not the chapter title; use the next
+        # explicitly styled Heading2 paragraph when present.
+        if block.get("sectionTitle") and re.fullmatch(r"\\d+", heading):
+            for candidate in blocks[index + 1:min(index + 3, len(blocks))]:
+                candidate_xml = str((candidate.get("sourceFormatting") or {}).get("paragraphPropertiesXml") or "")
+                if re.search(r'<w:pStyle\\b[^>]*w:val=["\\']Heading2["\\']', candidate_xml):
+                    heading = str(candidate.get("text") or "").strip()
+                    break
+            else:
+                continue
+        heading = re.sub(r"^\\s*\\d+\\s*[.)\\-:]\\s*", "", heading).strip()
         if heading:
             return heading[:200]
     return str(fallback or "").strip()
