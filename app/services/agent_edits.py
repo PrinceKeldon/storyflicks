@@ -34,6 +34,30 @@ def content_blocks(content: Any) -> list[dict[str, Any]]:
     return [block for block in blocks if isinstance(block, dict)]
 
 
+def chapter_title_from_edits(content: dict[str, Any], edits: list[dict[str, Any]], fallback: str) -> str:
+    """Return a chapter title when an approved edit changes its opening section heading.
+
+    Only the first three manuscript blocks are considered: later section headings
+    are internal headings, not chapter metadata. The heading must be explicitly
+    marked sectionTitle so ordinary prose edits cannot rename a chapter.
+    """
+    blocks = content_blocks(content)
+    for edit in edits:
+        index = edit.get("block_index")
+        if not isinstance(index, int) or index < 0 or index > 2 or index >= len(blocks):
+            continue
+        block = blocks[index]
+        if not block.get("sectionTitle"):
+            continue
+        heading = str(block.get("text") or "").strip()
+        # Manuscripts commonly include the chapter number in the heading itself.
+        import re
+        heading = re.sub(r"^\\s*\\d+\\s*[.)\\-:]\\s*", "", heading).strip()
+        if heading:
+            return heading[:200]
+    return str(fallback or "").strip()
+
+
 def replace_in_block(block: dict[str, Any], old_text: str, new_text: str) -> dict[str, Any]:
     """Return a copy of `block` with the one occurrence of `old_text` replaced."""
     text = block.get("text")
