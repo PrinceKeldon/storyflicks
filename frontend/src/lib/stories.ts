@@ -25,6 +25,8 @@ export type StoryResponse = {
     synopsis?: string | null;
     genres?: string[];
     completion_status?: string | null;
+    origin_type?: "storyflicks_original" | "previously_published" | "independent" | null;
+    content_format?: "standalone" | "series" | null;
     first_episode_free?: boolean;
     cover_url?: string | null;
     published_at?: string | null;
