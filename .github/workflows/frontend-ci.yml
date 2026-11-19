@@ -52,6 +52,9 @@ jobs:
       - name: Audit full dependency tree
         run: npm audit --audit-level=moderate
 
+      - name: DOCX namespace regression tests
+        run: npm run test:docx-import
+
       - name: TypeScript validation
         run: npx tsc --noEmit
 
