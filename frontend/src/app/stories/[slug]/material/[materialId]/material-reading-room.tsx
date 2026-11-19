@@ -1,4 +1,5 @@
 "use client";
+import { failureMessage } from "@/lib/api-client";
 
 import Link from "next/link";
 import { useEffect, useState, type ReactNode } from "react";
@@ -99,7 +100,7 @@ export default function MaterialReadingRoom({ slug, materialId }: { slug: string
     fetch(api + "/stories/" + encodeURIComponent(slug) + "/materials/" + encodeURIComponent(materialId), { cache: "no-store" })
       .then(async (response) => {
         const body = await response.json().catch(() => ({}));
-        if (!response.ok) throw new Error(body.detail || "This section is unavailable.");
+        if (!response.ok) throw new Error(failureMessage(response, body.detail, "This section is unavailable."));
         setData(body as Payload);
       })
       .catch((caught) => setError(caught instanceof Error ? caught.message : "Could not open this section."))

@@ -1,4 +1,5 @@
 "use client";
+import { failureMessage, rateLimitMessage } from "@/lib/api-client";
 
 import Link from "next/link";
 import AccountNavigation from "@/app/account-navigation";
@@ -112,6 +113,7 @@ export default function CreatorStudio(){
   const res=await fetch(api+path,{...init,headers:{Authorization:"Bearer "+accessToken,...(init.body?{"Content-Type":"application/json"}:{}),...init.headers},cache:"no-store"});
   const body=await res.json().catch(()=>({}));
   if(!res.ok){
+   const limited=rateLimitMessage(res);if(limited)throw new Error(limited);
    const detail=body?.detail;
    if(typeof detail==="string")throw new Error(detail);
    if(Array.isArray(detail)){
@@ -137,7 +139,7 @@ export default function CreatorStudio(){
   const {data:{session}}=await client.auth.getSession();if(!session?.access_token){setStatus("signed-out");return;}
   setToken(session.access_token);
   try{const res=await fetch(api+"/creator/dashboard",{headers:{Authorization:"Bearer "+session.access_token},cache:"no-store"});const body=await res.json().catch(()=>({}));
-   if(res.status===401){setStatus("signed-out");return;}if(res.status===403){setStatus("forbidden");return;}if(!res.ok)throw new Error(body.detail||"Could not load Creator Studio.");
+   if(res.status===401){setStatus("signed-out");return;}if(res.status===403){setStatus("forbidden");return;}if(!res.ok)throw new Error(failureMessage(res,body.detail,"Could not load Creator Studio."));
    setDashboard(body as Dashboard);setStatus("ready");if(!storyId&&(body as Dashboard).stories.length)setStoryId((body as Dashboard).stories[0].id);
   }catch(e){setError(message(e,"Something went wrong."));setStatus("error");}
  },[api,storyId]);

@@ -47,3 +47,15 @@ export async function apiErrorMessage(response: Response, fallback: string): Pro
   const body = await response.json().catch(() => ({})) as { detail?: unknown };
   return typeof body.detail === "string" && body.detail ? body.detail : fallback;
 }
+
+/** Friendly rate-limit text for a 429, or null for any other status. Synchronous, for use inside existing error handling. */
+export function rateLimitMessage(response: Response): string | null {
+  if (response.status !== 429) return null;
+  const wait = Number(response.headers.get("retry-after"));
+  return `You’re going a little fast. Please wait ${Number.isFinite(wait) && wait > 0 ? `${Math.min(wait, 120)} seconds` : "a moment"} and try again.`;
+}
+
+/** Message for a failed response: the 429 notice, else the API's `detail` string, else the fallback. */
+export function failureMessage(response: Response, detail: unknown, fallback: string): string {
+  return rateLimitMessage(response) ?? (typeof detail === "string" && detail ? detail : fallback);
+}

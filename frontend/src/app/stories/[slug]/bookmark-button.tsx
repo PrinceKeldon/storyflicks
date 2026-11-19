@@ -1,4 +1,5 @@
 "use client";
+import { failureMessage } from "@/lib/api-client";
 
 import Link from "next/link";
 import { useEffect, useState } from "react";
@@ -40,7 +41,7 @@ export default function BookmarkButton({ storyId, slug }: { storyId: string; slu
         method:wasSaved?"DELETE":"POST",
         headers:{Authorization:`Bearer ${session.access_token}`},
       });
-      if(!response.ok){const result=await response.json().catch(()=>({}));throw new Error(result.detail||"Your library could not be updated.");}
+      if(!response.ok){const result=await response.json().catch(()=>({}));throw new Error(failureMessage(response,result.detail,"Your library could not be updated."));}
       setState(wasSaved?"unsaved":"saved");
     }catch(cause){setMessage(cause instanceof Error?cause.message:"Something went wrong.");setState(wasSaved?"saved":"unsaved");}
   }

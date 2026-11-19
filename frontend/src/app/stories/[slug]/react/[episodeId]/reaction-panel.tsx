@@ -1,4 +1,5 @@
 "use client";
+import { failureMessage } from "@/lib/api-client";
 
 import Link from "next/link";
 import { useCallback, useEffect, useState } from "react";
@@ -65,7 +66,7 @@ export default function ReactionPanel({ slug, episodeId, presentation = "page", 
       if (response.status === 401) { setStatus("signed-out"); return; }
       if (!response.ok) {
         const result = await response.json().catch(() => ({}));
-        throw new Error(result.detail || "We couldn’t load your episode response.");
+        throw new Error(failureMessage(response, result.detail, "We couldn’t load your episode response."));
       }
       const result = await response.json() as ReviewRoomPayload;
       setData(result);
@@ -102,7 +103,7 @@ export default function ReactionPanel({ slug, episodeId, presentation = "page", 
           : { headline: headline.trim() || null, body: body.trim(), visibility }),
       });
       const result = await response.json().catch(() => ({})) as UnlockPayload & { detail?: string };
-      if (!response.ok) throw new Error(result.detail || "Your contribution could not be saved. Please try again.");
+      if (!response.ok) throw new Error(failureMessage(response, result.detail, "Your contribution could not be saved. Please try again."));
       const unlocked = result.unlock?.next_episode;
       if (unlocked) {
         setUnlock({

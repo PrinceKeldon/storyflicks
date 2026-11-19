@@ -1,4 +1,5 @@
 "use client";
+import { failureMessage } from "@/lib/api-client";
 
 import { useState } from "react";
 import { getSupabaseBrowserClient } from "@/lib/supabase";
@@ -50,7 +51,7 @@ export default function SupportStoryButton({
       });
       const result = await response.json().catch(() => ({})) as { checkout_url?: string; detail?: string };
       if (!response.ok || !result.checkout_url) {
-        throw new Error(result.detail || "We couldn’t start secure checkout. Please try again.");
+        throw new Error(failureMessage(response, result.detail, "We couldn’t start secure checkout. Please try again."));
       }
       window.location.assign(result.checkout_url);
     } catch (cause) {
