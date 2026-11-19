@@ -20,6 +20,7 @@ type EpisodeAccessGate = {
   locked_episode?: { id: string; title: string; sequence_number: number };
 };
 type EpisodePayload = {
+  sample?: boolean;
   story: { id: string; slug: string; title: string; section_label?: string; section_label_plural?: string };
   episode: { id: string; sequence_number: number; title: string; synopsis?: string | null; content: unknown; assets?: { id: string; asset_type: string; public_url?: string | null; alt_text?: string | null; position: number }[] };
   next_episode?: { id: string; title: string; sequence_number: number } | null;
@@ -151,12 +152,13 @@ export default function ReadingRoom({
     if (!session?.access_token) {
       tokenRef.current = null;
       setSessionReady(false);
-      setStatus("signed-out");
+      // The open sample (free first episode) stays readable without an account.
+      if (!initialPayload?.sample) setStatus("signed-out");
       return;
     }
     tokenRef.current = session.access_token;
     setSessionReady(true);
-  }, []);
+  }, [initialPayload]);
 
   useEffect(() => {
     const supabase = getSupabaseBrowserClient();
@@ -533,15 +535,21 @@ export default function ReadingRoom({
         </div>
         {bodyAssets.map((asset) => <figure className="reading-asset" key={asset.id}><img loading="lazy" decoding="async" src={asset.public_url!} alt={asset.alt_text || "Story illustration"} /></figure>)}
         <footer className="reading-end">
-          {payload.next_episode && (
+          {payload.sample ? (
+            <div className="reading-sample-cta">
+              <p className="eyebrow">ENJOYING THE FIRST {(payload.story.section_label || "Episode").toUpperCase()}?</p>
+              <p>Sign in free to keep reading, save your place and add this story to your library.</p>
+              <Link className="primary-button" href={`/sign-in?next=/stories/${slug}/read/${payload.episode.id}`}>Sign in to keep reading <span>↗</span></Link>
+            </div>
+          ) : payload.next_episode && (
             <button type="button" className="reading-next-episode" onClick={() => setShowContribution(true)}>
               {payload.story.section_label || "Episode"} {payload.next_episode.sequence_number}. {payload.next_episode.title}
               <span aria-hidden="true">→</span>
             </button>
           )}
-          <div className="reading-donation-area">
+          {!payload.sample && <div className="reading-donation-area">
             <SupportStoryButton storyId={payload.story.id} slug={slug} compact />
-          </div>
+          </div>}
         </footer>
       </article>
       </div>

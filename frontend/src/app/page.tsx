@@ -65,7 +65,6 @@ export default async function DiscoverPage() {
 
       <section className="welcome-row">
         <div>
-          <p className="eyebrow">YOUR NEXT OBSESSION STARTS HERE</p>
           <h1>Stories worth <em>staying for.</em></h1>
           <p className="welcome-note"><span>A good story pulls you in.</span> <mark>A great one keeps you coming back.</mark></p>
         </div>

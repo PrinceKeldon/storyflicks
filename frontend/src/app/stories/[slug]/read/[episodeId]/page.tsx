@@ -38,6 +38,21 @@ type EpisodeAccessGate = {
   locked_episode?: { id: string; title: string; sequence_number: number };
 };
 
+// Signed-out readers can open a story's free first episode; anything else asks them to sign in.
+async function openSample(slug: string, episodeId: string, apiUrl: string | undefined) {
+  if (!apiUrl) return <ReadingRoom slug={slug} episodeId={episodeId} initialStatus="signed-out" />;
+  try {
+    const response = await fetch(`${apiUrl}/episodes/${encodeURIComponent(episodeId)}`, { cache: "no-store" });
+    if (response.ok) {
+      const payload = await response.json();
+      if (payload?.sample) return <ReadingRoom slug={slug} episodeId={episodeId} initialStatus="ready" initialPayload={payload} />;
+    }
+  } catch {
+    // fall through to the sign-in prompt
+  }
+  return <ReadingRoom slug={slug} episodeId={episodeId} initialStatus="signed-out" />;
+}
+
 export default async function ReadingPage({ params }: { params: Promise<{ slug: string; episodeId: string }> }) {
   const { slug, episodeId } = await params;
   const supabase = await getSupabaseServerClient();
@@ -45,15 +60,11 @@ export default async function ReadingPage({ params }: { params: Promise<{ slug: 
     return <ReadingRoom slug={slug} episodeId={episodeId} initialStatus="error" initialError="Reading is not configured yet. Please try again later." />;
   }
 
-  const { data: verified, error: userError } = await supabase.auth.getUser();
-  if (userError || !verified.user) {
-    return <ReadingRoom slug={slug} episodeId={episodeId} initialStatus="signed-out" />;
-  }
-
-  const { data: session } = await supabase.auth.getSession();
   const apiUrl = process.env.NEXT_PUBLIC_API_URL?.replace(/\/$/, "");
-  if (!session.session?.access_token || !apiUrl) {
-    return <ReadingRoom slug={slug} episodeId={episodeId} initialStatus="signed-out" />;
+  const { data: verified, error: userError } = await supabase.auth.getUser();
+  const { data: session } = verified?.user ? await supabase.auth.getSession() : { data: { session: null } };
+  if (userError || !verified?.user || !session.session?.access_token || !apiUrl) {
+    return openSample(slug, episodeId, apiUrl);
   }
 
   const headers = { Authorization: `Bearer ${session.session.access_token}` };
