@@ -33,7 +33,8 @@ const WORD_NAMESPACE = "http://schemas.openxmlformats.org/wordprocessingml/2006/
 // explicit false values to be interpreted as true and discarded paragraph layout.
 export function wordAttribute(node: Element | null | undefined, name: string): string | null {
   if (!node) return null;
-  // The fallback intentionally reads only an unqualified attribute. Matching
+  // Regression coverage for this lookup runs in frontend/tests/docx-import.test.mjs.
+// The fallback intentionally reads only an unqualified attribute. Matching
   // localName alone could accidentally accept an attribute from another namespace.
   return node.getAttributeNS(WORD_NAMESPACE, name) ?? node.getAttribute(name) ?? null;
 }
