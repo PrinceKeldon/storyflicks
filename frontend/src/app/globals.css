@@ -2381,3 +2381,40 @@ html[data-theme="dark"] body :is(input,textarea,select)::placeholder {
   width: min(calc(100% - 40px), 690px);
   min-width: 0;
 }
+
+
+/* The chapter editor is rich text: keep it visually aligned with the former body field. */
+.studio-rich-chapter-editor {
+  width: 100%;
+  min-height: 32rem;
+  max-height: 70vh;
+  overflow-y: auto;
+  padding: 1rem 1.1rem;
+  border: 1px solid var(--studio-border, #b9b9b9);
+  border-radius: 0.65rem;
+  background: var(--studio-field-bg, var(--surface, #fff));
+  color: var(--studio-text, #111);
+  font: inherit;
+  line-height: 1.6;
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+  outline-offset: 2px;
+}
+.studio-rich-chapter-editor:focus {
+  outline: 2px solid var(--studio-accent, #9b593f);
+  border-color: transparent;
+}
+.studio-rich-chapter-editor:empty::before {
+  content: attr(data-placeholder);
+  color: var(--studio-muted, #666);
+  pointer-events: none;
+}
+.studio-rich-chapter-editor > :first-child { margin-top: 0; }
+.studio-rich-chapter-editor > :last-child { margin-bottom: 0; }
+.studio-rich-chapter-editor blockquote {
+  margin-left: 1.5rem;
+  margin-right: 1.5rem;
+}
+.studio-rich-chapter-editor [data-block-type="separator"] {
+  text-align: center;
+}
