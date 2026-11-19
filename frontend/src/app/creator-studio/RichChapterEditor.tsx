@@ -196,7 +196,8 @@ export default function RichChapterEditor({ blocks, onChange, placeholder = "Pas
     const clipboard = event.clipboardData;
     const html = clipboard.getData("text/html");
     const plain = clipboard.getData("text/plain");
-    const insertion = html ? sanitiseHtml(html) : plain.replace(/\r\n?/g, "\n").split(/\n[ \t]*\n+/).map(paragraph => "<p>" + escapeHtml(paragraph).replace(/\n/g, "<br>") + "</p>").join("");
+    const safeHtml = html ? sanitiseHtml(html) : "";
+    const insertion = safeHtml || plain.replace(/\r\n?/g, "\n").split(/\n[ \t]*\n+/).map(paragraph => "<p>" + escapeHtml(paragraph).replace(/\n/g, "<br>") + "</p>").join("");
     document.execCommand("insertHTML", false, insertion);
     update();
   }
