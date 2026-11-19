@@ -22,15 +22,6 @@ type Props = {
   onApplied: () => void | Promise<void>;
 };
 
-const SUGGESTIONS = [
-  "Give me an overview of how this story is doing.",
-  "Check chapter 1 for typos and awkward sentences, and propose fixes.",
-  "Draft replies to my newest reader reviews.",
-  "Check my chapter numbering for gaps or duplicates and propose a fix.",
-  "Summarise what readers are saying in recent reviews.",
-  "Search the manuscript for inconsistencies in character names.",
-];
-
 function EditDiff({ edit }: { edit: Edit }) {
   return (
     <div className="sf-agent-edit">
@@ -120,6 +111,8 @@ export default function AgentPanel({ storyId, stories, request, onApplied }: Pro
   const [messages, setMessages] = useState<Message[]>([]);
   const [conversationId, setConversationId] = useState<string | null>(null);
   const [conversations, setConversations] = useState<Conversation[]>([]);
+  const [historyOpen, setHistoryOpen] = useState(false);
+  const [historyLoading, setHistoryLoading] = useState(false);
   const [draft, setDraft] = useState("");
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState("");
@@ -145,41 +138,31 @@ export default function AgentPanel({ storyId, stories, request, onApplied }: Pro
     setError("");
   }, [request]);
 
-  // Restore the most recent saved conversation for this title whenever the
-  // assistant opens or the author changes working context.
-  useEffect(() => {
-    let cancelled = false;
-    setMessages([]);
-    setConversationId(null);
+  const loadHistory = useCallback(async () => {
+    setHistoryLoading(true);
     setError("");
-    (async () => {
+    try {
       const data = (await request("/creator/agent/conversations")) as { conversations: Conversation[] };
       const matching = (data.conversations ?? []).filter(item =>
         item.story_id === (selectedTitleId === "general" ? null : selectedTitleId)
       );
-      if (cancelled) return;
       setConversations(matching);
-      if (matching.length) {
-        const detail = (await request(`/creator/agent/conversations/${matching[0].id}`)) as {
-          messages: Message[]; proposals: ProposalItem[];
-        };
-        if (cancelled) return;
-        const restored = [...(detail.messages ?? [])];
-        const proposals = detail.proposals ?? [];
-        if (proposals.length) {
-          const lastAssistant = restored.map((message, index) => ({ message, index }))
-            .filter(item => item.message.role === "model").slice(-1)[0];
-          if (lastAssistant) restored[lastAssistant.index] = { ...restored[lastAssistant.index], proposals };
-          else restored.push({ id: `restored-proposals-${matching[0].id}`, role: "model", content: "Saved proposals", proposals });
-        }
-        setConversationId(matching[0].id);
-        setMessages(restored);
-      }
-    })().catch(err => {
-      if (!cancelled) setError(err instanceof Error ? err.message : "Saved conversations could not be restored.");
-    });
-    return () => { cancelled = true; };
-  }, [selectedTitleId, request]);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Saved conversations could not be loaded.");
+    } finally {
+      setHistoryLoading(false);
+    }
+  }, [request, selectedTitleId]);
+
+  // A title change starts a fresh chat. History is fetched only when requested.
+  useEffect(() => {
+    setMessages([]);
+    setConversationId(null);
+    setConversations([]);
+    setHistoryOpen(false);
+    setError("");
+    setDraft("");
+  }, [selectedTitleId]);
 
   useEffect(() => {
     endRef.current?.scrollIntoView({ block: "end" });
@@ -224,7 +207,27 @@ export default function AgentPanel({ storyId, stories, request, onApplied }: Pro
   return (
     <section className="studio-content sf-agent">
       <div className="studio-workspace-select sf-agent-context"><label htmlFor="sf-agent-title">WORKING CONTEXT<select id="sf-agent-title" value={selectedTitleId} onChange={event => setSelectedTitleId(event.target.value)}><option value="general">General — all titles / uncategorised</option>{stories.map(story => <option key={story.id} value={story.id}>{story.title}</option>)}</select></label><small>{selectedTitle ? `Focused on ${selectedTitle.title}` : "General workspace context"}</small></div>
-      {conversations.length > 1 && <div className="studio-workspace-select sf-agent-context"><label htmlFor="sf-agent-conversation">SAVED CONVERSATION<select id="sf-agent-conversation" value={conversationId ?? ""} onChange={event => { if (event.target.value) void openConversation(event.target.value); }}><option value="">Choose a conversation…</option>{conversations.map(item => <option key={item.id} value={item.id}>{item.title}</option>)}</select></label></div>}
+      <div className="sf-agent-history-bar">
+        <button type="button" className="studio-text-action" onClick={() => {
+          const next = !historyOpen;
+          setHistoryOpen(next);
+          if (next) void loadHistory();
+        }}>{historyOpen ? "Hide History" : "History"}{conversations.length ? ` · ${conversations.length}` : ""}</button>
+        <button type="button" className="studio-text-action" onClick={() => {
+          setMessages([]);
+          setConversationId(null);
+          setDraft("");
+          setError("");
+          setHistoryOpen(false);
+        }}>New chat</button>
+      </div>
+      {historyOpen && <div className="sf-agent-history" aria-label="Saved conversations">
+        {historyLoading ? <p className="studio-sidebar-empty">Loading saved conversations…</p>
+          : conversations.length ? conversations.map(item => <button key={item.id} type="button" className={conversationId === item.id ? "active" : ""} onClick={() => { void openConversation(item.id); setHistoryOpen(false); }}>
+              <span>{item.title}</span><small>{new Date(item.updated_at).toLocaleDateString("en-GB")}</small>
+            </button>)
+          : <p className="studio-sidebar-empty">No saved conversations for this context yet.</p>}
+      </div>}
       <div className="studio-section-heading"><div>
         <p className="eyebrow">YOUR EDITOR AND ASSISTANT</p>
         <h2>Studio assistant<span>.</span></h2>
@@ -232,11 +235,6 @@ export default function AgentPanel({ storyId, stories, request, onApplied }: Pro
       </div></div>
 
       <div className="sf-agent-thread" aria-live="polite">
-        {!messages.length && (
-          <div className="sf-agent-suggestions">
-            {SUGGESTIONS.map(text => <button key={text} type="button" className="studio-text-action" onClick={() => void send(text)} disabled={busy}>{text}</button>)}
-          </div>
-        )}
         {messages.map(message => (
           <div key={message.id} className={`sf-agent-message sf-agent-${message.role}`}>
             <small>{message.role === "user" ? "YOU" : "ASSISTANT"}</small>
