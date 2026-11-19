@@ -13,6 +13,9 @@ type SearchStory = {
   synopsis: string | null;
   genres: string[];
   completion_status?: string | null;
+  origin_type?: "storyflicks_original" | "previously_published" | "independent" | null;
+  content_format?: "standalone" | "series" | null;
+  section_label_plural?: string | null;
   cover_url?: string | null;
 };
 
@@ -68,13 +71,13 @@ export default function SearchResults({
         {items.map((item) => (
           <Link key={item.id || item.slug} className="search-result-card" href={"/stories/" + item.slug}>
             <div className={item.cover_url ? "search-result-art has-cover" : "search-result-art"} aria-label={item.title + " book cover artwork"}>
-              {item.cover_url ? <RemoteImage className="catalogue-cover-image" src={item.cover_url} alt={item.title + " book cover"} fill sizes="(max-width: 640px) 40vw, 200px" /> : <><span>{item.title}</span><small>STORYFLICKS ORIGINAL</small></>}
+              {item.cover_url ? <RemoteImage className="catalogue-cover-image" src={item.cover_url} alt={item.title + " book cover"} fill sizes="(max-width: 640px) 40vw, 200px" /> : <><span>{item.title}</span><small>{item.origin_type === "storyflicks_original" ? "STORYFLICKS ORIGINAL" : item.origin_type === "previously_published" ? "PREVIOUSLY PUBLISHED" : "INDEPENDENT STORY"}</small></>}
             </div>
             <div className="search-result-copy">
-              <p className="eyebrow">{item.genres?.join(" · ") || "STORYFLICKS ORIGINAL"} <span>·</span> {item.completion_status || "EPISODIC"}</p>
+              <p className="eyebrow">{item.genres?.join(" · ") || "STORY"} <span>·</span> {item.completion_status || "ONGOING"} <span>·</span> {item.content_format === "series" ? "SERIES" : "STANDALONE STORY"}</p>
               <h3>{item.title}</h3>
               {item.author_name && <p className="catalogue-author-byline">By {item.author_name}</p>}
-              <p>{item.tagline || item.synopsis || "Discover this STORYFLICKS original."}</p>
+              <p>{item.synopsis || item.tagline || "Explore the story and discover its world."}</p>
               <span className="text-button">Explore story <span>↗</span></span>
             </div>
           </Link>
