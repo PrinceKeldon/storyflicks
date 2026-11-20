@@ -437,6 +437,68 @@ class CreatorEpisodeSynopsisSubmission(BaseModel):
     synopsis: str | None = Field(default=None, max_length=10000)
 
 
+class CreatorEpisodeReviewSubmission(BaseModel):
+    ready: bool
+
+
+class CreatorEpisodeOrderSubmission(BaseModel):
+    episode_ids: list[UUID] = Field(min_length=1, max_length=2000)
+
+
+@router.patch("/creator/stories/{story_id}/episodes/{episode_id}/review")
+async def set_creator_episode_review_status(
+    story_id: UUID,
+    episode_id: UUID,
+    submission: CreatorEpisodeReviewSubmission,
+    user: AuthenticatedUser = Depends(get_current_user),
+):
+    """Mark a draft chapter ready for review, or move it back to plain draft."""
+    await require_story_editor(story_id, user)
+    episodes = await supabase.admin_get(
+        "episodes",
+        {
+            "id": f"eq.{episode_id}",
+            "story_id": f"eq.{story_id}",
+            "deleted_at": "is.null",
+            "select": "id,publication_status",
+            "limit": "1",
+        },
+    )
+    if not episodes:
+        raise HTTPException(404, "Section not found in this story.")
+    if episodes[0].get("publication_status") != "draft":
+        raise HTTPException(409, "Only draft chapters can be marked ready for review.")
+    await supabase.admin_patch(
+        "episodes",
+        {"id": f"eq.{episode_id}", "story_id": f"eq.{story_id}"},
+        {"ready_for_review": submission.ready},
+    )
+    return {"episode_id": str(episode_id), "ready_for_review": submission.ready}
+
+
+@router.post("/creator/stories/{story_id}/episodes/reorder")
+async def reorder_creator_episodes(
+    story_id: UUID,
+    submission: CreatorEpisodeOrderSubmission,
+    user: AuthenticatedUser = Depends(get_current_user),
+):
+    """Renumber every active chapter 1..n in the given order."""
+    await require_story_editor(story_id, user)
+    ids = [str(episode_id) for episode_id in submission.episode_ids]
+    if len(set(ids)) != len(ids):
+        raise HTTPException(422, "A chapter can only appear once in the new order.")
+    try:
+        count = await supabase.admin_rpc(
+            "reorder_creator_episodes",
+            {"p_story_id": str(story_id), "p_episode_ids": ids},
+        )
+    except HTTPException as error:
+        if error.status_code in (400, 422):
+            raise HTTPException(409, "The chapter list changed. Reload the story and try again.") from error
+        raise
+    return {"story_id": str(story_id), "count": count, "episode_ids": ids}
+
+
 @router.patch("/creator/stories/{story_id}/episodes/{episode_id}/synopsis")
 async def save_creator_episode_synopsis(
     story_id: UUID,

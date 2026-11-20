@@ -117,3 +117,26 @@ html[data-theme] body .library-progress-track span, html[data-theme] body .perso
 
 /* The preview's back control is a <button>; match the link version used in the real Reading Room */
 .reading-room button.reader-bar-back { background: transparent; border: 0; box-shadow: none; color: inherit; font: inherit; cursor: pointer; padding: 0; }
+
+/* Creator Studio: review status tag and chapter reordering */
+.studio-status-tag[data-state="ready-for-review"], .studio-episode-choice[data-state="ready-for-review"] small { color: var(--sf-turquoise); }
+.studio-status-tag[data-state="published"], .studio-episode-choice[data-state="published"] small { color: var(--sf-yellow, #ffd60a); }
+.studio-reorder-start { margin-top: 12px; width: 100%; }
+.studio-reorder-hint { margin: 0 0 12px; font-size: 14px; line-height: 1.5; opacity: .8; }
+.studio-reorder-list { list-style: none; margin: 0; padding: 0; display: grid; gap: 8px; }
+.studio-reorder-item { display: grid; grid-template-columns: 22px 34px 1fr auto; align-items: center; gap: 8px; padding: 10px 12px; border: 1px solid currentColor; border-color: color-mix(in srgb, currentColor 28%, transparent); border-radius: 10px; cursor: grab; }
+.studio-reorder-item.dragging { opacity: .45; }
+.studio-reorder-item:hover { border-color: var(--sf-turquoise); }
+.studio-reorder-grip { opacity: .55; letter-spacing: -2px; }
+.studio-reorder-number { font-family: var(--font-dm-mono), 'DM Mono', monospace; font-size: 13px; }
+.studio-reorder-title strong { display: block; font-size: 15px; font-weight: 600; }
+.studio-reorder-title small { display: block; font-size: 12px; opacity: .7; }
+.studio-reorder-moves { display: inline-flex; gap: 4px; }
+.studio-reorder-moves button { width: 32px; height: 32px; border-radius: 8px; border: 1px solid color-mix(in srgb, currentColor 30%, transparent); background: transparent; color: inherit; cursor: pointer; }
+.studio-reorder-moves button:disabled { opacity: .3; cursor: default; }
+.studio-reorder-actions { display: flex; gap: 8px; margin-top: 12px; justify-content: flex-end; }
+.studio-block-heading { flex-wrap: wrap; }
+.studio-block-heading > div:first-child { flex: 1 1 340px; }
+.studio-editor-actions { flex: 0 0 auto; }
+.studio-editor-actions button { border: 1px solid color-mix(in srgb, currentColor 35%, transparent); border-radius: 999px; padding: 9px 14px; white-space: nowrap; }
+.studio-editor-actions button:hover:not(:disabled) { border-color: var(--sf-turquoise); }
