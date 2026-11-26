@@ -11,7 +11,7 @@
     "start": "next start",
     "lint": "ESLINT_USE_FLAT_CONFIG=false eslint .",
     "typecheck": "tsc --noEmit",
-    "test:docx-import": "node --experimental-strip-types --test tests/docx-import.test.mjs tests/chapter-title.test.mjs"
+    "test:docx-import": "node --experimental-strip-types --test tests/docx-import.test.mjs tests/chapter-title.test.mjs tests/book-review.test.mjs"
   },
   "dependencies": {
     "next": "15.5.29",

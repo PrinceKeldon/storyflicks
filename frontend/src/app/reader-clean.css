@@ -140,3 +140,24 @@ html[data-theme] body .library-progress-track span, html[data-theme] body .perso
 .studio-editor-actions { flex: 0 0 auto; }
 .studio-editor-actions button { border: 1px solid color-mix(in srgb, currentColor 35%, transparent); border-radius: 999px; padding: 9px 14px; white-space: nowrap; }
 .studio-editor-actions button:hover:not(:disabled) { border-color: var(--sf-turquoise); }
+
+/* Book review tab */
+.book-review-tiles { display: grid; grid-template-columns: repeat(auto-fit, minmax(110px, 1fr)); gap: 10px; margin: 16px 0 24px; }
+.book-review-tiles > div { border: 1px solid var(--sf-line, rgba(255,255,255,.16)); padding: 12px; display: grid; gap: 2px; }
+.book-review-tiles strong { font-size: 22px; }
+.book-review-tiles span { font-size: 11px; letter-spacing: .08em; text-transform: uppercase; opacity: .7; }
+.book-review-heading { margin: 24px 0 8px; font-size: 13px; letter-spacing: .1em; text-transform: uppercase; }
+.book-review-clear { color: var(--sf-turquoise); }
+.book-review-issues, .book-review-order { list-style: none; margin: 8px 0; padding: 0; display: grid; gap: 6px; }
+.book-review-issues li { display: grid; grid-template-columns: 64px 1fr auto; gap: 10px; align-items: baseline; border: 1px solid var(--sf-line, rgba(255,255,255,.16)); padding: 8px 10px; font-size: 14px; }
+.book-review-level { font-size: 11px; font-weight: 700; letter-spacing: .08em; }
+html body .book-review-issues li[data-level="fix"] .book-review-level { color: var(--sf-red, #ff453a); }
+html body .book-review-issues li[data-level="check"] .book-review-level { color: var(--sf-yellow, #ffd60a); }
+html body .book-review-issues li[data-level="info"] .book-review-level { color: var(--sf-turquoise); }
+.book-review-order li { display: grid; grid-template-columns: 48px 1fr auto auto auto auto; gap: 10px; align-items: center; border-bottom: 1px solid var(--sf-line, rgba(255,255,255,.16)); padding: 8px 0; font-size: 14px; }
+.book-review-num { font-size: 12px; opacity: .7; }
+.book-review-words { font-size: 12px; opacity: .7; }
+.book-review-order li button:disabled { opacity: .35; cursor: default; }
+.preview-nav { display: flex; flex-wrap: wrap; gap: 12px; align-items: center; justify-content: center; margin-top: 12px; }
+.preview-nav small { width: 100%; text-align: center; opacity: .7; }
+@media (max-width: 640px) { .book-review-order li { grid-template-columns: 40px 1fr auto; } .book-review-words { display: none; } .book-review-issues li { grid-template-columns: 1fr; } }

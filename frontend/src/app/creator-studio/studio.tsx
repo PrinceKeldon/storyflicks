@@ -10,6 +10,7 @@ import { importDocx, type ImportedManuscriptBlock } from "@/lib/docx-import";
 import { splitChapterTitle } from "@/lib/chapter-title";
 import ManuscriptImportAssistant from "./ManuscriptImportAssistant";
 import StoryMaterialsManager from "./StoryMaterialsManager";
+import BookReview from "./BookReview";
 import CreatorTrash from "./CreatorTrash";
 import AgentPanel from "./AgentPanel";
 import ReadingRoom from "@/app/stories/[slug]/read/[episodeId]/reading-room";
@@ -38,8 +39,8 @@ type CreatorReview = {id:string;headline:string|null;body:string;submitted_at:st
 type CreatorReport = {report_id:string;target_type:"review"|"author_reply"|"author_note";target_id:string;reason:string;details:string|null;status:string;created_at:string;story:{id:string;title:string};episode_title:string|null;content:{title:string|null;body:string;author:{username:string|null;display_name:string|null}|null};reporter:{username:string|null;display_name:string|null}|null};
 
 type Block = ImportedManuscriptBlock;
-type Tab = "overview"|"stories"|"episodes"|"structure"|"trash"|"community"|"audience"|"insights"|"assistant"|"settings";
-const tabs: {id:Tab;label:string}[] = [{id:"overview",label:"Overview"},{id:"stories",label:"My Stories"},{id:"episodes",label:"Episode Manager"},{id:"structure",label:"Story Structure"},{id:"trash",label:"Trash"},{id:"community",label:"Community"},{id:"audience",label:"Audience"},{id:"insights",label:"Insights"},{id:"assistant",label:"Assistant"},{id:"settings",label:"Settings"}];
+type Tab = "overview"|"stories"|"episodes"|"structure"|"review"|"trash"|"community"|"audience"|"insights"|"assistant"|"settings";
+const tabs: {id:Tab;label:string}[] = [{id:"overview",label:"Overview"},{id:"stories",label:"My Stories"},{id:"episodes",label:"Episode Manager"},{id:"structure",label:"Story Structure"},{id:"review",label:"Book review"},{id:"trash",label:"Trash"},{id:"community",label:"Community"},{id:"audience",label:"Audience"},{id:"insights",label:"Insights"},{id:"assistant",label:"Assistant"},{id:"settings",label:"Settings"}];
 function slugify(s:string){return s.toLowerCase().trim().normalize("NFKD").replace(/[\u0300-\u036f]/g,"").replace(/[^a-z0-9]+/g,"-").replace(/^-|-$/g,"");}
 function parseGenres(value:string){return [...new Set(value.split(",").map(item=>item.trim()).filter(Boolean))].slice(0,5);}
 async function detectImageContentType(file:File):Promise<string>{
@@ -404,6 +405,7 @@ export default function CreatorStudio(){
     <ManuscriptImportAssistant storyId={storyId} storyTitle={workspace.story.title} sectionLabel={workspace.story.section_label||"Episode"} sectionLabelPlural={workspace.story.section_label_plural||"Episodes"} episodes={workspace.episodes} request={request} onImported={async()=>{await loadWorkspace(storyId);await loadDashboard();}}/>
    </section>}
   </section>}
+  {tab==="review"&&<>{workspace&&workspace.story.id===storyId?<BookReview storyId={storyId} slug={workspace.story.slug} story={{id:workspace.story.id,title:workspace.story.title,tagline:workspace.story.tagline,synopsis:workspace.story.synopsis,genres:workspace.story.genres}} coverUrl={coverUrl} episodes={workspace.episodes} assets={assets} sectionLabel={workspace.story.section_label||"Episode"} sectionLabelPlural={workspace.story.section_label_plural||"Episodes"} request={request} onOpen={target=>{if(target.kind==="story")setTab("stories");else if(target.kind==="materials")setTab("structure");else{if(target.kind==="episode")setEpisodeId(target.id);setTab("episodes");}}}/>:<section className="studio-content"><div className="studio-empty"><h3>Select a story workspace first.</h3></div></section>}</>}
   {tab==="structure"&&<>{workspace&&workspace.story.id===storyId?<StoryMaterialsManager storyId={storyId} request={request}/>:<section className="studio-content"><div className="studio-empty"><h3>Select a story workspace first.</h3><button className="studio-primary" onClick={()=>setTab("stories")}>Choose a story ↗</button></div></section>}</>}
   {tab==="assistant"&&<AgentPanel storyId={storyId} stories={(dashboard?.stories||[]).map(item=>({id:item.id,title:item.title}))} request={request} onApplied={async()=>{if(storyId)await loadWorkspace(storyId);}}/>}
   {tab==="trash"&&<CreatorTrash request={request} onChanged={async()=>{await loadDashboard();if(storyId)await loadWorkspace(storyId);}}/>}
