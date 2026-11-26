@@ -129,6 +129,7 @@ export default function ReadingRoom({
   initialPreferences = null,
   preview = false,
   onClosePreview,
+  previewNav,
 }: {
   slug: string;
   episodeId: string;
@@ -140,6 +141,8 @@ export default function ReadingRoom({
   /** Author preview: renders supplied content, never talks to the API, saves no progress or preferences. */
   preview?: boolean;
   onClosePreview?: () => void;
+  /** Whole-book preview: step to the neighbouring item without leaving the preview. */
+  previewNav?: { position?: string; previousLabel?: string; nextLabel?: string; onPrevious?: () => void; onNext?: () => void };
 }) {
   const [payload, setPayload] = useState<EpisodePayload | null>(initialPayload);
   const [status, setStatus] = useState<"loading" | "signed-out" | "ready" | "locked" | "error">(initialStatus);
@@ -502,7 +505,7 @@ export default function ReadingRoom({
       <div className="reader-progress-track"><span style={{ width: `${progress}%` }} /></div>
       <header className="reader-bar">
         {preview ? <button type="button" className="reader-bar-back" onClick={onClosePreview} aria-label="Close preview">←</button> : <Link className="reader-bar-back" href={`/stories/${slug}`} aria-label={`Back to ${payload.story.title}`}>←</Link>}
-        <div className="reader-bar-title">{preview ? <span>{payload.story.title}</span> : <Link href={`/stories/${slug}`}>{payload.story.title}</Link>}<span>{(payload.story.section_label || "Episode").toUpperCase()} {String(payload.episode.sequence_number).padStart(2, "0")}</span></div>
+        <div className="reader-bar-title">{preview ? <span>{payload.story.title}</span> : <Link href={`/stories/${slug}`}>{payload.story.title}</Link>}<span>{(payload.story.section_label || "Episode").toUpperCase()}{payload.episode.sequence_number > 0 ? " " + String(payload.episode.sequence_number).padStart(2, "0") : ""}</span></div>
         <div className="reader-bar-tools">
           {payload.previous_episode && (
             <Link
@@ -546,7 +549,7 @@ export default function ReadingRoom({
               priority
             />
           )}
-          <div className="reading-kicker">{payload.story.title} <span>·</span> {(payload.story.section_label || "Episode").toUpperCase()} {String(payload.episode.sequence_number).padStart(2, "0")}</div>
+          <div className="reading-kicker">{payload.story.title} <span>·</span> {(payload.story.section_label || "Episode").toUpperCase()}{payload.episode.sequence_number > 0 ? " " + String(payload.episode.sequence_number).padStart(2, "0") : ""}</div>
           <h1 className="reading-episode-title" style={{ ...manuscriptBlockStyle(sourceTitleBlock || {}), fontWeight: sourceTitleBlock?.bold || (sourceTitleRuns.length > 0 && sourceTitleRuns.every((run) => run.bold)) ? 700 : 500, fontStyle: sourceTitleBlock?.italic || (sourceTitleRuns.length > 0 && sourceTitleRuns.every((run) => run.italic)) ? "italic" : undefined, textAlign: "center", fontFamily: "'Playfair Display', Georgia, serif", color: readableRunColour(sourceTitleRunFormat?.color, theme) }}>{payload.episode.title}</h1>
         </div>
         {leadingBlocks.length > 0 && <div className="manuscript" style={{ fontSize: `${fontScale}%` }}>{leadingBlocks.map((block, index) => <p key={"leading-" + index} style={manuscriptBlockStyle(block)}>{renderRuns(block, theme)}</p>)}</div>}
@@ -572,7 +575,7 @@ export default function ReadingRoom({
         {bodyAssets.map((asset) => <figure className="reading-asset" key={asset.id}><img loading="lazy" decoding="async" src={asset.public_url!} alt={asset.alt_text || "Story illustration"} /></figure>)}
         <footer className="reading-end">
           {preview ? (
-            <div className="reading-sample-cta"><p className="eyebrow">END OF PREVIEW</p><p>This is exactly how readers will see this {(payload.story.section_label || "Episode").toLowerCase()}. Nothing here is saved.</p>{onClosePreview && <button type="button" className="primary-button" onClick={onClosePreview}>Back to editing <span>←</span></button>}</div>
+            <div className="reading-sample-cta"><p className="eyebrow">END OF PREVIEW</p><p>This is exactly how readers will see this {(payload.story.section_label || "Episode").toLowerCase()}. Nothing here is saved.</p>{previewNav && <div className="preview-nav">{previewNav.position && <small>{previewNav.position}</small>}{previewNav.onPrevious && <button type="button" className="text-button" onClick={previewNav.onPrevious}>← {previewNav.previousLabel || "Previous"}</button>}{previewNav.onNext && <button type="button" className="primary-button" onClick={previewNav.onNext}>{previewNav.nextLabel || "Next"} <span>→</span></button>}</div>}{onClosePreview && <button type="button" className="primary-button" onClick={onClosePreview}>Back to editing <span>←</span></button>}</div>
           ) : payload.sample ? (
             <div className="reading-sample-cta">
               <p className="eyebrow">ENJOYING THE FIRST {(payload.story.section_label || "Episode").toUpperCase()}?</p>
